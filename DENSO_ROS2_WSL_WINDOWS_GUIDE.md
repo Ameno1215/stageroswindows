@@ -85,10 +85,11 @@ ros2 launch denso_motion_control motion_server.launch.py model:=vs060 sim:=true
 python3 -m pip install --user fastapi uvicorn pydantic
 ```
 
-### Lancement
+### Terminal WSL #3
 
 ```bash
 cd ~/workspace
+source venv/bin/activate
 source /opt/ros/humble/setup.bash
 source ~/workspace/denso_ros2_ws/install/setup.bash
 uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000
@@ -111,73 +112,9 @@ python -m pip install requests
 
 ---
 
-## 8. Client Python Windows
+### Terminal windows
 
-### denso_http_client.py
-
-```python
-import requests
-
-class DensoRobotClient:
-    def __init__(self, base_url="http://localhost:8000"):
-        self.base_url = base_url.rstrip("/")
-
-    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1):
-        return requests.post(f"{self.base_url}/init", json={
-            "model": model,
-            "planning_group": planning_group,
-            "velocity_scale": velocity_scale,
-            "accel_scale": accel_scale
-        }).json()
-
-    def set_scaling(self, velocity_scale, accel_scale):
-        return requests.post(f"{self.base_url}/scaling", json={
-            "velocity_scale": velocity_scale,
-            "accel_scale": accel_scale
-        }).json()
-
-    def goto_joint(self, joints):
-        return requests.post(f"{self.base_url}/goto_joint", json={
-            "joints": joints,
-            "execute": True
-        }).json()
-
-    def goto_pose(self, frame_id, x, y, z, qx, qy, qz, qw):
-        return requests.post(f"{self.base_url}/goto_pose", json={
-            "frame_id": frame_id,
-            "position": {"x": x, "y": y, "z": z},
-            "orientation": {"x": qx, "y": qy, "z": qz, "w": qw},
-            "execute": True
-        }).json()
+```powershell
+.\venv\Scripts\activate
+python ./test.py
 ```
-
----
-
-## 9. Exemple d’utilisation
-
-```python
-from denso_http_client import DensoRobotClient
-
-robot = DensoRobotClient()
-
-robot.init_robot()
-robot.set_scaling(0.5, 0.5)
-robot.goto_joint([1.57, 0, 1.57, 0, 1.57, 0])
-robot.goto_pose("base_link", -0.1, 0.4, 0.4, 0.707, -0.707, 0, 0)
-```
-
----
-
-## 10. Passage au robot réel
-
-Changer uniquement le bringup :
-
-```bash
-ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=false
-```
-
-Le code Windows reste identique.
-
----
-
-Fin du document.

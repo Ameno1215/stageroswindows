@@ -1,0 +1,22 @@
+source /opt/ros/humble/setup.bash
+source install/setup.bash
+
+
+
+rosdep install --ignore-src --from-paths src -y -r
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+export LIBGL_ALWAYS_SOFTWARE=1
+source install/setup.bash
+
+
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select denso_motion_control
+
+
+colcon build --packages-select denso_motion_control --cmake-clean-cache
+
+
+
+ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=true
+
+
+ros2 launch denso_robot_moveit_demo denso_robot_moveit_pickandplace.launch.py model:=vs060 scale_factor:=1 num_cycles:=1

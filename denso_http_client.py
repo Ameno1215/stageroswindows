@@ -2,7 +2,7 @@ import requests
 
 
 class DensoRobotClient:
-    def __init__(self, base_url="http://localhost:8000", timeout=30.0):
+    def __init__(self, base_url="http://localhost:8000", timeout=60.0):
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
@@ -47,3 +47,14 @@ class DensoRobotClient:
         r = requests.post(f"{self.base_url}/goto_pose", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
+    
+    def get_joint_state(self):
+        r = requests.get(f"{self.base_url}/state/joints", timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def get_current_pose(self):
+        r = requests.get(f"{self.base_url}/state/pose", timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
