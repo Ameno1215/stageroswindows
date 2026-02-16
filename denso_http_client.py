@@ -30,10 +30,12 @@ class DensoRobotClient:
         r = requests.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
-
+   
     def goto_joint(self, joints, execute=True):
         payload = {"joints": [float(x) for x in joints], "execute": bool(execute)}
-        r = requests.post(f"{self.base_url}/goto_joint", json=payload, timeout=self.timeout)
+        current_timeout = 120.0 if execute else self.timeout
+    
+        r = requests.post(f"{self.base_url}/goto_joint", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return r.json()
 
@@ -44,6 +46,8 @@ class DensoRobotClient:
             "orientation": {"x": float(qx), "y": float(qy), "z": float(qz), "w": float(qw)},
             "execute": bool(execute),
         }
+        current_timeout = 120.0 if execute else self.timeout
+
         r = requests.post(f"{self.base_url}/goto_pose", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
