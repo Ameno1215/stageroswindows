@@ -3,15 +3,50 @@ import requests
 
 class DensoRobotClient:
     def __init__(self, base_url="http://localhost:8000", timeout=60.0):
+        """
+        Initializes the Denso client.
+        
+        Examples:
+            robot = DensoRobotClient("http://localhost:8000")
+        
+        Args:
+            base_url (str): The URL of the wsl_ros_bridge server.
+            timeout (float): Default HTTP request timeout in seconds.
+        """
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
 
+
     def health(self):
+        """
+        Checks if the bridge server is online.
+
+        Examples:
+            ret = robot.health()
+
+        Returns:
+            dict: {"ok": True} if the server responds.
+        """
         r = requests.get(f"{self.base_url}/health", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
 
     def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1):
+        """
+        Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
+
+        Examples:
+            ret = robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1)
+
+        Args:
+            model (str): Robot model name (e.g., "vs060", "cobotta").
+            planning_group (str): MoveIt planning group name (e.g., "arm").
+            velocity_scale (float): Initial velocity scaling factor (0.0 to 1.0).
+            accel_scale (float): Initial acceleration scaling factor (0.0 to 1.0).
+
+        Returns:
+            dict: Initialization result (success, message).
+        """
         payload = {
             "model": model,
             "planning_group": planning_group,
@@ -23,6 +58,19 @@ class DensoRobotClient:
         return r.json()
 
     def set_scaling(self, velocity_scale, accel_scale):
+        """
+        Updates velocity and acceleration scaling factors for future movements.
+
+        Examples:
+            ret = robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+
+        Args:
+            velocity_scale (float): Velocity factor (0.0 to 1.0).
+            accel_scale (float): Acceleration factor (0.0 to 1.0).
+
+        Returns:
+            dict: Update status.
+        """
         payload = {
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
@@ -32,6 +80,20 @@ class DensoRobotClient:
         return r.json()
    
     def goto_joint(self, joints, execute=True):
+        """
+        Commands a movement to a target joint configuration.
+
+        Examples:
+            #### Move all 6 axes to 0.0 radians
+            ret = robot.goto_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], execute=True)
+
+        Args:
+            joints (list[float]): List of target angles in radians (must match the number of axes).
+            execute (bool): If True, physically moves the robot. If False, only plans.
+
+        Returns:
+            dict: Movement status (success, message).
+        """
         payload = {"joints": [float(x) for x in joints], "execute": bool(execute)}
         current_timeout = 120.0 if execute else self.timeout
     
@@ -40,6 +102,26 @@ class DensoRobotClient:
         return r.json()
 
     def goto_pose(self, frame_id, x, y, z, qx, qy, qz, qw, execute=True):
+        """
+        Commands a movement to a target Cartesian pose (Position + Orientation).
+
+        Examples:
+            ret = robot.goto_pose(
+                    frame_id="base_link",
+                    x=0.4, y=0.0, z=0.4,
+                    qx=0.0, qy=1.0, qz=0.0, qw=0.0,
+                    execute=True
+                    )
+
+        Args:
+            frame_id (str): Reference frame (e.g., "base_link" or "world").
+            x, y, z (float): Target position in meters.
+            qx, qy, qz, qw (float): Target orientation (Quaternion).
+            execute (bool): If True, physically moves the robot.
+
+        Returns:
+            dict: Movement status.
+        """
         payload = {
             "frame_id": frame_id,
             "position": {"x": float(x), "y": float(y), "z": float(z)},
@@ -53,12 +135,46 @@ class DensoRobotClient:
         return r.json()
     
     def get_joint_state(self):
+        """
+        Retrieves the current joint angles of the robot.
+
+        Examples:
+            ret = robot.get_joint_state()
+
+        Returns:
+            dict: Contains the 'joints' list with angles in radians.
+        """
         r = requests.get(f"{self.base_url}/state/joints", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
+    
+    def get_current_pose(self, frame_id=None, child_frame_id=None):
+        """
+        Retrieves the current Cartesian pose (Position + Orientation).
+        Uses TF2 to calculate the transform between two frames.
 
-    def get_current_pose(self):
-        r = requests.get(f"{self.base_url}/state/pose", timeout=self.timeout)
+        Examples:
+            #### 1. Get End-Effector pose relative to World (Default)
+            ret = robot.get_current_pose()
+            
+            #### 2. Get pose of link 'J3' relative to 'base_link'
+            ret = robot.get_current_pose(frame_id="base_link", child_frame_id="J3")
+
+        Args:
+            frame_id (str, optional): The reference frame (Origin). Defaults to "world" or "base_link".
+            child_frame_id (str, optional): The target frame (Object being measured). Defaults to End-Effector (J6/flange).
+
+        Returns:
+            dict: The pose {'position': {...}, 'orientation': {...}} and the frames used.
+        """
+        # Construct URL parameters
+        params = {}
+        if frame_id:
+            params["frame_id"] = frame_id
+        if child_frame_id:
+            params["child_frame_id"] = child_frame_id
+
+        r = requests.get(f"{self.base_url}/state/pose", params=params, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
 
