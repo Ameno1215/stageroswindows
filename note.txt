@@ -16,7 +16,7 @@ source install/setup.bash
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select denso_motion_control
 
 
-colcon build --packages-select denso_motion_control --cmake-clean-cache
+colcon build --packages-select denso_motion_control n
 
 
 
@@ -24,3 +24,6 @@ ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=
 
 
 ros2 launch denso_robot_moveit_demo denso_robot_moveit_pickandplace.launch.py model:=vs060 scale_factor:=1 num_cycles:=1
+
+
+ps aux | grep gazebo

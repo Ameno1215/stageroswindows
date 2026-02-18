@@ -134,6 +134,76 @@ class DensoRobotClient:
         r.raise_for_status()
         return r.json()
     
+    def goto_euler_world(self, x, y, z, rx, ry, rz, frame_id="base_link", execute=True):
+        """
+        Moves the robot to an absolute position with Euler orientation (Extrinsic XYZ).
+        
+        Examples:
+            ret = robot.goto_euler_world(x=0.5, y=0.0, z=0.4, rx=3.14/2, ry=0, rz=0.0)
+
+        Args:
+            x, y, z (float): Target position (meters)
+            rx, ry, rz (float): Target rotation in radians (World Fixed Axes)
+            frame_id (str): Reference frame ("base_link" or "world")
+            execute (bool): Execute or just schedule
+        """
+        payload = {
+            "frame_id": frame_id,
+            "x": float(x), "y": float(y), "z": float(z),
+            "rx": float(rx), "ry": float(ry), "rz": float(rz),
+            "execute": bool(execute)
+        }
+        # longer timeout for execution since it may take time to move, while planning should be quick
+        current_timeout = 120.0 if execute else self.timeout
+        r = requests.post(f"{self.base_url}/goto_euler_world", json=payload, timeout=current_timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def move_relative_tool(self, dx, dy, dz, drx, dry, drz, execute=True):
+        """
+        Moves the robot RELATIVELY to its tool (Airplane Mode).
+
+        Examples:
+            ret = robot.move_relative_tool(dx=0, dy=0, dz=0.1, drx=0, dry=0, drz=0)
+
+        Args:
+        dx, dy, dz (float): Movement in meters (X=Forward/Backward, Y=Left/Right, Z=Top/Bottom of the tool)
+        drx, dry, drz (float): Rotation in radians around the tool axes
+        execute (bool): Execute or simply plan
+        """
+        payload = {
+            "frame_id": "ignored", # The frame is ignored because it is relative.
+            "x": float(dx), "y": float(dy), "z": float(dz),
+            "rx": float(drx), "ry": float(dry), "rz": float(drz),
+            "execute": bool(execute)
+        }
+        current_timeout = 120.0 if execute else self.timeout
+        r = requests.post(f"{self.base_url}/move_relative_tool", json=payload, timeout=current_timeout)
+        r.raise_for_status()
+        return r.json()
+    
+    def move_relative_world(self, dx, dy, dz, drx, dry, drz, execute=True):
+        """
+        Moves the robot RELATIVELY to the WORLD (Crane).
+        
+        Examples:
+            ret = robot.move_relative_world(dx=0, dy=0, dz=0.1, drx=0, dry=0, drz=0, execute=True)
+        Args:
+            dx, dy, dz (float): Movement in meters on the world axes (X, Y, Z)
+            drx, dry, drz (float): Rotation in radians around the fixed world axes (RPY)
+            execute (bool): Execute or just plan
+        """
+        payload = {
+            "frame_id": "world",
+            "x": float(dx), "y": float(dy), "z": float(dz),
+            "rx": float(drx), "ry": float(dry), "rz": float(drz),
+            "execute": bool(execute)
+        }
+        current_timeout = 120.0 if execute else self.timeout
+        r = requests.post(f"{self.base_url}/move_relative_world", json=payload, timeout=current_timeout)
+        r.raise_for_status()
+        return r.json()
+    
     def get_joint_state(self):
         """
         Retrieves the current joint angles of the robot.
