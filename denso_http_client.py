@@ -218,24 +218,34 @@ class DensoRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def get_current_pose(self, frame_id=None, child_frame_id=None):
+    def get_current_pose(self, frame_id=None, child_frame_id=None, output_format="quaternion"):
         """
         Retrieves the current Cartesian pose (Position + Orientation).
         Uses TF2 to calculate the transform between two frames.
 
         Examples:
-            #### 1. Get End-Effector pose relative to World (Default)
-            ret = robot.get_current_pose()
-            
-            #### 2. Get pose of link 'J3' relative to 'base_link'
-            ret = robot.get_current_pose(frame_id="base_link", child_frame_id="J3")
+            #### 1. Get standard ROS Pose (Quaternion) - Default
+            ret = robot.get_current_pose(output_format="quaternion")
+
+            #### 2. Get Euler Angles (easier to read)
+            ret = robot.get_current_pose(output_format="euler")
+
+            #### 3. Get Both formats
+            ret = robot.get_current_pose(output_format="both")
 
         Args:
             frame_id (str, optional): The reference frame (Origin). Defaults to "world" or "base_link".
-            child_frame_id (str, optional): The target frame (Object being measured). Defaults to End-Effector (J6/flange).
+            child_frame_id (str, optional): The target frame. Defaults to End-Effector.
+            output_format (str, optional): The desired orientation format.
+                - "quaternion": Returns x, y, z, w (Standard).
+                - "euler": Returns rx, ry, rz (Radians, Fixed XYZ).
+                - "both": Returns a dictionary containing both formats.
 
         Returns:
-            dict: The pose {'position': {...}, 'orientation': {...}} and the frames used.
+            dict: The pose with the requested orientation format.
+        
+        Raises:
+            ValueError: If output_format is not 'quaternion', 'euler', or 'both'.
         """
         # Construct URL parameters
         params = {}
@@ -244,7 +254,39 @@ class DensoRobotClient:
         if child_frame_id:
             params["child_frame_id"] = child_frame_id
 
+        # The server returns EVERYTHING (pos + quaternion + euler)
         r = requests.get(f"{self.base_url}/state/pose", params=params, timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        raw_data = r.json()
 
+        # If the request failed on the server side, return the error immediately
+        if not raw_data.get("success"):
+            return raw_data
+        
+        # Build the base response
+        result = {
+            "success": raw_data["success"],
+            "message": raw_data["message"],
+            "frame_id": raw_data["frame_id"],
+            "child_frame_id": raw_data["child_frame_id"],
+            "position": raw_data["position"]
+        }
+
+        # Select the orientation format explicitly
+        if output_format == "euler":
+            result["orientation"] = raw_data["orientation_euler"]
+        
+        elif output_format == "quaternion":
+            result["orientation"] = raw_data["orientation_quat"]
+            
+        elif output_format == "both":
+            result["orientation"] = {
+                "quaternion": raw_data["orientation_quat"],
+                "euler": raw_data["orientation_euler"]
+            }
+        
+        else: 
+            # RAISE ERROR instead of default behavior
+            raise ValueError(f"Invalid output_format '{output_format}'. Must be 'quaternion', 'euler', or 'both'.")
+
+        return result
