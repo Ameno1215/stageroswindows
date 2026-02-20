@@ -256,3 +256,27 @@ class DensoRobotClient:
             raise ValueError(f"Invalid output_format '{output_format}'. Must be 'quaternion', 'euler', or 'both'.")
 
         return result
+
+    def set_virtual_cage(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0):
+        """
+        Enables or disables a virtual collision cage around the robot.
+        Distances are measured in meters from the world's zero point.
+
+        Args:
+        enable(bool): Enables or disables the cage.
+        front(float): Maximum distance forward (+X).
+        back(float): Maximum distance backward (-X).
+        left(float): Maximum distance left (+Y).
+        right(float): Maximum distance right (-Y).
+        top(float): Maximum height (+Z).
+        bottom(float): Maximum depth (-Z).
+        """
+        payload = {
+            "enable": bool(enable),
+            "front": float(front), "back": float(back),
+            "left": float(left), "right": float(right),
+            "top": float(top), "bottom": float(bottom)
+        }
+        r = requests.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
