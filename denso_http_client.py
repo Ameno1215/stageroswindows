@@ -78,129 +78,95 @@ class DensoRobotClient:
         r = requests.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
-   
-    def goto_joint(self, joints, execute=True):
-        """
-        Commands a movement to a target joint configuration.
 
-        Examples:
-            #### Move all 6 axes to 0.0 radians
-            ret = robot.goto_joint([0.0, 0.0, 0.0, 0.0, 0.0, 0.0], execute=True)
+    def move_joints(self, joints, is_relative=False, execute=True):
+        """
+        Commands a movement to target joint angles.
 
         Args:
             joints (list[float]): List of target angles in radians (must match the number of axes).
+            is_relative (bool): If True, adds the angles to the current position. If False, goes to absolute angles.
             execute (bool): If True, physically moves the robot. If False, only plans.
-
-        Returns:
-            dict: Movement status (success, message).
-        """
-        payload = {"joints": [float(x) for x in joints], "execute": bool(execute)}
-        current_timeout = 120.0 if execute else self.timeout
-    
-        r = requests.post(f"{self.base_url}/goto_joint", json=payload, timeout=current_timeout)
-        r.raise_for_status()
-        return r.json()
-
-    def goto_pose(self, frame_id, x, y, z, qx, qy, qz, qw, execute=True):
-        """
-        Commands a movement to a target Cartesian pose (Position + Orientation).
-
-        Examples:
-            ret = robot.goto_pose(
-                    frame_id="base_link",
-                    x=0.4, y=0.0, z=0.4,
-                    qx=0.0, qy=1.0, qz=0.0, qw=0.0,
-                    execute=True
-                    )
-
-        Args:
-            frame_id (str): Reference frame (e.g., "base_link" or "world").
-            x, y, z (float): Target position in meters.
-            qx, qy, qz, qw (float): Target orientation (Quaternion).
-            execute (bool): If True, physically moves the robot.
-
-        Returns:
-            dict: Movement status.
         """
         payload = {
-            "frame_id": frame_id,
-            "position": {"x": float(x), "y": float(y), "z": float(z)},
-            "orientation": {"x": float(qx), "y": float(qy), "z": float(qz), "w": float(qw)},
-            "execute": bool(execute),
+            "joints": [float(x) for x in joints], 
+            "is_relative": bool(is_relative),
+            "execute": bool(execute)
         }
         current_timeout = 120.0 if execute else self.timeout
-
-        r = requests.post(f"{self.base_url}/goto_pose", json=payload, timeout=self.timeout)
+    
+        r = requests.post(f"{self.base_url}/move_joints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return r.json()
-    
-    def goto_euler_world(self, x, y, z, rx, ry, rz, frame_id="base_link", execute=True):
+
+    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
         """
-        Moves the robot to an absolute position with Euler orientation (Extrinsic XYZ).
-        
+        The universal function for point-to-point Cartesian movement.
+
         Examples:
-            ret = robot.goto_euler_world(x=0.5, y=0.0, z=0.4, rx=3.14/2, ry=0, rz=0.0)
+            # 1. Absolute Move in World (Euler)
+            robot.move_to_pose(0.5, 0.0, 0.4, 3.14/2, 0.0, 0.0, rotation_format="RPY", reference_frame="WORLD")
+
+            # 2. Relative Move in Tool frame (Fly-by-wire: advance 10cm on Z)
+            robot.move_to_pose(0.0, 0.0, 0.10, 0.0, 0.0, 0.0, rotation_format="RPY", reference_frame="TOOL", is_relative=True, cartesian_path=True)
+
+            # 3. Absolute Move with Quaternion
+            robot.move_to_pose(0.4, 0.0, 0.4, 0.0, 1.0, 0.0, 0.0, rotation_format="QUAT")
 
         Args:
-            x, y, z (float): Target position (meters)
-            rx, ry, rz (float): Target rotation in radians (World Fixed Axes)
-            frame_id (str): Reference frame ("base_link" or "world")
-            execute (bool): Execute or just schedule
+            x, y, z (float): Translation.
+            r1, r2, r3, r4 (float): Rotation (r4 is ignored if format is RPY).
+            rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
+            reference_frame (str): "WORLD" or "TOOL".
+            is_relative (bool): True = Delta from current pos, False = Absolute target.
+            cartesian_path (bool): True = Strict straight line, False = Fluid joint-space path.
+            execute (bool): Execute or simply plan.
         """
         payload = {
-            "frame_id": frame_id,
             "x": float(x), "y": float(y), "z": float(z),
-            "rx": float(rx), "ry": float(ry), "rz": float(rz),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "reference_frame": str(reference_frame),
+            "is_relative": bool(is_relative),
+            "cartesian_path": bool(cartesian_path),
             "execute": bool(execute)
         }
-        # longer timeout for execution since it may take time to move, while planning should be quick
         current_timeout = 120.0 if execute else self.timeout
-        r = requests.post(f"{self.base_url}/goto_euler_world", json=payload, timeout=current_timeout)
+
+        r = requests.post(f"{self.base_url}/move_to_pose", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return r.json()
 
-    def move_relative_tool(self, dx, dy, dz, drx, dry, drz, execute=True):
+    def move_waypoints(self, waypoints, rotation_format="RPY", reference_frame="WORLD", is_relative=False, cartesian_path=True, execute=True):
         """
-        Moves the robot RELATIVELY to its tool (Airplane Mode).
+        Moves the robot through a list of points without stopping.
 
         Examples:
-            ret = robot.move_relative_tool(dx=0, dy=0, dz=0.1, drx=0, dry=0, drz=0)
+            points = [
+                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # +10cm X
+                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # then +10cm Y
+            ]
+            robot.move_waypoints(points, is_relative=True, reference_frame="TOOL")
 
         Args:
-        dx, dy, dz (float): Movement in meters (X=Forward/Backward, Y=Left/Right, Z=Top/Bottom of the tool)
-        drx, dry, drz (float): Rotation in radians around the tool axes
-        execute (bool): Execute or simply plan
+            waypoints (list[dict]): List of dictionaries with keys x, y, z, r1, r2, r3, (r4).
+            rotation_format (str): "RPY" or "QUAT" for all points.
+            reference_frame (str): "WORLD" or "TOOL".
+            is_relative (bool): If True, Point 1 is relative to start, Point N is relative to Point N-1.
+            cartesian_path (bool): True = straight lines between points.
+            execute (bool): Execute or simply plan.
         """
         payload = {
-            "frame_id": "ignored", # The frame is ignored because it is relative.
-            "x": float(dx), "y": float(dy), "z": float(dz),
-            "rx": float(drx), "ry": float(dry), "rz": float(drz),
+            "waypoints": waypoints,
+            "rotation_format": str(rotation_format),
+            "reference_frame": str(reference_frame),
+            "is_relative": bool(is_relative),
+            "cartesian_path": bool(cartesian_path),
             "execute": bool(execute)
         }
         current_timeout = 120.0 if execute else self.timeout
-        r = requests.post(f"{self.base_url}/move_relative_tool", json=payload, timeout=current_timeout)
-        r.raise_for_status()
-        return r.json()
-    
-    def move_relative_world(self, dx, dy, dz, drx, dry, drz, execute=True):
-        """
-        Moves the robot RELATIVELY to the WORLD (Crane).
-        
-        Examples:
-            ret = robot.move_relative_world(dx=0, dy=0, dz=0.1, drx=0, dry=0, drz=0, execute=True)
-        Args:
-            dx, dy, dz (float): Movement in meters on the world axes (X, Y, Z)
-            drx, dry, drz (float): Rotation in radians around the fixed world axes (RPY)
-            execute (bool): Execute or just plan
-        """
-        payload = {
-            "frame_id": "world",
-            "x": float(dx), "y": float(dy), "z": float(dz),
-            "rx": float(drx), "ry": float(dry), "rz": float(drz),
-            "execute": bool(execute)
-        }
-        current_timeout = 120.0 if execute else self.timeout
-        r = requests.post(f"{self.base_url}/move_relative_world", json=payload, timeout=current_timeout)
+
+        r = requests.post(f"{self.base_url}/move_waypoints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return r.json()
     

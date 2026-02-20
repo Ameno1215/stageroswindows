@@ -62,7 +62,7 @@ export LIBGL_ALWAYS_SOFTWARE=1
 ### Terminal WSL #1
 
 ```bash
-ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=true
+ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=true tool:=effecteur_v1
 ```
 
 ---
@@ -72,7 +72,7 @@ ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=
 ### Terminal WSL #2
 
 ```bash
-ros2 launch denso_motion_control motion_server.launch.py model:=vs060 sim:=true
+ros2 launch denso_motion_control motion_server.launch.py model:=vs060 sim:=true tool:=effecteur_v1
 ```
 
 ---
