@@ -184,7 +184,7 @@ class DensoRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def get_current_pose(self, frame_id=None, child_frame_id=None, output_format="quaternion"):
+    def get_current_pose(self, frame_id=None, child_frame_id=None, output_format="euler"):
         """
         Retrieves the current Cartesian pose (Position + Orientation).
         Uses TF2 to calculate the transform between two frames.

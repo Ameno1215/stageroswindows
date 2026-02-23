@@ -5,12 +5,12 @@ from denso_http_client import DensoRobotClient
 robot = DensoRobotClient("http://localhost:8000")
 
 print("Health:", robot.health())
-print("Init:", robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2))
-print("Scaling:", robot.set_scaling(velocity_scale=1, accel_scale=1))
+robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2)
+robot.set_scaling(velocity_scale=1, accel_scale=1)
 
 
 
-print(robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0], is_relative=False))
+robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0], is_relative=False)
 
 
 
@@ -27,13 +27,13 @@ print(robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0], is_relative=False))
 #     {"x": 0.0,  "y": 0.0, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0}, 
 # ]
 
-# print(robot.move_waypoints(
+# robot.move_waypoints(
 #     waypoints=carrer_points,
 #     rotation_format="RPY",
 #     reference_frame="TOOL", 
 #     is_relative=True, 
 #     cartesian_path=True
-# ))
+# )
 
 
 # print(robot.move_to_pose(
@@ -56,22 +56,6 @@ print(robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0], is_relative=False))
 # ))
 # time.sleep(1)
 
-"""
-carrer_points = [
-    {"x": 0.10, "y": 0.0,  "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # Avance X
-    {"x": 0.0,  "y": 0.10, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # Décale Y
-    {"x": -0.10,"y": 0.0,  "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # Recule X
-    {"x": 0.0,  "y": -0.10,"z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # Retour Y
-]
-
-print(robot.move_waypoints(
-    waypoints=carrer_points,
-    rotation_format="RPY",
-    reference_frame="TOOL", 
-    is_relative=True, 
-    cartesian_path=True  
-))
-"""
 
 
 # print("Joints :", robot.get_joint_state())
@@ -105,3 +89,7 @@ print(robot.move_to_pose(
 time.sleep(2)
 
 print(robot.set_virtual_cage(enable=False))
+
+
+robot.get_joint_state()
+robot.get_current_pose(output_format="both")
