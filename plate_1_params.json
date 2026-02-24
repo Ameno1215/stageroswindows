@@ -1,0 +1,58 @@
+{
+  "plate_number": 1,
+  "list_readers": [
+    {
+      "reader_name": "DESKO GmbH SmartCard Reader 0",
+      "reader_brand": "Desko",
+      "reader_model": "PENTA Scanner",
+      "baudrate": 104,
+      "reader_market": "ID",
+      "reader_number": "1.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Antenna top (Glass): center",
+          "x": 4877,
+          "y": 863,
+          "z": 1215,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1420
+        },
+        {
+          "position_label": "Antenna front (PVC): center",
+          "x": 4351,
+          "y": 442,
+          "z": 857,
+          "rx": 1792,
+          "ry": 511,
+          "rz": -1420
+        }
+      ]
+    },
+    {
+      "reader_name": "ACS ACR1251 1S CL Reader PICC 0",
+      "reader_brand": "SecuGen",
+      "reader_model": "Hamster Pro Duo CL",
+      "baudrate": 204,
+      "reader_market": "USB Dongle",
+      "reader_number": "1.2",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 5094,
+          "y": -1552,
+          "z": 569,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -900
+        }
+      ]
+    }
+  ]
+}

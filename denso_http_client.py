@@ -257,6 +257,11 @@ class DensoRobotClient:
             raise ValueError(f"Invalid output_format '{output_format}'. Must be 'quaternion', 'euler', or 'both'.")
 
         return result
+    
+
+    def move_to_home(self):
+        home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+        return self.move_joints(home_position, is_relative=False)
 
     def set_virtual_cage(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0, r=0.0, g=0.6, b=1.0, a=0.15):
         """
@@ -298,5 +303,59 @@ class DensoRobotClient:
             dict: Contains 'success', 'solver' (short name), and 'full_plugin_name'.
         """
         r = requests.get(f"{self.base_url}/state/solver", timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
+        """
+        Asks the Linux ROS server to calculate and execute an approach position above an object.
+        
+        Args:
+            x, y, z (float): Position of the object (final target).
+            r1, r2, r3, r4 (float): Desired orientation of the tool.
+            rotation_format (str): "RPY" or "QUAT".
+            z_offset (float): Retreat distance in meters (e.g., 0.1 for 10 cm above).
+            cartesian_path (bool): True = straight line, False = joint space path.
+            execute (bool): True = execute motion, False = plan only.
+            
+        Returns:
+            dict: The response from the motion server.
+        """
+        payload = {
+            "x": float(x), "y": float(y), "z": float(z),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "z_offset": float(z_offset),
+            "cartesian_path": bool(cartesian_path),
+            "execute": bool(execute)
+        }
+        current_timeout = 120.0 if execute else self.timeout
+
+        r = requests.post(f"{self.base_url}/move_approach", json=payload, timeout=current_timeout)
+        r.raise_for_status()
+        return r.json()
+    
+    def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, action="ADD"):
+        """
+        Adds or removes a collision box in MoveIt.
+        If adding, the coordinates provided should be the TOP SURFACE center of the box, 
+        where the robot will grasp. The box center will be automatically calculated downward.
+
+        Args:
+            box_id (str): Unique name for the object (e.g., "target_cube").
+            x, y, z (float): Position of the grasp point.
+            r1, r2, r3, r4 (float): Orientation of the grasp point.
+            size_x, size_y, size_z (float): Dimensions of the box in meters.
+            action (str): "ADD" to spawn the box, "REMOVE" to delete it.
+        """
+        payload = {
+            "box_id": str(box_id),
+            "x": float(x), "y": float(y), "z": float(z),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "size_x": float(size_x), "size_y": float(size_y), "size_z": float(size_z),
+            "action": str(action).upper()
+        }
+        r = requests.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()
