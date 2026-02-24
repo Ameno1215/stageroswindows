@@ -55,6 +55,7 @@ class DensoRobotClient:
         }
         r = requests.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
+        self.get_solver()
         return r.json()
 
     def set_scaling(self, velocity_scale, accel_scale):
@@ -281,5 +282,21 @@ class DensoRobotClient:
             "r": float(r), "g": float(g), "b": float(b), "a": float(a)
         }
         r = requests.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def get_solver(self):
+        """
+        Retrieves the currently active Kinematic Solver (IK) used by MoveIt.
+
+        Examples:
+            ret = robot.get_solver()
+            print(f"Active solver: {ret.get('solver')}")
+            # Output: Active solver: pick_ik
+
+        Returns:
+            dict: Contains 'success', 'solver' (short name), and 'full_plugin_name'.
+        """
+        r = requests.get(f"{self.base_url}/state/solver", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
