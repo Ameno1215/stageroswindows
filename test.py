@@ -283,7 +283,43 @@ def run():
                     inputStorage = box1 if box_source == 1 else box2
                     outputStorage = box2 if box_source == 1 else box1
 
-    robot.move_to_home()      
+    robot.move_to_home()     
+
+
+    robot.move_to_pose(
+        x=0.4,
+        y=0,
+        z=0.5,
+        r1=0,
+        r2=1.57,
+        r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=False,
+        cartesian_path=False,
+        execute=True
+    )
+
+    robot.move_to_pose(
+        x=1,
+        y=0,
+        z=0,
+        r1=0,
+        r2=0,
+        r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=True,
+        execute=True
+    )
+
+    time.sleep(2)
+
+
+
+
+
     
     print(robot.set_virtual_cage(enable=False))  
 
