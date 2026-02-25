@@ -127,6 +127,9 @@ cd ~/workspace/denso_ros2_ws
 source /opt/ros/humble/setup.bash
 source install/setup.bash
 export LIBGL_ALWAYS_SOFTWARE=1
+
+# if you've got a NVIDIA graphic card 
+export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
 ```
 
 #### WSL Terminal #1: Launch Bringup (Gazebo & RViz)
