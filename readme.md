@@ -16,7 +16,7 @@ The communication flow between the Windows host and the WSL simulation is as fol
 > **Windows (Python)** > → HTTP (`requests`) 
 > → **WSL Ubuntu** > → FastAPI / Uvicorn (Bridge) 
 > → ROS 2 Humble 
-> → `denso_motion_control` (C++ / MoveIt 2) 
+> → `motion_control` (C++ / MoveIt 2) 
 > → Gazebo / RViz Simulation
 
 ---

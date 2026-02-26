@@ -1,7 +1,7 @@
 import requests
 
 
-class DensoRobotClient:
+class MotionRobotClient:
     def __init__(self, base_url="http://localhost:8000", timeout=60.0):
         """
         Initializes the Denso client.

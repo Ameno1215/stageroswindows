@@ -10,10 +10,10 @@ rosdep install --ignore-src --from-paths src -y -r
 colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
 
 
-colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select denso_motion_control
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select motion_control
 
 
-colcon build --packages-select denso_motion_control
+colcon build --packages-select motion_control
 
 colcon build --symlink-install
 

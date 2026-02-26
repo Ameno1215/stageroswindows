@@ -1,6 +1,6 @@
 import math
 import time
-from denso_http_client import DensoRobotClient
+from motion_http_client import MotionRobotClient
 from math import pi
 from plate import load_plate_from_file
 
@@ -40,7 +40,7 @@ plate = load_plate_from_file(json_path)
 
 
 def run():
-    robot = DensoRobotClient("http://localhost:8000")
+    robot = MotionRobotClient("http://localhost:8000")
 
     print("Health:", robot.health())
     robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2)
