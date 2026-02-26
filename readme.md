@@ -89,6 +89,20 @@ ros2 run demo_nodes_cpp listener
 You should see the talker publishing messages and the listener receiving them.
 
 ### 4. Getting the Code & Compilation
+#### Modification in rosdep to correct certificates problem on WSL
+
+find in your wsl file usr/lib/python/sit-packages/rosdep2/url_utils.py
+or if your using a venv YOUR_VENV_PATH/lib/python/sit-packages/rosdep2/url_utils.py
+JUST BEFORE the function : 
+```python
+def urlopen_gzip(url, **kwargs):
+```
+ADD THIS : 
+```ptyhon
+import ssl
+ssl._create_default_https_context = ssl._create_stdlib_context
+```
+
 #### WSL Environment (Linux Workspace)
 Fetch the repository and build the ROS 2 workspace:
 
