@@ -30,7 +30,7 @@ The communication flow between the Windows host and the WSL simulation is as fol
 - Packages:
   - `denso_robot_bringup`
   - `denso_robot_moveit_config`
-  - `denso_motion_control`
+  - `motion_control`
 - Python 3.10
 - Virtual environment (`venv`)
 - Python modules: `requests`, `numpy`, `uvicorn`, `fastapi`
@@ -91,8 +91,11 @@ You should see the talker publishing messages and the listener receiving them.
 ### 4. Getting the Code & Compilation
 #### Modification in rosdep to correct certificates problem on WSL
 
-find in your wsl file usr/lib/python/sit-packages/rosdep2/url_utils.py
-or if your using a venv YOUR_VENV_PATH/lib/python/sit-packages/rosdep2/url_utils.py
+Use :  `which rosdep`    
+to find `/usr/bin/rosdep`    
+find in your wsl file `usr/lib/python/sit-packages/rosdep2/url_utils.py`    
+or if your using a venv `YOUR_VENV_PATH/lib/python/sit-packages/rosdep2/url_utils.py`
+
 JUST BEFORE the function : 
 ```python
 def urlopen_gzip(url, **kwargs):
@@ -154,7 +157,7 @@ ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=
 
 #### WSL Terminal #2: Launch Motion Server
 ```bash
-ros2 launch denso_motion_control motion_server.launch.py model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl
+ros2 launch motion_control motion_server.launch.py model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl
 ```
 
 #### WSL Terminal #3: Launch HTTP Bridge (FastAPI)
