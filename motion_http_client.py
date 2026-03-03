@@ -15,6 +15,7 @@ class MotionRobotClient:
         """
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
+        self.model = None
 
 
     def health(self):
@@ -47,6 +48,8 @@ class MotionRobotClient:
         Returns:
             dict: Initialization result (success, message).
         """
+
+        self.model = model
         payload = {
             "model": model,
             "planning_group": planning_group,
@@ -260,7 +263,11 @@ class MotionRobotClient:
     
 
     def move_to_home(self):
-        home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+        home_position = []
+        if self.model == "vs060":
+            home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+        if self.model == "vp5243":
+            home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
         return self.move_joints(home_position, is_relative=False)
 
     def set_virtual_cage(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0, r=0.0, g=0.6, b=1.0, a=0.15):
