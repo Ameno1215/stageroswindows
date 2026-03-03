@@ -5,40 +5,57 @@ from denso_http_client import DensoRobotClient
 robot = DensoRobotClient("http://localhost:8000")
 
 print("Health:", robot.health())
-robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2)
+robot.init_robot(model="vp5243", planning_group="arm", velocity_scale=0.2, accel_scale=0.2)
 robot.set_scaling(velocity_scale=1, accel_scale=1)
 
 # print(robot.get_solver())
 
 
-robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0], is_relative=False)
+robot.move_joints([0.0, 0.0, 1.57, 1.57, 0.0], is_relative=False)
 
 
 
-print(robot.move_to_pose(
-    x=0.435, y=0.0488, z=0.0800, 
-    r1=-3.14, r2=0.83, r3=-2.5,
-    rotation_format="RPY", 
-    reference_frame="WORLD",
-    cartesian_path=False
-))
+rx = 0.0
+ry = 3.14 
+rz = 0.0
 
-carrer_points = [
-    # {"x": 0.4, "y": 0.3,  "z": 0.2, "r1": 3.14, "r2": 0.0, "r3": -1.57},
-    # {"x": 0.2,  "y": 0.3, "z": 0.1, "r1": 3.14, "r2": 0.0, "r3": -1.57}, 
-    # {"x": 0.2,  "y": -0.3, "z": 0.3, "r1": 3.14, "r2": 0.0, "r3": -1.57}, 
-    # {"x": 0.4, "y": 0.3,  "z": 0.2, "r1": 3.14, "r2": 0.0, "r3": -1.57},
-    { "x": 0.0, "y": 0.0, "z": -0.2, "r1": 0, "r2": 0, "r3": 0, "is_relative": True, "reference_frame": "TOOL" },
-    { "x": 0.0, "y": 0, "z": 0.2, "r1": 0, "r2": 0, "r3": 0, "is_relative": True, "reference_frame": "WORLD" },
+safe_square_points = [
+    { "x": 0.20, "y": 0.1, "z": 0.10, "r1": rx, "r2": ry, "r3": rz, "is_relative": False, "reference_frame": "WORLD" },
+    { "x": 0.30, "y": 0.1, "z": 0.20, "r1": rx, "r2": ry, "r3": rz, "is_relative": False, "reference_frame": "WORLD" },
+    { "x": 0.3, "y": -0.1, "z": 0.10, "r1": rx, "r2": ry, "r3": rz, "is_relative": False, "reference_frame": "WORLD" },
+    { "x": 0.2, "y": -0.1, "z": 0.20, "r1": rx, "r2": ry, "r3": rz, "is_relative": False, "reference_frame": "WORLD" },
+    { "x": 0.20, "y": 0.1, "z": 0.10, "r1": rx, "r2": ry, "r3": rz, "is_relative": False, "reference_frame": "WORLD" }
 ]
 
 robot.move_waypoints(
-    waypoints=carrer_points,
+    waypoints=safe_square_points,
     rotation_format="RPY",
-    reference_frame="TOOL", 
-    is_relative=False, 
+    is_relative=False,
     cartesian_path=True
 )
+
+
+
+# print(robot.move_to_pose(
+#     x=0.435, y=0.0488, z=0.0800, 
+#     r1=-3.14, r2=0.83, r3=-2.5,
+#     rotation_format="RPY", 
+#     reference_frame="WORLD",
+#     cartesian_path=False
+# ))
+
+# carrer_points = [
+#     { "x": 0.0, "y": 0.0, "z": -0.2, "r1": 0, "r2": 0, "r3": 0, "is_relative": True, "reference_frame": "TOOL" },
+#     { "x": 0.0, "y": 0, "z": 0.2, "r1": 0, "r2": 0, "r3": 0, "is_relative": True, "reference_frame": "WORLD" },
+# ]
+
+# robot.move_waypoints(
+#     waypoints=carrer_points,
+#     rotation_format="RPY",
+#     reference_frame="TOOL", 
+#     is_relative=False, 
+#     cartesian_path=True
+# )
 
 
 # print(robot.move_to_pose(
