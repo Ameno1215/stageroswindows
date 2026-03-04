@@ -32,7 +32,8 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
 
-    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1):
+    
+    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True):
         """
         Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
 
@@ -48,13 +49,14 @@ class MotionRobotClient:
         Returns:
             dict: Initialization result (success, message).
         """
-
-        self.model = model
         payload = {
             "model": model,
             "planning_group": planning_group,
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
+            "planning_time": planning_time,
+            "planning_attempts": planning_attempts,
+            "allow_replanning": allow_replanning
         }
         r = requests.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
