@@ -1,11 +1,18 @@
 import time
-from denso_http_client import DensoRobotClient
+from motion_http_client import MotionRobotClient
 
 # Initialisation du client
-robot = DensoRobotClient("http://localhost:8000")
+robot = MotionRobotClient("http://localhost:8000")
 
 print("Health:", robot.health())
-print(robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2, planning_time=10, planning_attempts=20, allow_replanning=True))
+print(robot.init_robot(model="vs060", 
+                       planning_group="arm", 
+                       velocity_scale=0.2, 
+                       accel_scale=0.2, 
+                       planning_time=10, 
+                       planning_attempts=20, 
+                       allow_replanning=True, 
+                       planner_id="RRTstar"))
 robot.set_scaling(velocity_scale=1, accel_scale=1)
 
 
