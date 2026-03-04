@@ -33,36 +33,56 @@ class MotionRobotClient:
         return r.json()
 
     
-    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True):
+    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="PRMstar"):
         """
         Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
 
         Examples:
-            ret = robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1)
+            ret = robot.init_robot(
+                model="vp5243", 
+                planning_group="arm", 
+                velocity_scale=0.2, 
+                planning_time=10.0,
+                planner_id="RRTstar"
+            )
 
         Args:
-            model (str): Robot model name (e.g., "vs060", "cobotta").
+            model (str): Robot model name (e.g., "vs060", "vp5243").
             planning_group (str): MoveIt planning group name (e.g., "arm").
-            velocity_scale (float): Initial velocity scaling factor (0.0 to 1.0).
-            accel_scale (float): Initial acceleration scaling factor (0.0 to 1.0).
+            velocity_scale (float): Global velocity scaling factor (0.0 to 1.0).
+            accel_scale (float): Global acceleration scaling factor (0.0 to 1.0).
+            planning_time (float): Maximum time (in seconds) allowed for the solver to compute the path.
+            planning_attempts (int): Number of solver attempts (with different random seeds) before failing.
+            allow_replanning (bool): If True, MoveIt will attempt to replan a path on the fly if an obstacle appears.
+            planner_id (str): Identifier of the OMPL planning algorithm to use. 
+                Here are the most relevant choices:
+                
+                -- Optimizing Planners (Smooth and short trajectories) --
+                * "RRTstar"   : Excellent for smooth and direct movements. It uses the entire 'planning_time' to refine and shorten the path as much as possible. No more useless contortions!
+                * "PRMstar"   : Very powerful in confined environments or with many obstacles (like your virtual cage). It pre-calculates a roadmap of possible movements.
+                * "FMT"       : (Fast Marching Tree) A modern algorithm, very fast to converge towards an optimal solution without making detours.
+                
+                -- Fast Planners (First found path = validated) --
+                * "RRTConnect": MoveIt's default algorithm. Ultra-fast (often < 0.1s), but very erratic. It can cause the robot to make large detours or strange wrist rotations.
+                * "BiTRRT"    : A good compromise. It is fast like RRTConnect, but incorporates a slight notion of optimization to avoid overly absurd movements.
 
         Returns:
-            dict: Initialization result (success, message).
+            dict: Initialization result containing 'success' (bool) and 'message' (str).
         """
         payload = {
             "model": model,
             "planning_group": planning_group,
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
-            "planning_time": planning_time,
-            "planning_attempts": planning_attempts,
-            "allow_replanning": allow_replanning
+            "planning_time": float(planning_time),
+            "planning_attempts": int(planning_attempts),
+            "allow_replanning": bool(allow_replanning),
+            "planner_id": str(planner_id)
         }
         r = requests.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
         self.get_solver()
         return r.json()
-
     def set_scaling(self, velocity_scale, accel_scale):
         """
         Updates velocity and acceleration scaling factors for future movements.

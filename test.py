@@ -43,7 +43,15 @@ def run():
     robot = MotionRobotClient("http://localhost:8000")
 
     print("Health:", robot.health())
-    print(robot.init_robot(model="vs060", planning_group="arm", velocity_scale=0.2, accel_scale=0.2, planning_time=10, planning_attempts=20, allow_replanning=True))
+    print(robot.init_robot(model="vs060", 
+                           planning_group="arm", 
+                           velocity_scale=0.2, 
+                           accel_scale=0.2, 
+                           planning_time=10, 
+                           planning_attempts=20, 
+                           allow_replanning=True, 
+                           planner_id="RRTConnect"))
+
     robot.set_scaling(velocity_scale=1, accel_scale=1)
 
     robot.manage_box(
