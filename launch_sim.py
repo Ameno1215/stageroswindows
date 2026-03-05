@@ -14,6 +14,7 @@ SETUP = (
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
     "export LIBGL_ALWAYS_SOFTWARE=1"
+    "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
 )
 
 TERMINAL_1 = (
