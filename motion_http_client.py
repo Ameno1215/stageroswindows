@@ -295,6 +295,8 @@ class MotionRobotClient:
         home_position = []
         if self.model == "vs060":
             home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+        if self.model == "staubli_tx2_60l":
+            home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         if self.model == "vp5243":
             home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
         return self.move_joints(home_position, is_relative=False)

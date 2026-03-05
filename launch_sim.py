@@ -6,6 +6,7 @@ import sys
 # --- Config ------------------------------------------------------------------
 
 SHOW_TERMINALS = True  # Set to False to hide WSL terminals
+is_denso = False
 
 # --- Commands ----------------------------------------------------------------
 
@@ -21,12 +22,21 @@ TERMINAL_1 = (
     "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
     "model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl"
 )
+if not is_denso:
+    TERMINAL_1 = (
+        f"{SETUP} && ros2 launch staubli_tx2_60l_moveit_config staubli_tx2_60l_planning_execution_sim.launch.py"
+    )
 
 TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
     "model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl"
 )
+if not is_denso:    
+    TERMINAL_2 = (
+        f"{SETUP} && "
+        "ros2 launch motion_control motion_server.launch.py model:=staubli_tx2_60l sim:=true tool:=none ik_solver:=kdl"
+    )
 
 TERMINAL_3 = (
     "cd ~/workspace && "

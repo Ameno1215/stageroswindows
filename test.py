@@ -5,8 +5,10 @@ from motion_http_client import MotionRobotClient
 robot = MotionRobotClient("http://localhost:8000")
 
 print("Health:", robot.health())
-print(robot.init_robot(model="vs060", 
-                       planning_group="arm", 
+print(robot.init_robot(model="staubli_tx2_60l", 
+                       planning_group="manipulator", 
+# print(robot.init_robot(model="vs060", 
+#                        planning_group="arm", 
                        velocity_scale=0.2, 
                        accel_scale=0.2, 
                        planning_time=10, 
