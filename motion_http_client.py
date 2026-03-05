@@ -106,17 +106,19 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
 
-    def move_joints(self, joints, is_relative=False, execute=True):
+    def move_joints(self, joints, angle_format="RAD", is_relative=False, execute=True):
         """
         Commands a movement to target joint angles.
 
         Args:
-            joints (list[float]): List of target angles in radians (must match the number of axes).
+            joints (list[float]): List of target angles in radians or in degrees (must match the number of axes).
+            angle_format(string): Angle format, RAD or DEG
             is_relative (bool): If True, adds the angles to the current position. If False, goes to absolute angles.
             execute (bool): If True, physically moves the robot. If False, only plans.
         """
         payload = {
             "joints": [float(x) for x in joints], 
+            "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "execute": bool(execute)
         }
@@ -126,7 +128,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
 
-    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
+    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
         """
         The universal function for point-to-point Cartesian movement.
 
@@ -144,6 +146,7 @@ class MotionRobotClient:
             x, y, z (float): Translation.
             r1, r2, r3, r4 (float): Rotation (r4 is ignored if format is RPY).
             rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
+            angle_format (str): "DEG" for degrees or "RAD" for radians.
             reference_frame (str): "WORLD" or "TOOL".
             is_relative (bool): True = Delta from current pos, False = Absolute target.
             cartesian_path (bool): True = Strict straight line, False = Fluid joint-space path.
@@ -154,6 +157,7 @@ class MotionRobotClient:
             "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
             "rotation_format": str(rotation_format),
             "reference_frame": str(reference_frame),
+            "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "cartesian_path": bool(cartesian_path),
             "execute": bool(execute)
@@ -164,7 +168,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
 
-    def move_waypoints(self, waypoints, rotation_format="RPY", reference_frame="WORLD", is_relative=False, cartesian_path=True, execute=True):
+    def move_waypoints(self, waypoints, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=True, execute=True):
         """
         Moves the robot through a list of points without stopping.
 
@@ -179,6 +183,7 @@ class MotionRobotClient:
             waypoints (list[dict]): List of dictionaries with keys x, y, z, r1, r2, r3, (r4).
             rotation_format (str): "RPY" or "QUAT" for all points.
             reference_frame (str): "WORLD" or "TOOL".
+            angle_format (str): "RAD" or "DEG"
             is_relative (bool): If True, Point 1 is relative to start, Point N is relative to Point N-1.
             cartesian_path (bool): True = straight lines between points.
             execute (bool): Execute or simply plan.
@@ -187,6 +192,7 @@ class MotionRobotClient:
             "waypoints": waypoints,
             "rotation_format": str(rotation_format),
             "reference_frame": str(reference_frame),
+            "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "cartesian_path": bool(cartesian_path),
             "execute": bool(execute)
