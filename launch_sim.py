@@ -19,13 +19,13 @@ SETUP = (
 TERMINAL_1 = (
     f"{SETUP} && "
     "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-    "model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl"
+    "model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:=kdl"
 )
 
 TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
-    "model:=vs060 sim:=true tool:=effecteur_v1 ik_solver:=kdl"
+    "model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:=kdl"
 )
 
 TERMINAL_3 = (
