@@ -82,6 +82,7 @@ class MotionRobotClient:
         r = requests.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
         self.get_solver()
+        self.model = model
         return r.json()
     
     def set_scaling(self, velocity_scale, accel_scale):
@@ -371,7 +372,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, action="ADD"):
+    def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD"):
         """
         Adds or removes a collision box in MoveIt.
         If adding, the coordinates provided should be the TOP SURFACE center of the box, 
@@ -382,6 +383,8 @@ class MotionRobotClient:
             x, y, z (float): Position of the grasp point.
             r1, r2, r3, r4 (float): Orientation of the grasp point.
             size_x, size_y, size_z (float): Dimensions of the box in meters.
+            r, g, b (float): RGB color values from 0.0 to 1.0 (default is light gray).
+            a (float): Alpha/transparency from 0.0 (invisible) to 1.0 (solid).
             action (str): "ADD" to spawn the box, "REMOVE" to delete it.
         """
         payload = {
@@ -390,8 +393,63 @@ class MotionRobotClient:
             "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
             "rotation_format": str(rotation_format),
             "size_x": float(size_x), "size_y": float(size_y), "size_z": float(size_z),
+            "r": float(r), "g": float(g), "b": float(b), "a": float(a),
             "action": str(action).upper()
         }
         r = requests.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+
+    def manage_mesh(self, mesh_id, mesh_path="", x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", scale_x=1.0, scale_y=1.0, scale_z=1.0, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD"):
+        """
+        Adds or removes a 3D mesh (STL or DAE file) as a collision object in MoveIt/RViz.
+        The mesh is positioned relative to the world frame.
+
+        Examples:
+            # 1. Add an STL file located on the absolute file system
+            robot.manage_mesh(
+                mesh_id="my_obstacle",
+                mesh_path="file:///home/user/workspace/models/obstacle.stl",
+                x=0.5, y=0.0, z=0.0,
+                r1=0.0, r2=0.0, r3=1.57, rotation_format="RPY",
+                action="ADD"
+            )
+
+            # 2. Add an STL file located inside a ROS package
+            robot.manage_mesh(
+                mesh_id="my_obstacle",
+                mesh_path="package://my_robot_description/meshes/obstacle.stl",
+                x=0.5, y=0.0, z=0.0,
+                action="ADD"
+            )
+
+            # 3. Remove the mesh from the environment
+            robot.manage_mesh(mesh_id="my_obstacle", action="REMOVE")
+
+        Args:
+            mesh_id (str): Unique identifier for the collision object (e.g., "motor_casing").
+            mesh_path (str): URI pointing to the 3D file. MUST start with "file://" for absolute paths or "package://" for ROS packages. Ignored if action is "REMOVE".
+            x, y, z (float): Position of the mesh's origin in the world frame.
+            r1, r2, r3, r4 (float): Orientation of the mesh.
+            rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
+            scale_x, scale_y, scale_z (float): Scaling factors for the mesh along its X, Y, and Z axes (default is 1.0).
+            r, g, b (float): RGB color values from 0.0 to 1.0 (default is light gray).
+            action (str): "ADD" to spawn/update the mesh, "REMOVE" to delete it from the scene.
+            
+        Returns:
+            dict: The response from the motion server containing 'success' and 'message'.
+        """
+        payload = {
+            "mesh_id": str(mesh_id),
+            "mesh_path": str(mesh_path),
+            "x": float(x), "y": float(y), "z": float(z),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "scale_x": float(scale_x), "scale_y": float(scale_y), "scale_z": float(scale_z),
+            "r": float(r), "g": float(g), "b": float(b), "a": float(a),
+            "action": str(action).upper()
+        }
+        
+        r = requests.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return r.json()

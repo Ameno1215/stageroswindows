@@ -5,7 +5,6 @@ from math import pi
 from plate import load_plate_from_file
 
 from pathlib import Path
-from plate import load_plate_from_file
 
 
 box_source = 1
@@ -14,7 +13,7 @@ box1 = {
     "position": {
         "x": 0.2581,
         "y": 0.1360,
-        "z": 0.0330,
+        "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -25,7 +24,7 @@ box2 = {
     "position": {
         "x": 0.2618,
         "y": -0.1192,
-        "z": 0.0330,
+        "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -50,23 +49,40 @@ def run():
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
-                           planner_id="RRTConnect"))
+                           planner_id="PRMstar"))
 
     robot.set_scaling(velocity_scale=1, accel_scale=1)
 
-    robot.manage_box(
-        box_id="box1",
-        x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"] - 0.01,
-        r1=box1["position"]["rx"], r2=box1["position"]["ry"], r3=box1["position"]["rz"],
-        size_x=0.05, size_y=0.1, size_z=0.05, 
+    robot.manage_mesh(
+        mesh_id="box1",
+        mesh_path="file:///mnt/c/Users/33648/Desktop/STAGE_2026/boitier_carte/boitier.STL",
+        x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
+        r1=0.0, r2=0.0, r3=0.0,
+        scale_x=0.001, scale_y=0.001, scale_z=0.001,
+        rotation_format="RPY",
+        a=1, r=1, g=0, b=0,
         action="ADD"
     )
 
-    robot.manage_box(
-        box_id="box2",
-        x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"] - 0.01,
-        r1=box2["position"]["rx"], r2=box2["position"]["ry"], r3=box2["position"]["rz"],
-        size_x=0.05, size_y=0.1, size_z=0.05, 
+    robot.manage_mesh(
+        mesh_id="box2",
+        mesh_path="file:///mnt/c/Users/33648/Desktop/STAGE_2026/boitier_carte/boitier.STL",
+        x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
+        r1=0.0, r2=0.0, r3=0.0,
+        scale_x=0.001, scale_y=0.001, scale_z=0.001,
+        rotation_format="RPY",
+        a=0.5, r=0, g=0, b=1,
+        action="ADD"
+    )
+
+    robot.manage_mesh(
+        mesh_id="plaque",
+        mesh_path="file:///mnt/c/Users/33648/Desktop/STAGE_2026/plaque/plaque.stl",
+        x=0.258+0.135/2+0.15, y=0, z=0,
+        r1=0.0, r2=0.0, r3=0.0,
+        scale_x=0.001, scale_y=0.001, scale_z=0.001,
+        rotation_format="RPY",
+        a=1, r=0, g=1, b=0,
         action="ADD"
     )
 
@@ -74,7 +90,7 @@ def run():
         for pos in reader.positions:
             robot.manage_box(
                 box_id=f"{reader.reader_name}_{pos.position_label}",
-                x=pos.x, y=pos.y, z=pos.z - 0.01,
+                x=pos.x, y=pos.y, z=pos.z - 0.02,
                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
                 size_x=0.1, size_y=0.1, size_z=0.05,
                 action="ADD"
@@ -245,11 +261,11 @@ def run():
                         # )
 
                         storage_points = [
-                            { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3,
-                                "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+                            { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3,
+                                "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
                                 "is_relative": False, "reference_frame": "WORLD" },
-                            { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
-                                "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+                            { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"],
+                                "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
                                 "is_relative": False, "reference_frame": "WORLD" },
                         ]
 
@@ -275,12 +291,12 @@ def run():
                         # )
 
                         robot.move_to_pose(
-                            x=inputStorage["position"]["x"],
-                            y=inputStorage["position"]["y"],
-                            z=inputStorage["position"]["z"] + 0.3,
-                            r1=inputStorage["position"]["rx"],
-                            r2=inputStorage["position"]["ry"],
-                            r3=inputStorage["position"]["rz"],
+                            x=outputStorage["position"]["x"],
+                            y=outputStorage["position"]["y"],
+                            z=outputStorage["position"]["z"] + 0.3,
+                            r1=outputStorage["position"]["rx"],
+                            r2=outputStorage["position"]["ry"],
+                            r3=outputStorage["position"]["rz"],
                             rotation_format="RPY",
                             reference_frame="WORLD",
                             is_relative=False,
@@ -288,39 +304,39 @@ def run():
                             execute=True
                         )
 
-                    inputStorage = box1 if box_source == 1 else box2
-                    outputStorage = box2 if box_source == 1 else box1
+            inputStorage = box1 if box_source == 1 else box2
+            outputStorage = box2 if box_source == 1 else box1
 
     robot.move_to_home()     
 
 
-    robot.move_to_pose(
-        x=0.4,
-        y=0,
-        z=0.5,
-        r1=0,
-        r2=1.57,
-        r3=0,
-        rotation_format="RPY",
-        reference_frame="WORLD",
-        is_relative=False,
-        cartesian_path=False,
-        execute=True
-    )
+    # robot.move_to_pose(
+    #     x=0.4,
+    #     y=0,
+    #     z=0.5,
+    #     r1=0,
+    #     r2=1.57,
+    #     r3=0,
+    #     rotation_format="RPY",
+    #     reference_frame="WORLD",
+    #     is_relative=False,
+    #     cartesian_path=False,
+    #     execute=True
+    # )
 
-    robot.move_to_pose(
-        x=1,
-        y=0,
-        z=0,
-        r1=0,
-        r2=0,
-        r3=0,
-        rotation_format="RPY",
-        reference_frame="WORLD",
-        is_relative=True,
-        cartesian_path=True,
-        execute=True
-    )
+    # robot.move_to_pose(
+    #     x=1,
+    #     y=0,
+    #     z=0,
+    #     r1=0,
+    #     r2=0,
+    #     r3=0,
+    #     rotation_format="RPY",
+    #     reference_frame="WORLD",
+    #     is_relative=True,
+    #     cartesian_path=True,
+    #     execute=True
+    # )
 
     time.sleep(2)
 
@@ -331,12 +347,17 @@ def run():
     
     print(robot.set_virtual_cage(enable=False))  
 
-    robot.manage_box(
-        box_id="box1",
+    robot.manage_mesh(
+        mesh_id="box1",
         action="REMOVE"
     )
-    robot.manage_box(
-        box_id="box2",
+    robot.manage_mesh(
+        mesh_id="box2",
+        action="REMOVE"
+    )
+
+    robot.manage_mesh(
+        mesh_id="plaque",
         action="REMOVE"
     )
     
