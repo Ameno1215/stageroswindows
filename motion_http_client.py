@@ -372,7 +372,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD"):
+    def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD", enable_collision=True):
         """
         Adds or removes a collision box in MoveIt.
         If adding, the coordinates provided should be the TOP SURFACE center of the box, 
@@ -386,6 +386,7 @@ class MotionRobotClient:
             r, g, b (float): RGB color values from 0.0 to 1.0 (default is light gray).
             a (float): Alpha/transparency from 0.0 (invisible) to 1.0 (solid).
             action (str): "ADD" to spawn the box, "REMOVE" to delete it.
+            enable_collision (bool): Enable collision of the box or not.
         """
         payload = {
             "box_id": str(box_id),
@@ -394,7 +395,8 @@ class MotionRobotClient:
             "rotation_format": str(rotation_format),
             "size_x": float(size_x), "size_y": float(size_y), "size_z": float(size_z),
             "r": float(r), "g": float(g), "b": float(b), "a": float(a),
-            "action": str(action).upper()
+            "action": str(action).upper(),
+            "enable_collision": bool(enable_collision)
         }
         r = requests.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
         r.raise_for_status()

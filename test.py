@@ -86,15 +86,27 @@ def run():
         action="ADD"
     )
 
+    # print(robot.manage_mesh(
+    #     mesh_id="plaque_scanned",
+    #     mesh_path="file:///mnt/c/Users/33648/Desktop/STAGE_2026/Lecteur3D/plaque1/plaque1.obj",
+    #     x=0.557+0.135/2, y=-0.25, z=0,
+    #     r1=0.0, r2=0.0, r3=pi/2,
+    #     rotation_format="RPY",
+    #     a=1, r=0, g=1, b=0,
+    #     action="ADD"
+    # ))
+
+
     for reader in plate.readers:
         for pos in reader.positions:
-            robot.manage_box(
+            print(robot.manage_box(
                 box_id=f"{reader.reader_name}_{pos.position_label}",
-                x=pos.x, y=pos.y, z=pos.z - 0.02,
+                x=pos.x, y=pos.y, z=pos.z,
                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
                 size_x=0.1, size_y=0.1, size_z=0.05,
-                action="ADD"
-            )
+                action="ADD",
+                enable_collision=False
+            ))
 
 
 
@@ -358,6 +370,10 @@ def run():
 
     robot.manage_mesh(
         mesh_id="plaque",
+        action="REMOVE"
+    )
+    robot.manage_mesh(
+        mesh_id="plaque_scanned",
         action="REMOVE"
     )
     
