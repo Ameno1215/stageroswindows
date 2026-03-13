@@ -1,5 +1,9 @@
 {
   "plate_number": 1,
+  "mesh_path": "plates/plate1/plaque1.obj",
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 90,
   "list_readers": [
     {
       "reader_name": "DESKO GmbH SmartCard Reader 0",

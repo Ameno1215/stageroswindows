@@ -1,0 +1,66 @@
+{
+  "plate_number": 3,
+  "mesh_path": "plates/plate3/plaque3.obj",
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 0,
+  "list_readers": [
+    {
+      "reader_name": "HID Global OMNIKEY 5122CL Dual 0",
+      "reader_brand": "Thales",
+      "reader_model": "ATK10",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "3.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 1,
+      "wait_power": 5000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Antenna Glass: center",
+          "x": 5183,
+          "y": 1312,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna PVC: center",
+          "x": 4371,
+          "y": 1320,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        }
+      ]
+    },
+    {
+      "reader_name": "ELYCTIS CL reader 324068070000 0",
+      "reader_brand": "ELYCTIS",
+      "reader_model": "IDBOX 621",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "3.2",
+      "minimum_height": 0,
+      "maximum_height": 200,
+      "relay_number": 2,
+      "wait_power": 5000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "center",
+          "x": 4725,
+          "y": -1542,
+          "z": 378,
+          "rx": -1800,
+          "ry": 0,
+          "rz": 1800
+        }
+      ]
+    }
+  ]
+}
