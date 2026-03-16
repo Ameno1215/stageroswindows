@@ -6,6 +6,7 @@ import sys
 # --- Config ------------------------------------------------------------------
 
 SHOW_TERMINALS = True  # Set to False to hide WSL terminals
+SOLVER = "pick_ik"
 
 # --- Commands ----------------------------------------------------------------
 
@@ -20,13 +21,13 @@ SETUP = (
 TERMINAL_1 = (
     f"{SETUP} && "
     "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-    "model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:=kdl"
+    f"model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
 TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
-    "model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:=kdl"
+    f"model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
 TERMINAL_3 = (

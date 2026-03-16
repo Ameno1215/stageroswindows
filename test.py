@@ -5,6 +5,8 @@ from math import pi
 from plate import load_plate_from_file
 from pathlib import Path
 import urllib.parse
+from logger_worker import tail_linux_logs, win_logger
+import threading
 
 
 box_source = 1
@@ -51,9 +53,22 @@ def to_path_real(input):
 
 
 def run():
+    linux_log_path = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
+    
+    # Start the log reader in a background daemon thread
+    log_thread = threading.Thread(
+        target=tail_linux_logs, 
+        args=(linux_log_path,), 
+        daemon=True
+    )
+    log_thread.start()
+
+
+
     robot = MotionRobotClient("http://localhost:8000")
 
-    print("Health:", robot.health())
+    win_logger.info(f"Health: {robot.health()}")
+    win_logger.info(f"Initialising robot")
     print(robot.init_robot(model="vs060", 
                            planning_group="arm", 
                            velocity_scale=0.2, 
@@ -61,7 +76,7 @@ def run():
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
-                           planner_id="PRMstar"))
+                           planner_id="RRTConnect"))
 
     robot.set_scaling(velocity_scale=1, accel_scale=1)
 
@@ -108,7 +123,7 @@ def run():
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
-        
+
         # Ensure it's actually a directory (and not a file named plate_something)
         if plate_dir.is_dir():
             
@@ -117,10 +132,11 @@ def run():
             
             if json_files:
                 json_path = json_files[0] # Take the first (and supposedly only) JSON file
-                print(f"Loading plate from: {json_path.name}")
+                print(f'Loading plate from: {json_path.name}')
                 
                 # Load the plate
                 plate = load_plate_from_file(json_path)
+                win_logger.info(f"Testing plate : {plate.plate_number}")
 
                 for reader in plate.readers:
                     for pos in reader.positions:
@@ -133,45 +149,43 @@ def run():
                             enable_collision=False
                         ))
                 
-                
-                print(to_path_real(plate.mesh_path))
-                print(robot.manage_mesh(
-                    mesh_id=f"plaque{plate.plate_number}",
-                    mesh_path=to_path_real(plate.mesh_path),
-                    x=0.557+0.135/2, y=-0.25, z=0,
-                    r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
-                    rotation_format="RPY",
-                    a=1, r=0, g=1, b=0,
-                    action="ADD"
-                ))       
+                # print(robot.manage_mesh(
+                #     mesh_id=f"plaque{plate.plate_number}",
+                #     mesh_path=to_path_real(plate.mesh_path),
+                #     x=0.557+0.135/2, y=-0.25, z=0,
+                #     r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
+                #     rotation_format="RPY",
+                #     a=1, r=0, g=1, b=0,
+                #     action="ADD"
+                # ))       
 
                 for reader_index, reader in enumerate(plate.readers):
-                    print(f'reader: {reader.reader_name}')
+                    win_logger.info(f'Testing reader: {reader.reader_name}')
                     for card in range(number_of_cards):
-                        print(f'card: {card}')
                         if card == 0 and reader_index !=0:
                             pass
                         else:
-                            storage_points = [
-                                { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3,
-                                    "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
-                                    "is_relative": False, "reference_frame": "WORLD" },
-                                { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
-                                    "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
-                                    "is_relative": False, "reference_frame": "WORLD" },
-                            ]
-
-                            robot.move_waypoints(
-                                waypoints=storage_points,
-                                rotation_format="RPY",
-                                is_relative=False, 
-                                cartesian_path=True
-                            )
+                            win_logger.info(f'Robot is going to take card: {card}')
+                            # storage_points = [
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3,
+                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
+                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            # ]
+                            
+                            # robot.move_waypoints(
+                            #     waypoints=storage_points,
+                            #     rotation_format="RPY",
+                            #     is_relative=False, 
+                            #     cartesian_path=True
+                            # )
 
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3,
+                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
@@ -182,9 +196,38 @@ def run():
                                 execute=True
                             )
 
+                            robot.move_to_pose(
+                                x=0,
+                                y=0,
+                                z=-0.3,
+                                r1=0,
+                                r2=0,
+                                r3=0,
+                                rotation_format="RPY",
+                                reference_frame="WORLD",
+                                is_relative=True,
+                                cartesian_path=True,
+                                execute=True
+                            )
+
+
+                            robot.move_to_pose(
+                                x=0,
+                                y=0,
+                                z=0.3,
+                                r1=0,
+                                r2=0,
+                                r3=0,
+                                rotation_format="RPY",
+                                reference_frame="WORLD",
+                                is_relative=True,
+                                cartesian_path=True,
+                                execute=True
+                            )
+
                     
                         for pos_index, pos in enumerate(reader.positions):
-                            print(f'position: {pos.position_label}')
+                            win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
                             # if pos_index > 0:
                             #     dx = pos.x - reader.positions[pos_index-1].x
                             #     dy = pos.y - reader.positions[pos_index-1].y
@@ -234,6 +277,7 @@ def run():
                                 # peut etre si au retour de la position 2 ca fait un truc bizarre
 
                         if card == number_of_cards-1 and reader_index != len(plate.readers)-1:
+                            win_logger.info("Robot don't release the card to gain time")
                             pass
                         else:
                             # robot.move_to_pose(
@@ -249,26 +293,27 @@ def run():
                             #     execute=True
                             # )
 
-                            storage_points = [
-                                { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3,
-                                    "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
-                                    "is_relative": False, "reference_frame": "WORLD" },
-                                { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"],
-                                    "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
-                                    "is_relative": False, "reference_frame": "WORLD" },
-                            ]
+                            win_logger.info(f'Robot is going to release card: {card}')
+                            # storage_points = [
+                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3,
+                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"],
+                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            # ]
 
-                            robot.move_waypoints(
-                                waypoints=storage_points,
-                                rotation_format="RPY",
-                                is_relative=False, 
-                                cartesian_path=True
-                            )
+                            # robot.move_waypoints(
+                            #     waypoints=storage_points,
+                            #     rotation_format="RPY",
+                            #     is_relative=False, 
+                            #     cartesian_path=True
+                            # )
 
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3,
+                                z=outputStorage["position"]["z"] + 0.3  + 0.005,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],
@@ -278,11 +323,43 @@ def run():
                                 cartesian_path=True,
                                 execute=True
                             )
+
+                            robot.move_to_pose(
+                                x=0,
+                                y=0,
+                                z=-0.3,
+                                r1=0,
+                                r2=0,
+                                r3=0,
+                                rotation_format="RPY",
+                                reference_frame="WORLD",
+                                is_relative=True,
+                                cartesian_path=True,
+                                execute=True
+                            )
+
+                            robot.move_to_pose(
+                                x=0,
+                                y=0,
+                                z=0.3,
+                                r1=0,
+                                r2=0,
+                                r3=0,
+                                rotation_format="RPY",
+                                reference_frame="WORLD",
+                                is_relative=True,
+                                cartesian_path=True,
+                                execute=True
+                            )
                     
 
-                    inputStorage = box1 if box_source == 1 else box2
-                    outputStorage = box2 if box_source == 1 else box1
-
+                    if inputStorage is box1:
+                        inputStorage = box2
+                        outputStorage = box1
+                    else:
+                        inputStorage = box1
+                        outputStorage = box2
+                win_logger.info("Going home")
                 robot.move_to_home()     
 
                 for reader in plate.readers:
@@ -292,10 +369,10 @@ def run():
                             action="REMOVE"
                         )      
 
-                print(robot.manage_mesh(
-                    mesh_id=f"plaque{plate.plate_number}",
-                    action="REMOVE"
-                ))
+                # print(robot.manage_mesh(
+                #     mesh_id=f"plaque{plate.plate_number}",
+                #     action="REMOVE"
+                # ))
 
     time.sleep(2)
 
