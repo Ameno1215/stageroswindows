@@ -17,6 +17,11 @@ class MotionRobotClient:
         self.timeout = timeout
         self.model = None
 
+    def _check(self, result: dict) -> dict:
+        """Raises RuntimeError if the motion server returned a failure."""
+        if not result.get("success"):
+            raise RuntimeError(f"Motion failed: {result.get('message', 'unknown error')}")
+        return result
 
     def health(self):
         """
@@ -31,7 +36,6 @@ class MotionRobotClient:
         r = requests.get(f"{self.base_url}/health", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
-
     
     def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="PRMstar"):
         """
@@ -83,7 +87,7 @@ class MotionRobotClient:
         r.raise_for_status()
         self.get_solver()
         self.model = model
-        return r.json()
+        return self._check(r.json())
     
     def set_scaling(self, velocity_scale, accel_scale):
         """
@@ -105,7 +109,7 @@ class MotionRobotClient:
         }
         r = requests.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def move_joints(self, joints, angle_format="RAD", is_relative=False, execute=True):
         """
@@ -127,7 +131,7 @@ class MotionRobotClient:
     
         r = requests.post(f"{self.base_url}/move_joints", json=payload, timeout=current_timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
         """
@@ -167,7 +171,7 @@ class MotionRobotClient:
 
         r = requests.post(f"{self.base_url}/move_to_pose", json=payload, timeout=current_timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def move_waypoints(self, waypoints, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=True, execute=True):
         """
@@ -202,7 +206,7 @@ class MotionRobotClient:
 
         r = requests.post(f"{self.base_url}/move_waypoints", json=payload, timeout=current_timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
     
     def get_joint_state(self):
         """
@@ -216,7 +220,7 @@ class MotionRobotClient:
         """
         r = requests.get(f"{self.base_url}/state/joints", timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
     
     def get_current_pose(self, frame_id=None, child_frame_id=None, output_format="euler"):
         """
@@ -325,7 +329,7 @@ class MotionRobotClient:
         }
         r = requests.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def get_solver(self):
         """
@@ -341,7 +345,7 @@ class MotionRobotClient:
         """
         r = requests.get(f"{self.base_url}/state/solver", timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
         """
@@ -370,7 +374,7 @@ class MotionRobotClient:
 
         r = requests.post(f"{self.base_url}/move_approach", json=payload, timeout=current_timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
     
     def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD", enable_collision=True):
         """
@@ -400,7 +404,7 @@ class MotionRobotClient:
         }
         r = requests.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())
 
     def manage_mesh(self, mesh_id, mesh_path="", x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", scale_x=1.0, scale_y=1.0, scale_z=1.0, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD"):
         """
@@ -454,4 +458,4 @@ class MotionRobotClient:
         
         r = requests.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
         r.raise_for_status()
-        return r.json()
+        return self._check(r.json())

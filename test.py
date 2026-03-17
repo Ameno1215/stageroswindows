@@ -225,6 +225,8 @@ def run():
                                 execute=True
                             )
 
+                            robot.move_to_pose(x=0,y=0,z=0,r1=0,r2=0,r3=0,r4=0)
+
                     
                         for pos_index, pos in enumerate(reader.positions):
                             win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
@@ -395,4 +397,11 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except RuntimeError as e:
+        win_logger.error(f"Program stopped due to motion error: {e}")
+    except KeyboardInterrupt:
+        win_logger.info("Program interrupted by user.")
+    except Exception as e:
+        win_logger.error(f"Unexpected error: {e}")

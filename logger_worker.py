@@ -3,7 +3,7 @@ import time
 import logging
 
 # Create a generic formatter that uses the logger's name dynamically
-formatter = logging.Formatter('%(asctime)s - [%(name)s] - %(message)s')
+formatter = logging.Formatter('%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
 # Set up shared Console output handler
 console_handler = logging.StreamHandler()
