@@ -15,7 +15,7 @@ box1 = {
     "position": {
         "x": 0.2581,
         "y": 0.1360,
-        "z": 0.0,
+        "z": 0.01,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -26,7 +26,7 @@ box2 = {
     "position": {
         "x": 0.2618,
         "y": -0.1192,
-        "z": 0.0,
+        "z": 0.01,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -83,7 +83,7 @@ def run():
     print(robot.manage_mesh(
         mesh_id="box1",
         mesh_path=to_path_real(rel_path_to_stl),
-        x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
+        x=box1["position"]["x"], y=box1["position"]["y"], z=0.0,
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
@@ -94,7 +94,7 @@ def run():
     print(robot.manage_mesh(
         mesh_id="box2",
         mesh_path=to_path_real(rel_path_to_stl),
-        x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
+        x=box2["position"]["x"], y=box2["position"]["y"], z=0.0,
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
@@ -144,7 +144,7 @@ def run():
                             box_id=f"{reader.reader_name}_{pos.position_label}",
                             x=pos.x, y=pos.y, z=pos.z,
                             r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                            size_x=0.1, size_y=0.1, size_z=0.05,
+                            size_x=0.06, size_y=0.09, size_z=0.02,
                             action="ADD",
                             enable_collision=False
                         ))
@@ -313,7 +313,7 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3  + 0.005,
+                                z=outputStorage["position"]["z"] + 0.3 + 0.005,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],
