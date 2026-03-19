@@ -7,6 +7,7 @@ import sys
 
 SHOW_TERMINALS = True  # Set to False to hide WSL terminals
 SOLVER = "pick_ik"
+# SOLVER = "kdl"
 
 # --- Commands ----------------------------------------------------------------
 
@@ -14,7 +15,8 @@ SETUP = (
     "cd ~/workspace/denso_ros2_ws && "
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
-    "export LIBGL_ALWAYS_SOFTWARE=1"
+    "export OMPL_CONSOLE_LOG_LEVEL=DEBUG && "
+    "export LIBGL_ALWAYS_SOFTWARE=1 && "
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
 )
 

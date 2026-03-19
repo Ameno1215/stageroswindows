@@ -115,7 +115,7 @@ def run():
     
     inputStorage = box1
     outputStorage = box2
-    number_of_cards = 2
+    number_of_cards = 1
 
 
 
@@ -149,15 +149,15 @@ def run():
                             enable_collision=False
                         ))
                 
-                # print(robot.manage_mesh(
-                #     mesh_id=f"plaque{plate.plate_number}",
-                #     mesh_path=to_path_real(plate.mesh_path),
-                #     x=0.557+0.135/2, y=-0.25, z=0,
-                #     r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
-                #     rotation_format="RPY",
-                #     a=1, r=0, g=1, b=0,
-                #     action="ADD"
-                # ))       
+                print(robot.manage_mesh(
+                    mesh_id=f"plaque{plate.plate_number}",
+                    mesh_path=to_path_real(plate.mesh_path),
+                    x=0.557+0.135/2, y=-0.25, z=0,
+                    r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
+                    rotation_format="RPY",
+                    a=1, r=0, g=1, b=0,
+                    action="ADD"
+                ))       
 
                 for reader_index, reader in enumerate(plate.readers):
                     win_logger.info(f'Testing reader: {reader.reader_name}')
@@ -165,12 +165,15 @@ def run():
                         if card == 0 and reader_index !=0:
                             pass
                         else:
-                            win_logger.info(f'Robot is going to take card: {card}')
+                            # win_logger.info(f'Robot is going to take card {card} by waypoints move')
                             # storage_points = [
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3,
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
                             #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
+                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
                             #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             # ]
@@ -181,6 +184,9 @@ def run():
                             #     is_relative=False, 
                             #     cartesian_path=True
                             # )
+
+                        
+                            win_logger.info(f'Robot is going to take card {card} by move pose')
 
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
@@ -224,9 +230,6 @@ def run():
                                 cartesian_path=True,
                                 execute=True
                             )
-
-                            robot.move_to_pose(x=0,y=0,z=0,r1=0,r2=0,r3=0,r4=0)
-
                     
                         for pos_index, pos in enumerate(reader.positions):
                             win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
@@ -282,25 +285,16 @@ def run():
                             win_logger.info("Robot don't release the card to gain time")
                             pass
                         else:
-                            # robot.move_to_pose(
-                            #     x=outputStorage["position"]["x"],
-                            #     y=outputStorage["position"]["y"],
-                            #     z=outputStorage["position"]["z"]+0.3,
-                            #     r1=outputStorage["position"]["rx"],
-                            #     r2=outputStorage["position"]["ry"],
-                            #     r3=outputStorage["position"]["rz"],
-                            #     rotation_format="RPY",
-                            #     reference_frame="WORLD",
-                            #     cartesian_path=False,
-                            #     execute=True
-                            # )
 
-                            win_logger.info(f'Robot is going to release card: {card}')
+                            # win_logger.info(f'Robot is going to release card: {card} by waypoints move')
                             # storage_points = [
-                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3,
+                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3+0.005,
                             #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"],
+                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
+                            #         "is_relative": False, "reference_frame": "WORLD" },
+                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3+0.005,
                             #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             # ]
@@ -312,6 +306,8 @@ def run():
                             #     cartesian_path=True
                             # )
 
+                            win_logger.info(f'Robot is going to release card: {card} by move pose')
+                            
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
@@ -371,10 +367,10 @@ def run():
                             action="REMOVE"
                         )      
 
-                # print(robot.manage_mesh(
-                #     mesh_id=f"plaque{plate.plate_number}",
-                #     action="REMOVE"
-                # ))
+                print(robot.manage_mesh(
+                    mesh_id=f"plaque{plate.plate_number}",
+                    action="REMOVE"
+                ))
 
     time.sleep(2)
 

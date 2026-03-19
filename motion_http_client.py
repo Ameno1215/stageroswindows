@@ -459,3 +459,45 @@ class MotionRobotClient:
         r = requests.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
+    
+    def move_to_pose_via_joint(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, execute=True):
+        """
+        Moves to a Cartesian pose by first solving Inverse Kinematics, then planning
+        and executing in joint space. Useful when you want a free-form joint-space
+        trajectory to a known Cartesian goal (avoids Cartesian path constraints).
+
+        Examples:
+            # Absolute pose in world frame (RPY)
+            robot.move_to_pose_via_joint(0.5, 0.0, 0.4, 3.14, 0.0, 0.0)
+
+            # Relative move in tool frame
+            robot.move_to_pose_via_joint(0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
+                                        reference_frame="TOOL", is_relative=True)
+
+        Args:
+            x, y, z (float): Translation target.
+            r1, r2, r3, r4 (float): Rotation (r4 ignored if RPY).
+            rotation_format (str): "RPY" or "QUAT".
+            angle_format (str): "RAD" or "DEG".
+            reference_frame (str): "WORLD" or "TOOL".
+            is_relative (bool): True = delta from current pose, False = absolute.
+            execute (bool): True = execute, False = plan only.
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        payload = {
+            "x": float(x), "y": float(y), "z": float(z),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "angle_format": str(angle_format),
+            "reference_frame": str(reference_frame),
+            "is_relative": bool(is_relative),
+            "cartesian_path": False,
+            "execute": bool(execute)
+        }
+        current_timeout = 120.0 if execute else self.timeout
+
+        r = requests.post(f"{self.base_url}/move_to_pose_via_joint", json=payload, timeout=current_timeout)
+        r.raise_for_status()
+        return self._check(r.json())
