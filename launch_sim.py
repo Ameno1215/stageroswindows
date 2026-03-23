@@ -5,7 +5,7 @@ import sys
 
 # --- Config ------------------------------------------------------------------
 
-SHOW_TERMINALS = True  # Set to False to hide WSL terminals
+SHOW_TERMINALS = False  # Set to False to hide WSL terminals
 SOLVER = "pick_ik"
 # SOLVER = "kdl"
 

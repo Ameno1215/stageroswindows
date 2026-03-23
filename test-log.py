@@ -34,6 +34,9 @@ box2 = {
 }
 
 
+inputStorage = box1
+outputStorage = box2
+
 base_path = Path.cwd()
 rel_path_to_stl = "card_storage/boitier.STL"
 
@@ -79,29 +82,31 @@ def run():
                            planner_id="RRTConnect"))
 
     robot.set_scaling(velocity_scale=1, accel_scale=1)
+    
+    
+    # print(robot.manage_mesh(
+    #     mesh_id="box1",
+    #     mesh_path=to_path_real(rel_path_to_stl),
+    #     x=box1["position"]["x"], y=box1["position"]["y"], z=0.0,
+    #     r1=0.0, r2=0.0, r3=0.0,
+    #     scale_x=0.001, scale_y=0.001, scale_z=0.001,
+    #     rotation_format="RPY",
+    #     a=1, r=1, g=0, b=0,
+    #     action="ADD"
+    # ))
 
-    print(robot.manage_mesh(
-        mesh_id="box1",
-        mesh_path=to_path_real(rel_path_to_stl),
-        x=box1["position"]["x"], y=box1["position"]["y"], z=0.0,
-        r1=0.0, r2=0.0, r3=0.0,
-        scale_x=0.001, scale_y=0.001, scale_z=0.001,
-        rotation_format="RPY",
-        a=1, r=1, g=0, b=0,
-        action="ADD"
-    ))
+    # print(robot.manage_mesh(
+    #     mesh_id="box2",
+    #     mesh_path=to_path_real(rel_path_to_stl),
+    #     x=box2["position"]["x"], y=box2["position"]["y"], z=0.0,
+    #     r1=0.0, r2=0.0, r3=0.0,
+    #     scale_x=0.001, scale_y=0.001, scale_z=0.001,
+    #     rotation_format="RPY",
+    #     a=0.5, r=0, g=0, b=1,
+    #     action="ADD"
+    # ))
 
-    print(robot.manage_mesh(
-        mesh_id="box2",
-        mesh_path=to_path_real(rel_path_to_stl),
-        x=box2["position"]["x"], y=box2["position"]["y"], z=0.0,
-        r1=0.0, r2=0.0, r3=0.0,
-        scale_x=0.001, scale_y=0.001, scale_z=0.001,
-        rotation_format="RPY",
-        a=0.5, r=0, g=0, b=1,
-        action="ADD"
-    ))
-
+    robot.move_to_home()
 
     robot.set_virtual_cage(
         enable=True, 
@@ -109,36 +114,89 @@ def run():
         left=0.325, right=0.325, 
         top=0.9, bottom=0.0
     )
-    time.sleep(2)
 
-    robot.move_to_home()
+
+    # storage_points = [
+    #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
+    #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+    #         "is_relative": False, "reference_frame": "WORLD" },
+    #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
+    #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+    #         "is_relative": False, "reference_frame": "WORLD" },
+    #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
+    #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
+    #         "is_relative": False, "reference_frame": "WORLD" },
+    # ]
+
+    # robot.move_waypoints(
+    #     waypoints=storage_points,
+    #     rotation_format="RPY",
+    #     is_relative=False, 
+    #     cartesian_path=True
+    # )
+
 
     # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 5], is_relative=False)
-    
+      
+
     robot.move_to_pose(
-        x=0.0,
+        x=0.30,
         y=0,
-        z=0.0,
+        z=0.50,
         r1=0,
-        r2=0,
+        r2=pi/2,
         r3=0,
         rotation_format="RPY",
         reference_frame="WORLD",
         angle_format="RAD",
         is_relative=False,
+        cartesian_path=True,
+        execute=True
+    )
+
+    # print(robot.get_current_pose())
+
+    robot.move_to_pose(
+        x=0.0,
+        y=0,
+        z=0.50,
+        r1=0,
+        r2=0,
+        r3=0,
+        rotation_format="RPY",
+        reference_frame="TOOL",
+        angle_format="RAD",
+        is_relative=True,
         cartesian_path=False,
         execute=True
     )
 
-    print(robot.get_current_pose())
+
+
+    # print(robot.get_current_pose())
+
+    # robot.move_to_pose(
+    #     x=0.0,
+    #     y=0,
+    #     z=0.4,
+    #     r1=0,
+    #     r2=0,
+    #     r3=0,
+    #     rotation_format="RPY",
+    #     reference_frame="TOOL",
+    #     angle_format="DEG",
+    #     is_relative=True,
+    #     cartesian_path=True,
+    #     execute=True
+    # )
 
 
     
-    time.sleep(10)
-
 
     
     print(robot.set_virtual_cage(enable=False))  
+    
+    return
 
     robot.manage_mesh(
         mesh_id="box1",

@@ -1,0 +1,93 @@
+{
+  "plate_number": 2,
+  "mesh_path": "plates/plate2/plaque2.obj",
+   "mesh_rotation_x": 0,
+   "mesh_rotation_y": 0, 
+   "mesh_rotation_z": 90,
+  "list_readers": [
+    {
+      "reader_name": "ELYCTIS CL reader 000000000001A3AB 0",
+      "reader_brand": "Elyctis",
+      "reader_model": "IDBOX 141",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "2.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 1,
+      "wait_power": 5000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "Antenna front (Glass): center",
+          "x": 5245,
+          "y": 1583,
+          "z": 889,
+          "rx": -1758,
+          "ry": 716,
+          "rz": -1164
+        },
+        {
+          "position_label": "Antenna front (Glass): left",
+          "x": 5065,
+          "y": 1688,
+          "z": 889,
+          "rx": -1758,
+          "ry": 716,
+          "rz": -1164
+        },
+        {
+          "position_label": "Antenna front (Glass): right",
+          "x": 5400,
+          "y": 1492,
+          "z": 889,
+          "rx": -1758,
+          "ry": 716,
+          "rz": -1164
+        }
+      ]
+    },
+    {
+      "reader_name": "HID Global OMNIKEY 5422CL Smartcard Reader 0",
+      "reader_brand": "Omnikey",
+      "reader_model": "Omnikey 5422",
+      "baudrate": 848,
+      "reader_market": "USB Dongle",
+      "reader_number": "2.2",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 2,
+      "wait_power": 5000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 4653,
+          "y": -1623,
+          "z": 342,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -900
+        },
+        {
+          "position_label": "Top left",
+          "x": 4714,
+          "y": -1378,
+          "z": 342,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -900
+        },
+        {
+          "position_label": "Bottom right",
+          "x": 4533,
+          "y": -1775,
+          "z": 342,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -900
+        }
+      ]
+    }
+  ]
+}
