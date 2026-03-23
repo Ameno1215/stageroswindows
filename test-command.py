@@ -1,0 +1,67 @@
+import math
+import time
+from motion_http_client import MotionRobotClient
+from math import pi
+from plate import load_plate_from_file
+from pathlib import Path
+import urllib.parse
+from logger_worker import tail_linux_logs, win_logger
+import threading
+
+
+def run():
+    linux_log_path = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
+    
+    # Start the log reader in a background daemon thread
+    log_thread = threading.Thread(
+        target=tail_linux_logs, 
+        args=(linux_log_path,), 
+        daemon=True
+    )
+    log_thread.start()
+
+
+
+    robot = MotionRobotClient("http://localhost:8000")
+
+    win_logger.info(f"Health: {robot.health()}")
+    win_logger.info(f"Initialising robot")
+    print(robot.init_robot(model="vs060", 
+                           planning_group="arm", 
+                           velocity_scale=0.2, 
+                           accel_scale=0.2, 
+                           planning_time=10, 
+                           planning_attempts=20, 
+                           allow_replanning=True, 
+                           planner_id="RRTConnect"))
+
+    robot.set_scaling(velocity_scale=0.2, accel_scale=0.2)
+
+    robot.move_to_pose(
+        x=0.1,
+        y=0,
+        z=0,
+        r1=0,
+        r2=0,
+        r3=0,
+        rotation_format="RPY",
+        is_relative=True,
+        cartesian_path=True,
+        execute=True
+    )
+
+
+    
+         
+
+
+
+if __name__ == "__main__":
+    try:
+        run()
+    except RuntimeError as e:
+        win_logger.error(f"Program stopped due to motion error: {e}")
+    except KeyboardInterrupt:
+        win_logger.info("Program interrupted by user.")
+    except Exception as e:
+        win_logger.error(f"Unexpected error: {e}")
