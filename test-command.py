@@ -48,8 +48,12 @@ def run():
 
     # robot.move_joints([0.0, 0.2, 1.4, 0.0, 1.4, 0], is_relative=False)
 
+    robot.set_servo_on(False)
+
+    robot.set_servo_on(True) 
+
     robot.move_to_pose(
-        x=-0.1,
+        x=0.05,
         y=0,
         z=0,
         r1=0,
@@ -62,7 +66,7 @@ def run():
     )
 
     
-    robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
+    # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
 
     robot.set_virtual_cage(
         enable=False

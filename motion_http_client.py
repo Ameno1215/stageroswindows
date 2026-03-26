@@ -501,3 +501,22 @@ class MotionRobotClient:
         r = requests.post(f"{self.base_url}/move_to_pose_via_joint", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
+
+    def set_servo_on(self, enable: bool):
+        """
+        Enables or disables the robot motors.
+
+        Examples:
+            robot.set_servo_on(True)   # Motors ON
+            robot.set_servo_on(False)  # Motors OFF
+
+        Args:
+            enable (bool): True = motors ON, False = motors OFF.
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        payload = {"enable": bool(enable)}
+        r = requests.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
