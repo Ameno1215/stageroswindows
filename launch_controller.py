@@ -95,37 +95,45 @@ def kill_wsl_processes():
     """Kills ROS 2, Gazebo and Uvicorn processes on the WSL side."""
     print("\nStopping WSL processes...")
 
-    targets = [
-        "ros2",
-        "gzserver",
-        "gzclient",
-        "gazebo",
-        "rviz2",
-        "uvicorn",
-        "robot_state_publisher",
-        "move_group",
-    ]
+    ros_targets = ["denso_robot", "move_group", "robot_state_publisher", "rviz2"]
+    all_targets = ros_targets + ["gzserver", "gzclient", "gazebo", "uvicorn"]
 
-    # First pass: SIGTERM
-    for target in targets:
+    # --- Step 1: SIGINT on ROS2 nodes (allows on_deactivate to run)
+    print("   Sending SIGINT to ROS2 nodes...")
+    for target in all_targets:
         subprocess.run(
-            ["wsl.exe", "bash", "-c", f"pkill -f {target} 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            ["wsl.exe", "bash", "-c", f"pkill -SIGINT -f {target} 2>/dev/null || true"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
 
-    print("   Waiting for graceful shutdown (3s)...")
-    time.sleep(3)
+    # --- Step 2: Long wait (RC8 controller needs time to close the b-CAP session)
+    wait_time = 15 if SIM == "false" else 3
+    print(f"   Waiting {wait_time}s for graceful b-CAP disconnect...")
+    time.sleep(wait_time)
 
-    # Second pass: SIGKILL
-    for target in targets:
+    # --- Step 3: SIGTERM for any remaining processes
+    print("   Sending SIGTERM to remaining processes...")
+    for target in all_targets:
+        subprocess.run(
+            ["wsl.exe", "bash", "-c", f"pkill -SIGTERM -f {target} 2>/dev/null || true"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+        )
+    time.sleep(2)
+
+    # --- Step 4: SIGKILL as last resort only
+    print("   Force-killing remaining processes...")
+    for target in all_targets:
         subprocess.run(
             ["wsl.exe", "bash", "-c", f"pkill -9 -f {target} 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
 
-    # Terminate background Python-side process handles if hidden mode
+    # --- Step 5: Stop ROS2 daemon to release network resources
+    subprocess.run(
+        ["wsl.exe", "bash", "-c", "ros2 daemon stop 2>/dev/null || true"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
     if not SHOW_TERMINALS:
         for proc in launched_processes:
             try:
