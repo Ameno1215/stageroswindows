@@ -35,10 +35,21 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    robot.set_scaling(velocity_scale=0.2, accel_scale=0.2)
+    robot.set_virtual_cage(
+        enable=True,
+        front=0.66, back=0.35,
+        left=0.325, right=0.325,
+        top=0.9, bottom=0.0
+    )
+
+    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
+
+    # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
+
+    # robot.move_joints([0.0, 0.2, 1.4, 0.0, 1.4, 0], is_relative=False)
 
     robot.move_to_pose(
-        x=0.1,
+        x=-0.1,
         y=0,
         z=0,
         r1=0,
@@ -50,7 +61,12 @@ def run():
         execute=True
     )
 
+    
+    robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
 
+    robot.set_virtual_cage(
+        enable=False
+    )
     
          
 

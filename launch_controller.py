@@ -2,11 +2,28 @@ import subprocess
 import time
 import signal
 import sys
+import argparse
 
-# --- Config ------------------------------------------------------------------
+# --- CLI args ----------------------------------------------------------------
 
-SHOW_TERMINALS = False  # Set to False to hide WSL terminals
-SOLVER = "pick_ik"
+parser = argparse.ArgumentParser(description="Launch DENSO VS060 ROS 2 stack")
+parser.add_argument("--show-terminals", action="store_true",
+                    help="Hide WSL terminals (run in background)")
+parser.add_argument("--solver", choices=["pick_ik", "kdl"], default="pick_ik",
+                    help="IK solver to use (default: pick_ik)")
+parser.add_argument("--real-robot", action="store_true",
+                    help="Connect to the real robot (default: simulation)")
+
+args = parser.parse_args()
+
+SHOW_TERMINALS = args.show_terminals
+SOLVER = args.solver
+SIM = "false" if args.real_robot else "true"
+
+
+# SHOW_TERMINALS = True  # Set to False to hide WSL terminals
+# SOLVER = "pick_ik"
+# SIM = "false"
 # SOLVER = "kdl"
 
 # --- Commands ----------------------------------------------------------------
@@ -26,10 +43,16 @@ TERMINAL_1 = (
     f"model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
+if (SIM == "false"):
+       TERMINAL_1 = (f"{SETUP} && "
+            "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
+            f"model:=vs060 sim:=false ip_address:=10.138.6.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
+       )
+
 TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
-    f"model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
+    f"model:=vs060 sim:={SIM} tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
 TERMINAL_3 = (
