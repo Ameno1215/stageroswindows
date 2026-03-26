@@ -2,7 +2,7 @@ import requests
 
 
 class MotionRobotClient:
-    def __init__(self, base_url="http://localhost:8000", timeout=60.0):
+    def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0, ):
         """
         Initializes the Denso client.
         
@@ -16,6 +16,7 @@ class MotionRobotClient:
         self.base_url = base_url.rstrip("/")
         self.timeout = timeout
         self.model = None
+        self.sim = sim
 
     def _check(self, result: dict) -> dict:
         """Raises RuntimeError if the motion server returned a failure."""
@@ -516,6 +517,8 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
+        if self.sim:
+            return "No motor control on simulation"
         payload = {"enable": bool(enable)}
         r = requests.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
         r.raise_for_status()

@@ -7,7 +7,16 @@ from pathlib import Path
 import urllib.parse
 from logger_worker import tail_linux_logs, win_logger
 import threading
+import argparse
 
+
+parser = argparse.ArgumentParser(description="Test file to command real robot")
+parser.add_argument("--real-robot", action="store_false",
+                    help="Connect to the real robot (default: simulation)")
+
+args = parser.parse_args()
+
+SIM = args.real_robot
 
 def run():
     linux_log_path = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
@@ -22,7 +31,7 @@ def run():
 
 
 
-    robot = MotionRobotClient("http://localhost:8000")
+    robot = MotionRobotClient("http://localhost:8000", SIM)
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")

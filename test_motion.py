@@ -15,7 +15,16 @@ import math
 import threading
 from motion_http_client import MotionRobotClient
 from logger_worker import tail_linux_logs, win_logger
+import argparse
 
+
+parser = argparse.ArgumentParser(description="Test file to command real robot")
+parser.add_argument("--real-robot", action="store_false",
+                    help="Connect to the real robot (default: simulation)")
+
+args = parser.parse_args()
+
+SIM = args.real_robot
 
 # ─────────────────────────────────────────────
 # Helpers
@@ -86,10 +95,10 @@ def test_move_pose(robot: MotionRobotClient):
 
     targets = [
         # (x,    y,     z,    roll,        pitch,       yaw,  label)
-        (0.35,  0.10,  0.45,  0.0,          0.0,         0.0,   "center-right"),
-        (0.35, -0.10,  0.45,  0.0,          0.0,         0.0,   "center-left"),
+        (0.35,  0.10,  0.45,  0.0,          math.pi/2,         0.0,   "center-right"),
+        (0.35, -0.10,  0.45,  0.0,          math.pi/2,         0.0,   "center-left"),
         (0.40,  0.0,   0.60,  0.0,          math.pi/6,   0.0,   "high-tilted"),
-        (0.25,  0.0,   0.30,  math.pi/4,    0.0,         0.0,   "low-rolled"),
+        (0.25,  0.0,   0.30,  math.pi/4,    math.pi/2,         0.0,   "low-rolled"),
         (0.50,  0.15,  0.50, -math.pi/6,    math.pi/4,   0.3,   "skewed"),
     ]
 
@@ -121,12 +130,12 @@ def test_move_pose_relative(robot: MotionRobotClient):
 
     # --- WORLD-frame increments ---
     world_moves = [
-        (  0.05,  0.0,   0.0,  0.0, 0.0, 0.0, "WORLD +X 5cm"),
-        (  0.0,   0.05,  0.0,  0.0, 0.0, 0.0, "WORLD +Y 5cm"),
-        (  0.0,   0.0,   0.05, 0.0, 0.0, 0.0, "WORLD +Z 5cm"),
-        ( -0.05,  0.0,   0.0,  0.0, 0.0, 0.0, "WORLD -X 5cm"),
-        (  0.0,  -0.05,  0.0,  0.0, 0.0, 0.0, "WORLD -Y 5cm"),
-        (  0.0,   0.0,  -0.05, 0.0, 0.0, 0.0, "WORLD -Z 5cm"),
+        (  0.05,  0.0,   0.0,  0.0, math.pi/2, 0.0, "WORLD +X 5cm"),
+        (  0.0,   0.05,  0.0,  0.0, math.pi/2, 0.0, "WORLD +Y 5cm"),
+        (  0.0,   0.0,   0.05, 0.0, math.pi/2, 0.0, "WORLD +Z 5cm"),
+        ( -0.05,  0.0,   0.0,  0.0, math.pi/2, 0.0, "WORLD -X 5cm"),
+        (  0.0,  -0.05,  0.0,  0.0, math.pi/2, 0.0, "WORLD -Y 5cm"),
+        (  0.0,   0.0,  -0.05, 0.0, math.pi/2, 0.0, "WORLD -Z 5cm"),
     ]
     for x, y, z, r1, r2, r3, label in world_moves:
         result = robot.move_to_pose(
@@ -577,14 +586,14 @@ if __name__ == "__main__":
     )
     log_thread.start()
 
-    robot = MotionRobotClient("http://localhost:8000")
+    robot = MotionRobotClient("http://localhost:8000", SIM)
     win_logger.info(f"Health: {robot.health()}")
 
     robot.init_robot(
         model="vs060",
         planning_group="arm",
-        velocity_scale=0.15,
-        accel_scale=0.15,
+        velocity_scale=1,
+        accel_scale=1,
         planning_time=10,
         planning_attempts=20,
         allow_replanning=True,
