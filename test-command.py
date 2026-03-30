@@ -43,6 +43,7 @@ def run():
                            planning_attempts=20, 
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
+    
 
     robot.set_virtual_cage(
         enable=True,
@@ -51,28 +52,77 @@ def run():
         top=0.9, bottom=0.0
     )
 
-    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
+    
+
+    robot.set_scaling(velocity_scale=0.05, accel_scale=0.05)
 
     # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
 
     # robot.move_joints([0.0, 0.2, 1.4, 0.0, 1.4, 0], is_relative=False)
 
-    robot.set_servo_on(False)
+    print(robot.set_servo_on(False))
+    time.sleep(5)
 
-    robot.set_servo_on(True) 
+    
+    print(robot.set_servo_on(True))
+    time.sleep(2)
 
-    robot.move_to_pose(
-        x=0.05,
-        y=0,
-        z=0,
-        r1=0,
-        r2=0,
-        r3=0,
-        rotation_format="RPY",
-        is_relative=True,
-        cartesian_path=True,
-        execute=True
-    )
+    # print(robot.init_robot(model="vs060", 
+    #                     planning_group="arm", 
+    #                     velocity_scale=0.2, 
+    #                     accel_scale=0.2, 
+    #                     planning_time=10, 
+    #                     planning_attempts=20, 
+    #                     allow_replanning=True, 
+    #                     planner_id="RRTConnect"))
+
+    return 
+
+    for i in range(10):
+        print(i)
+        robot.move_to_pose(
+            x=0.05,
+            y=0,
+            z=0,
+            r1=0,
+            r2=0,
+            r3=0,
+            rotation_format="RPY",
+            is_relative=True,
+            cartesian_path=True,
+            execute=True
+        )
+
+        robot.move_to_pose(
+            x=-0.05,
+            y=0,
+            z=0,
+            r1=0,
+            r2=0,
+            r3=0,
+            rotation_format="RPY",
+            is_relative=True,
+            cartesian_path=True,
+            execute=True
+        )
+
+
+
+    # print(robot.set_servo_on(True))
+    # time.sleep(2)
+
+    # robot.move_to_pose(
+    #     x=0.05,
+    #     y=0,
+    #     z=0,
+    #     r1=0,
+    #     r2=0,
+    #     r3=0,
+    #     rotation_format="RPY",
+    #     is_relative=True,
+    #     cartesian_path=True,
+    #     execute=True
+    # )
 
     
     # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
