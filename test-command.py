@@ -44,6 +44,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
     
+    
 
     robot.set_virtual_cage(
         enable=True,
@@ -54,34 +55,18 @@ def run():
 
     
 
-    robot.set_scaling(velocity_scale=0.05, accel_scale=0.05)
-
-    # robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0], is_relative=False)
-
-    # robot.move_joints([0.0, 0.2, 1.4, 0.0, 1.4, 0], is_relative=False)
-
-    print(robot.set_servo_on(False))
-    time.sleep(5)
-
+    robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
     
-    print(robot.set_servo_on(True))
-    time.sleep(2)
-
-    # print(robot.init_robot(model="vs060", 
-    #                     planning_group="arm", 
-    #                     velocity_scale=0.2, 
-    #                     accel_scale=0.2, 
-    #                     planning_time=10, 
-    #                     planning_attempts=20, 
-    #                     allow_replanning=True, 
-    #                     planner_id="RRTConnect"))
-
-    return 
 
     for i in range(10):
         print(i)
+        
+        print(robot.set_servo_on(False))
+        input("Press Enter to move the robot...")
+        print(robot.set_servo_on(True))
+
         robot.move_to_pose(
-            x=0.05,
+            x=0.1,
             y=0,
             z=0,
             r1=0,
@@ -94,7 +79,7 @@ def run():
         )
 
         robot.move_to_pose(
-            x=-0.05,
+            x=-0.1,
             y=0,
             z=0,
             r1=0,
@@ -105,6 +90,8 @@ def run():
             cartesian_path=True,
             execute=True
         )
+
+
 
 
 

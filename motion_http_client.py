@@ -77,6 +77,7 @@ class MotionRobotClient:
         payload = {
             "model": model,
             "planning_group": planning_group,
+            "sim": self.sim,
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
             "planning_time": float(planning_time),

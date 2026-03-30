@@ -25,7 +25,7 @@ box1 = {
     "position": {
         "x": 0.2581,
         "y": 0.1360,
-        "z": 0.1,
+        "z": 0.07,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -36,7 +36,7 @@ box2 = {
     "position": {
         "x": 0.2618,
         "y": -0.1192,
-        "z": 0.1,
+        "z": 0.07,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -93,7 +93,7 @@ def run():
     print(robot.manage_mesh(
         mesh_id="box1",
         mesh_path=to_path_real(rel_path_to_stl),
-        x=box1["position"]["x"], y=box1["position"]["y"], z=0.0,
+        x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
@@ -104,7 +104,7 @@ def run():
     print(robot.manage_mesh(
         mesh_id="box2",
         mesh_path=to_path_real(rel_path_to_stl),
-        x=box2["position"]["x"], y=box2["position"]["y"], z=0.0,
+        x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
