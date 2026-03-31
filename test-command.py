@@ -55,8 +55,26 @@ def run():
 
     
 
-    robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
     
+
+    print(robot.pump_grab())
+
+    t = time.time()
+
+    while time.time() - t < 5:
+        if robot.pump_is_grabbed()["grabbed"]:
+            win_logger.info("Card is grabbed")
+            break
+    
+    print(robot.pump_release())
+
+
+
+
+
+
+    return
 
     for i in range(10):
         print(i)

@@ -524,3 +524,49 @@ class MotionRobotClient:
         r = requests.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
+    
+    def pump_grab(self):
+        """
+        Activates the vacuum pump + valve to grab an object.
+        (Rob6x: valve in series with pump, both must be ON)
+ 
+        Examples:
+            robot.pump_grab()
+ 
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        r = requests.post(f"{self.base_url}/pump/grab", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+ 
+    def pump_release(self):
+        """
+        Deactivates the vacuum pump + valve to release an object.
+ 
+        Examples:
+            robot.pump_release()
+ 
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        r = requests.post(f"{self.base_url}/pump/release", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+ 
+    def pump_is_grabbed(self):
+        """
+        Checks if the vacuum sensor detects an object is grabbed.
+ 
+        Examples:
+            result = robot.pump_is_grabbed()
+            if result["grabbed"]:
+                print("Object is held!")
+ 
+        Returns:
+            dict: Contains 'success' (bool), 'grabbed' (bool), and 'message' (str).
+        """
+        r = requests.get(f"{self.base_url}/pump/is_grabbed", timeout=self.timeout)
+        r.raise_for_status()
+        return r.json()
+    

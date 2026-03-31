@@ -46,7 +46,7 @@ TERMINAL_1 = (
 if (SIM == "false"):
        TERMINAL_1 = (f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-            f"model:=vs060 sim:=false ip_address:=169.254.139.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
+            f"model:=vs060 sim:=false ip_address:=10.138.6.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
        )
 
 TERMINAL_2 = (
@@ -56,6 +56,13 @@ TERMINAL_2 = (
 )
 
 TERMINAL_3 = (
+    f"{SETUP} && "
+    "ros2 launch command_pump_denso pump_controller.launch.py "
+    f"model:=vs060 pump_pin:=25 valve_pin:=26 vacuum_sensor_pin:=8"
+)
+
+
+TERMINAL_4 = (
     "cd ~/workspace && "
     "source venv/bin/activate && "
     "source /opt/ros/humble/setup.bash && "
@@ -63,7 +70,7 @@ TERMINAL_3 = (
     "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
 )
 
-TAB_TITLES = ["DENSO_Bringup", "DENSO_MotionServer", "DENSO_Bridge"]
+TAB_TITLES = ["DENSO_Bringup", "DENSO_MotionServer", "Pump Control", "DENSO_Bridge"]
 
 # --- Launched processes ------------------------------------------------------
 
@@ -164,22 +171,25 @@ def main():
     mode = "visible" if SHOW_TERMINALS else "hidden (background)"
     print(f"Starting DENSO VS060 simulation (mode: {mode})...\n")
 
-    print("[1/3] Starting Gazebo & RViz...")
+    print("[1/4] Starting Gazebo & RViz...")
     launch_wsl_tab(TAB_TITLES[0], TERMINAL_1)
 
     print("      Waiting 5s for Gazebo to start...")
     time.sleep(5)
 
-    print("[2/3] Starting Motion Server...")
+    print("[2/4] Starting Motion Server...")
     launch_wsl_tab(TAB_TITLES[1], TERMINAL_2)
 
     print("      Waiting 2s...")
     time.sleep(2)
 
-    print("[3/3] Starting HTTP Bridge...")
+    print("[3/4] Starting Pump Control...")
     launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
 
-    print(f"\nAll 3 WSL processes launched (mode: {mode}).")
+    print("[4/4] Starting HTTP Bridge...")
+    launch_wsl_tab(TAB_TITLES[3], TERMINAL_4)
+
+    print(f"\nAll 4 WSL processes launched (mode: {mode}).")
     print("Press Ctrl+C to stop everything.\n")
 
     while True:
