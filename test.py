@@ -25,7 +25,7 @@ box1 = {
     "position": {
         "x": 0.2581,
         "y": 0.1360,
-        "z": 0.07,
+        "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -36,7 +36,7 @@ box2 = {
     "position": {
         "x": 0.2618,
         "y": -0.1192,
-        "z": 0.07,
+        "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -88,7 +88,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=1, accel_scale=1))
+    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
 
     print(robot.manage_mesh(
         mesh_id="box1",
@@ -180,13 +180,13 @@ def run():
                         else:
                             # win_logger.info(f'Robot is going to take card {card} by waypoints move')
                             # storage_points = [
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.1,
                             #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
                             #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.3 + 0.005,
+                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.1,
                             #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
                             #         "is_relative": False, "reference_frame": "WORLD" },
                             # ]
@@ -204,7 +204,7 @@ def run():
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
+                                z=inputStorage["position"]["z"] + 0.3 + 0.01,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
@@ -324,7 +324,7 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.005,
+                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],

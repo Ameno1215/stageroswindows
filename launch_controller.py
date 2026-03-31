@@ -33,7 +33,7 @@ SETUP = (
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
     "export OMPL_CONSOLE_LOG_LEVEL=DEBUG && "
-    "export LIBGL_ALWAYS_SOFTWARE=1 && "
+    "export LIBGL_ALWAYS_SOFTWARE=0 && "
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
 )
 

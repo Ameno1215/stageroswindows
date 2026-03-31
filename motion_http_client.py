@@ -462,6 +462,21 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
     
+    def clear_environment(self):
+        """
+        Removes all collision objects (boxes, meshes, cage walls) from the
+        planning scene, keeping only the robot and any attached tool objects.
+
+        Examples:
+            robot.clear_environment()
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str) listing removed objects.
+        """
+        r = requests.post(f"{self.base_url}/clear_environment", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+    
     def move_to_pose_via_joint(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, execute=True):
         """
         Moves to a Cartesian pose by first solving Inverse Kinematics, then planning
@@ -518,8 +533,6 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
-        if self.sim:
-            return "No motor control on simulation"
         payload = {"enable": bool(enable)}
         r = requests.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
         r.raise_for_status()
