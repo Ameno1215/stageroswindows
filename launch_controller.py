@@ -13,12 +13,15 @@ parser.add_argument("--solver", choices=["pick_ik", "kdl"], default="pick_ik",
                     help="IK solver to use (default: pick_ik)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
+parser.add_argument("--model", choices=["vs060", "vp5243"], default="vs060",
+                    help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
 
 SHOW_TERMINALS = args.show_terminals
 SOLVER = args.solver
 SIM = "false" if args.real_robot else "true"
+MODEL = args.model
 
 
 # SHOW_TERMINALS = True  # Set to False to hide WSL terminals
@@ -40,25 +43,25 @@ SETUP = (
 TERMINAL_1 = (
     f"{SETUP} && "
     "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-    f"model:=vs060 sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
+    f"model:={MODEL} sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
 if (SIM == "false"):
        TERMINAL_1 = (f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-            f"model:=vs060 sim:=false ip_address:=169.254.139.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
+            f"model:={MODEL} sim:=false ip_address:=169.254.139.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
        )
 
 TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
-    f"model:=vs060 sim:={SIM} tool:=effecteur_v2 ik_solver:={SOLVER}"
+    f"model:={MODEL} sim:={SIM} tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
 
 TERMINAL_3 = (
     f"{SETUP} && "
     "ros2 launch command_pump_denso pump_controller.launch.py "
-    f"model:=vs060 pump_pin:=25 valve_pin:=26 vacuum_sensor_pin:=8"
+    f"model:={MODEL} pump_pin:=25 valve_pin:=26 vacuum_sensor_pin:=8"
 )
 
 
