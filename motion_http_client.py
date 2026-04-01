@@ -2,7 +2,7 @@ import requests
 
 
 class MotionRobotClient:
-    def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0, ):
+    def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0):
         """
         Initializes the Denso client.
         
@@ -17,6 +17,8 @@ class MotionRobotClient:
         self.timeout = timeout
         self.model = None
         self.sim = sim
+        self.session = requests.Session()
+        self.session.trust_env = False
 
     def _check(self, result: dict) -> dict:
         """Raises RuntimeError if the motion server returned a failure."""
@@ -34,7 +36,7 @@ class MotionRobotClient:
         Returns:
             dict: {"ok": True} if the server responds.
         """
-        r = requests.get(f"{self.base_url}/health", timeout=self.timeout)
+        r = self.session.get(f"{self.base_url}/health", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
     
@@ -85,7 +87,7 @@ class MotionRobotClient:
             "allow_replanning": bool(allow_replanning),
             "planner_id": str(planner_id)
         }
-        r = requests.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
         self.get_solver()
         self.model = model
@@ -109,7 +111,7 @@ class MotionRobotClient:
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
         }
-        r = requests.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -131,7 +133,7 @@ class MotionRobotClient:
         }
         current_timeout = 120.0 if execute else self.timeout
     
-        r = requests.post(f"{self.base_url}/move_joints", json=payload, timeout=current_timeout)
+        r = self.session.post(f"{self.base_url}/move_joints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -171,7 +173,7 @@ class MotionRobotClient:
         }
         current_timeout = 120.0 if execute else self.timeout
 
-        r = requests.post(f"{self.base_url}/move_to_pose", json=payload, timeout=current_timeout)
+        r = self.session.post(f"{self.base_url}/move_to_pose", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -206,7 +208,7 @@ class MotionRobotClient:
         }
         current_timeout = 120.0 if execute else self.timeout
 
-        r = requests.post(f"{self.base_url}/move_waypoints", json=payload, timeout=current_timeout)
+        r = self.session.post(f"{self.base_url}/move_waypoints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -220,7 +222,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains the 'joints' list with angles in radians.
         """
-        r = requests.get(f"{self.base_url}/state/joints", timeout=self.timeout)
+        r = self.session.get(f"{self.base_url}/state/joints", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -261,7 +263,7 @@ class MotionRobotClient:
             params["child_frame_id"] = child_frame_id
 
         # The server returns EVERYTHING (pos + quaternion + euler)
-        r = requests.get(f"{self.base_url}/state/pose", params=params, timeout=self.timeout)
+        r = self.session.get(f"{self.base_url}/state/pose", params=params, timeout=self.timeout)
         r.raise_for_status()
         raw_data = r.json()
 
@@ -329,7 +331,7 @@ class MotionRobotClient:
             "top": float(top), "bottom": float(bottom),
             "r": float(r), "g": float(g), "b": float(b), "a": float(a)
         }
-        r = requests.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -345,7 +347,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success', 'solver' (short name), and 'full_plugin_name'.
         """
-        r = requests.get(f"{self.base_url}/state/solver", timeout=self.timeout)
+        r = self.session.get(f"{self.base_url}/state/solver", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -374,7 +376,7 @@ class MotionRobotClient:
         }
         current_timeout = 120.0 if execute else self.timeout
 
-        r = requests.post(f"{self.base_url}/move_approach", json=payload, timeout=current_timeout)
+        r = self.session.post(f"{self.base_url}/move_approach", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -404,7 +406,7 @@ class MotionRobotClient:
             "action": str(action).upper(),
             "enable_collision": bool(enable_collision)
         }
-        r = requests.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/manage_box", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -458,7 +460,7 @@ class MotionRobotClient:
             "action": str(action).upper()
         }
         
-        r = requests.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -473,7 +475,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool) and 'message' (str) listing removed objects.
         """
-        r = requests.post(f"{self.base_url}/clear_environment", timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/clear_environment", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -515,7 +517,7 @@ class MotionRobotClient:
         }
         current_timeout = 120.0 if execute else self.timeout
 
-        r = requests.post(f"{self.base_url}/move_to_pose_via_joint", json=payload, timeout=current_timeout)
+        r = self.session.post(f"{self.base_url}/move_to_pose_via_joint", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -534,7 +536,7 @@ class MotionRobotClient:
             dict: Contains 'success' (bool) and 'message' (str).
         """
         payload = {"enable": bool(enable)}
-        r = requests.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
     
@@ -549,7 +551,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
-        r = requests.post(f"{self.base_url}/pump/grab", timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/pump/grab", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
  
@@ -563,7 +565,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
-        r = requests.post(f"{self.base_url}/pump/release", timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/pump/release", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
  
@@ -579,7 +581,7 @@ class MotionRobotClient:
         Returns:
             dict: Contains 'success' (bool), 'grabbed' (bool), and 'message' (str).
         """
-        r = requests.get(f"{self.base_url}/pump/is_grabbed", timeout=self.timeout)
+        r = self.session.get(f"{self.base_url}/pump/is_grabbed", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
     

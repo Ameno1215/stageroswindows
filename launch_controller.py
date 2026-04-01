@@ -46,7 +46,7 @@ TERMINAL_1 = (
 if (SIM == "false"):
        TERMINAL_1 = (f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-            f"model:=vs060 sim:=false ip_address:=10.138.6.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
+            f"model:=vs060 sim:=false ip_address:=169.254.139.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
        )
 
 TERMINAL_2 = (
@@ -67,7 +67,7 @@ TERMINAL_4 = (
     "source venv/bin/activate && "
     "source /opt/ros/humble/setup.bash && "
     "source ~/workspace/denso_ros2_ws/install/setup.bash && "
-    "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
+    "uvicorn wsl_ros_bridge:app --host 127.0.0.1 --port 8000"
 )
 
 TAB_TITLES = ["DENSO_Bringup", "DENSO_MotionServer", "Pump Control", "DENSO_Bridge"]

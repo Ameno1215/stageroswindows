@@ -69,10 +69,34 @@ def run():
     
     # print(robot.pump_release())
 
+    robot.move_to_pose(
+        x=0.1,
+        y=0,
+        z=0,
+        r1=0,
+        r2=0,
+        r3=0,
+        rotation_format="RPY",
+        is_relative=True,
+        cartesian_path=True,
+        execute=False
+    )
+    
+    robot.move_to_pose(
+        x=0.1,
+        y=0,
+        z=0,
+        r1=0,
+        r2=0,
+        r3=0,
+        rotation_format="RPY",
+        is_relative=True,
+        cartesian_path=True,
+        execute=True
+    )
 
 
-
-
+    return 
 
     
 

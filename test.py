@@ -81,14 +81,14 @@ def run():
     win_logger.info(f"Initialising robot")
     print(robot.init_robot(model="vs060", 
                            planning_group="arm", 
-                           velocity_scale=0.2, 
-                           accel_scale=0.2, 
+                           velocity_scale=0.1, 
+                           accel_scale=0.1, 
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
+    print(robot.set_scaling(velocity_scale=0.05, accel_scale=0.05))
 
     print(robot.manage_mesh(
         mesh_id="box1",
