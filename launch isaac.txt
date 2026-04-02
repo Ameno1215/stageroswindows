@@ -1,0 +1,91 @@
+Voici la manip complète pour lancer votre stack en mode Isaac uniquement.
+
+  1. Côté WSL
+  Dans WSL:
+
+  cd ~/workspace/denso_ros2_ws
+  source /opt/ros/humble/setup.bash
+  colcon build --symlink-install --packages-select isaac_joint_trajectory_bridge motion_control
+  denso_robot_bringup denso_robot_descriptions
+  source install/setup.bash
+  bash /home/antonin/workspace/isaac_sim/install_fastdds_wsl.sh 0
+
+  2. Générer le bundle URDF pour Windows
+  Toujours dans WSL:
+
+  python3 /home/antonin/workspace/isaac_sim/export_isaac_bundle.py --output-dir /mnt/c/Users/33648/Desktop/
+  STAGE_ROS/isaac_sim/import_bundle
+
+  Ça crée côté Windows:
+
+  - C:\Users\33648\Desktop\STAGE_ROS\isaac_sim\import_bundle\vs060_isaac.urdf
+  - les meshes à côté
+
+  3. Mettre à jour les fichiers côté Windows
+  Dans C:\Users\33648\Desktop\STAGE_ROS, il faut avoir les versions récentes de:
+
+  - launch_denso_stack.py
+  - isaac_sim\setup_vs060_ros2_bridge.py
+  - isaac_sim\install_fastdds_windows.ps1
+  - isaac_sim\fastdds\fastdds.xml
+
+  Dans install_fastdds_windows.ps1, la ligne source doit pointer vers votre vrai chemin Windows:
+
+  $SourceFile = "C:\Users\33648\Desktop\STAGE_ROS\isaac_sim\fastdds\fastdds.xml"
+
+  4. Installer Fast DDS côté Windows
+  Dans PowerShell Windows, depuis C:\Users\33648\Desktop\STAGE_ROS:
+
+  powershell -ExecutionPolicy Bypass -File .\isaac_sim\install_fastdds_windows.ps1 0
+
+  Puis ouvrez un nouveau PowerShell.
+
+  5. Importer le robot dans Isaac Sim
+  Dans Isaac Sim:
+
+  1. Activez l’extension ROS 2 bridge.
+  2. Importez:
+     C:\Users\33648\Desktop\STAGE_ROS\isaac_sim\import_bundle\vs060_isaac.urdf
+  3. Vérifiez le chemin du robot dans le Stage.
+     Le script suppose:
+
+     ROBOT_PRIM_PATH = "/World/vs060"
+     Si votre robot a un autre chemin, modifiez-le dans setup_vs060_ros2_bridge.py.
+  4. Exécutez setup_vs060_ros2_bridge.py dans le Script Editor.
+  5. Mettez Isaac en Play.
+
+  Le script Isaac publie sur /joint_states_raw et écoute /joint_command.
+
+  6. Lancer la stack ROS
+  Dans PowerShell Windows, depuis C:\Users\33648\Desktop\STAGE_ROS:
+
+  python .\launch_denso_stack.py --sim-backend isaac --launch-isaac --show-terminals
+
+  7. Vérifier que tout est bon
+  Dans les terminaux WSL, vous devez voir:
+
+  - follow_joint_trajectory_bridge
+  - isaac_joint_state_relay
+  - move_group qui ne crash pas
+  - motion_server qui démarre
+
+  Dans WSL, vous pouvez vérifier:
+
+  source ~/workspace/denso_ros2_ws/install/setup.bash
+  ros2 topic echo /joint_states --once
+  ros2 service list | grep init_robot
+
+  Si ça marche, /joint_states doit remonter et /init_robot doit exister.
+
+  Ordre recommandé
+
+  1. Build WSL
+  2. Export bundle
+  3. Installer Fast DDS Windows
+  4. Import URDF dans Isaac
+  5. Lancer setup_vs060_ros2_bridge.py
+  6. Mettre Play
+  7. Lancer launch_denso_stack.py
+
+  Si vous voulez, je peux maintenant vous faire une checklist ultra courte “clic par clic” dans Isaac Sim pour
+  l’import URDF et le script.

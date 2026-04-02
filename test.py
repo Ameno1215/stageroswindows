@@ -112,7 +112,11 @@ def run():
         action="ADD"
     ))
 
+    
+    print(robot.set_servo_on(True))
 
+    robot.move_to_home()
+    
     print(robot.set_virtual_cage(
         enable=True, 
         front=0.66, back=0.35, 
@@ -122,9 +126,6 @@ def run():
     time.sleep(2)
 
     
-    print(robot.set_servo_on(True))
-
-    robot.move_to_home()
     
     inputStorage = box1
     outputStorage = box2
