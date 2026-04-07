@@ -6,7 +6,6 @@ import signal
 import subprocess
 import sys
 import time
-from datetime import datetime
 
 
 parser = argparse.ArgumentParser(description="Launch the DENSO ROS 2 stack with Gazebo or Isaac Sim")
@@ -29,7 +28,8 @@ ROS_DOMAIN_ID = args.ros_domain_id
 
 launched_processes = []
 isaac_process = None
-LOG_STAMP = datetime.now().strftime("%Y%m%d_%H%M%S")
+# Keep a stable prefix so each service reuses the same log file across runs.
+LOG_STAMP = "latest"
 RUNNER_SCRIPT = "/home/antonin/workspace/run_logged_command.sh"
 
 if SIM_BACKEND == "isaac" and MODEL != "vs060":
@@ -57,7 +57,7 @@ if SIM == "true":
         f"{SETUP} && "
         "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
         f"model:={MODEL} sim:=true sim_backend:={SIM_BACKEND} "
-        f"use_sim_time:={'true' if SIM == 'true' else 'false'}"
+        f"use_sim_time:={'true' if SIM == 'true' else 'false'} "
         f"description_file:={'denso_robot_isaac.urdf.xacro' if SIM_BACKEND == 'isaac' else 'denso_robot.urdf.xacro'} "
         f"tool:=effecteur_v2 ik_solver:={SOLVER}"
     )
@@ -74,7 +74,7 @@ TERMINAL_2 = (
     f"{SETUP} && "
     "ros2 launch motion_control motion_server.launch.py "
     f"model:={MODEL} sim:={SIM} sim_backend:={SIM_BACKEND} "
-    f"use_sim_time:={'true' if SIM == 'true' else 'false'}"
+    f"use_sim_time:={'true' if SIM == 'true' else 'false'} "
     f"description_file:={'denso_robot_isaac.urdf.xacro' if SIM_BACKEND == 'isaac' else 'denso_robot.urdf.xacro'} "
     f"tool:=effecteur_v2 ik_solver:={SOLVER}"
 )
@@ -231,7 +231,7 @@ signal.signal(signal.SIGINT, handle_sigint)
 def main():
     mode = "visible" if SHOW_TERMINALS else "hidden (background)"
     print(f"Starting DENSO stack with backend={SIM_BACKEND} (mode: {mode})...\n")
-    print(f"WSL logs will be written under ~/workspace/launch_logs/{LOG_STAMP}_*.log\n")
+    print(f"WSL logs will be written under ~/workspace/launch_logs/{LOG_STAMP}_*.log (appended each run)\n")
 
     launch_isaac_if_requested()
 
@@ -240,8 +240,7 @@ def main():
         ("Starting Motion Server...", "DENSO_MotionServer", TERMINAL_2, 2),
     ]
 
-    if SIM_BACKEND != "isaac" or SIM == "false":
-        steps.append(("Starting Pump Control...", "Pump Control", TERMINAL_3, 0))
+    steps.append(("Starting Pump Control...", "Pump Control", TERMINAL_3, 0))
 
     steps.append(("Starting HTTP Bridge...", "DENSO_Bridge", TERMINAL_4, 0))
 

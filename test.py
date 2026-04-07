@@ -88,7 +88,9 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=0.05, accel_scale=0.05))
+    print(robot.set_scaling(velocity_scale=0.4, accel_scale=0.4))
+
+    print(robot.clear_environment())
 
     print(robot.manage_mesh(
         mesh_id="box1",
@@ -205,7 +207,7 @@ def run():
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.01,
+                                z=inputStorage["position"]["z"] + 0.3 + 0.1,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
@@ -325,7 +327,7 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
+                                z=outputStorage["position"]["z"] + 0.3 + 0.1,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],
