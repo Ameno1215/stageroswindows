@@ -25,3 +25,6 @@ tool:=effecteur_v1
 
 
 ps aux | grep gazebo
+
+
+& "C:\isaacsim\python.bat" "C:\Users\33648\Desktop\STAGE_ROS\launch_isaac.py"

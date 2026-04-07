@@ -88,7 +88,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
+    print(robot.set_scaling(velocity_scale=0.4, accel_scale=0.4))
 
     print(robot.clear_environment())
 
@@ -131,11 +131,11 @@ def run():
     
     inputStorage = box1
     outputStorage = box2
-    number_of_cards = 4
+    number_of_cards = 1
 
 
 
-    plates_dir = base_path / "plates2"
+    plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
