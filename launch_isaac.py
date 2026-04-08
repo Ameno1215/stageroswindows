@@ -1,13 +1,13 @@
 import os
 from isaacsim.simulation_app import SimulationApp
-
+import numpy as np
 simulation_app = SimulationApp({"headless": False})
 
 import omni.usd
 import omni.graph.core as og
 import carb
 from isaacsim.core.utils.extensions import enable_extension
-from pxr import UsdPhysics, UsdGeom, UsdLux
+from pxr import UsdPhysics, UsdGeom, UsdLux, Gf, UsdShade
 
 enable_extension("isaacsim.ros2.bridge")
 enable_extension("isaacsim.asset.importer.urdf")
@@ -177,6 +177,16 @@ def main():
     #    physics_prim_path ensures the scene is created at /World/physicsScene instead of root
     from isaacsim.core.api.world import World
     world = World(physics_dt=1.0 / 240.0, rendering_dt=1.0 / 60.0, physics_prim_path="/World/physicsScene")
+
+    # Add the default ground plane
+    world.scene.add_default_ground_plane()
+    
+    plane_prim = stage.GetPrimAtPath("/World/defaultGroundPlane")
+    if plane_prim.IsValid():
+        UsdShade.MaterialBindingAPI(plane_prim).UnbindAllBindings()
+        
+        UsdGeom.Gprim(plane_prim).CreateDisplayColorAttr().Set([Gf.Vec3f(0.2, 0.2, 0.2)])
+
     world.reset()
 
     # 3. Configure physics (240 Hz, V-Sync off) now that /World/physicsScene exists
