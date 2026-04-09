@@ -117,7 +117,7 @@ def run():
         enable=True, 
         front=0.66, back=0.35, 
         left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
+        top=0.75, bottom=0.0
     ))
     time.sleep(2)
 
@@ -129,8 +129,119 @@ def run():
     inputStorage = box1
     outputStorage = box2
     number_of_cards = 1
+    
+    robot.move_to_pose(
+        x=0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=False,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+
+    
+    robot.move_to_pose(
+        x=-0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=False,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+    
+    robot.move_to_pose(
+        x=0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=True,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+
+    
+    robot.move_to_pose(
+        x=-0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=True,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+
+    
+    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
+    robot.move_to_pose(
+        x=0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=False,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+
+    
+    robot.move_to_pose(
+        x=-0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=False,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+    
+    robot.move_to_pose(
+        x=0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=True,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
+
+    
+    robot.move_to_pose(
+        x=-0.2, y=0, z=0.0,
+        r1=0, r2=0, r3=0,
+        rotation_format="RPY",
+        reference_frame="WORLD",
+        is_relative=True,
+        cartesian_path=True,
+        joint_constraints=[
+            {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
+        ],
+        execute=True
+    )
 
 
+    return
 
     plates_dir = base_path / "plates"
 
@@ -195,7 +306,7 @@ def run():
                             #     waypoints=storage_points,
                             #     rotation_format="RPY",
                             #     is_relative=False, 
-                            #     cartesian_path=True
+                            #     cartesian_path=False
                             # )
 
                         
@@ -211,7 +322,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -225,7 +336,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -240,7 +351,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
                     
@@ -255,7 +366,7 @@ def run():
                             #         r1=0, r2=0, r3=0,
                             #         rotation_format="RPY",
                             #         reference_frame="WORLD",
-                            #         cartesian_path=True,
+                            #         cartesian_path=False,
                             #         is_relative=True,
                             #         execute=True
                             #     )
@@ -265,7 +376,7 @@ def run():
                                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                 z_offset=0.12,
                                 rotation_format="RPY",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -274,7 +385,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 is_relative=True,
                                 execute=True
                             )
@@ -284,7 +395,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 is_relative=True,
                                 execute=True
                             )
@@ -316,7 +427,7 @@ def run():
                             #     waypoints=storage_points,
                             #     rotation_format="RPY",
                             #     is_relative=False, 
-                            #     cartesian_path=True
+                            #     cartesian_path=False
                             # )
 
                             win_logger.info(f'Robot is going to release card: {card} by move pose')
@@ -331,7 +442,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -345,7 +456,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -359,7 +470,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
                     

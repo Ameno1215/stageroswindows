@@ -115,18 +115,20 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_joints(self, joints, angle_format="RAD", is_relative=False, execute=True):
+    def move_joints(self, joints, joint_constraints=None, angle_format="RAD", is_relative=False, execute=True):
         """
         Commands a movement to target joint angles.
 
         Args:
             joints (list[float]): List of target angles in radians or in degrees (must match the number of axes).
+            joint_constraints (list[dict], optional): List of joint constraints. Each dict: {"joint_name": str, "min": float, "max": float} (radians).
             angle_format(string): Angle format, RAD or DEG
             is_relative (bool): If True, adds the angles to the current position. If False, goes to absolute angles.
             execute (bool): If True, physically moves the robot. If False, only plans.
         """
         payload = {
             "joints": [float(x) for x in joints], 
+            "joint_constraints": joint_constraints or [],
             "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "execute": bool(execute)
@@ -137,7 +139,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
+    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
         """
         The universal function for point-to-point Cartesian movement.
 
@@ -154,6 +156,9 @@ class MotionRobotClient:
         Args:
             x, y, z (float): Translation.
             r1, r2, r3, r4 (float): Rotation (r4 is ignored if format is RPY).
+            joint_constraints (list[dict], optional): List of joint constraints.
+            Each dict: {"joint_name": str, "min": float, "max": float} (radians).
+            Ignored when cartesian_path=True.
             rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
             angle_format (str): "DEG" for degrees or "RAD" for radians.
             reference_frame (str): "WORLD" or "TOOL".
@@ -164,6 +169,7 @@ class MotionRobotClient:
         payload = {
             "x": float(x), "y": float(y), "z": float(z),
             "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+             "joint_constraints": joint_constraints or [],
             "rotation_format": str(rotation_format),
             "reference_frame": str(reference_frame),
             "angle_format": str(angle_format),
@@ -351,13 +357,15 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
+    def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, angle_format="RAD", rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
         """
         Asks the Linux ROS server to calculate and execute an approach position above an object.
         
         Args:
             x, y, z (float): Position of the object (final target).
             r1, r2, r3, r4 (float): Desired orientation of the tool.
+            joint_constraints (list[dict], optional): Joint constraints. Ignored when cartesian_path=True.
+            angle_format (str): "RAD" or "DEG".
             rotation_format (str): "RPY" or "QUAT".
             z_offset (float): Retreat distance in meters (e.g., 0.1 for 10 cm above).
             cartesian_path (bool): True = straight line, False = joint space path.
@@ -369,6 +377,8 @@ class MotionRobotClient:
         payload = {
             "x": float(x), "y": float(y), "z": float(z),
             "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "joint_constraints": joint_constraints or [],
+            "angle_format": str(angle_format),
             "rotation_format": str(rotation_format),
             "z_offset": float(z_offset),
             "cartesian_path": bool(cartesian_path),
@@ -479,7 +489,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
     
-    def move_to_pose_via_joint(self, x, y, z, r1, r2, r3, r4=0.0, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, execute=True):
+    def move_to_pose_via_joint(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, execute=True):
         """
         Moves to a Cartesian pose by first solving Inverse Kinematics, then planning
         and executing in joint space. Useful when you want a free-form joint-space
@@ -496,6 +506,7 @@ class MotionRobotClient:
         Args:
             x, y, z (float): Translation target.
             r1, r2, r3, r4 (float): Rotation (r4 ignored if RPY).
+            joint_constraints (list[dict], optional): Joint constraints.
             rotation_format (str): "RPY" or "QUAT".
             angle_format (str): "RAD" or "DEG".
             reference_frame (str): "WORLD" or "TOOL".
@@ -508,6 +519,7 @@ class MotionRobotClient:
         payload = {
             "x": float(x), "y": float(y), "z": float(z),
             "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "joint_constraints": joint_constraints or [],
             "rotation_format": str(rotation_format),
             "angle_format": str(angle_format),
             "reference_frame": str(reference_frame),
