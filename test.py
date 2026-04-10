@@ -79,18 +79,18 @@ def run():
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
-    print(robot.init_robot(model="vs060", 
+    robot.init_robot(model="vs060", 
                            planning_group="arm", 
                            velocity_scale=0.1, 
                            accel_scale=0.1, 
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
-                           planner_id="RRTConnect"))
+                           planner_id="RRTConnect")
 
-    print(robot.set_scaling(velocity_scale=1, accel_scale=1))
+    robot.set_scaling(velocity_scale=1, accel_scale=1)
 
-    print(robot.manage_mesh(
+    robot.manage_mesh(
         mesh_id="box1",
         mesh_path=to_path_real(rel_path_to_stl),
         x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
@@ -99,9 +99,9 @@ def run():
         rotation_format="RPY",
         a=1, r=1, g=0, b=0,
         action="ADD"
-    ))
+    )
 
-    print(robot.manage_mesh(
+    robot.manage_mesh(
         mesh_id="box2",
         mesh_path=to_path_real(rel_path_to_stl),
         x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
@@ -110,15 +110,15 @@ def run():
         rotation_format="RPY",
         a=0.5, r=0, g=0, b=1,
         action="ADD"
-    ))
+    )
 
 
-    print(robot.set_virtual_cage(
+    robot.set_virtual_cage(
         enable=True, 
         front=0.66, back=0.35, 
         left=0.325, right=0.325, 
         top=0.9, bottom=0.0
-    ))
+    )
     time.sleep(2)
 
     
@@ -153,16 +153,16 @@ def run():
 
                 for reader in plate.readers:
                     for pos in reader.positions:
-                        print(robot.manage_box(
+                        robot.manage_box(
                             box_id=f"{reader.reader_name}_{pos.position_label}",
                             x=pos.x, y=pos.y, z=pos.z,
                             r1=pos.rx, r2=pos.ry, r3=pos.rz,
                             size_x=0.06, size_y=0.09, size_z=0.02,
                             action="ADD",
                             enable_collision=False
-                        ))
+                        )
                 
-                print(robot.manage_mesh(
+                robot.manage_mesh(
                     mesh_id=f"plaque{plate.plate_number}",
                     mesh_path=to_path_real(plate.mesh_path),
                     x=0.557+0.135/2, y=-0.25, z=0,
@@ -170,7 +170,7 @@ def run():
                     rotation_format="RPY",
                     a=1, r=0, g=1, b=0,
                     action="ADD"
-                ))       
+                )       
 
                 for reader_index, reader in enumerate(plate.readers):
                     win_logger.info(f'Testing reader: {reader.reader_name}')
@@ -380,10 +380,10 @@ def run():
                             action="REMOVE"
                         )      
 
-                print(robot.manage_mesh(
+                robot.manage_mesh(
                     mesh_id=f"plaque{plate.plate_number}",
                     action="REMOVE"
-                ))
+                )
 
     time.sleep(2)
 
@@ -403,8 +403,6 @@ def run():
     
          
 
-
-
 if __name__ == "__main__":
     try:
         run()
@@ -414,3 +412,25 @@ if __name__ == "__main__":
         win_logger.info("Program interrupted by user.")
     except Exception as e:
         win_logger.error(f"Unexpected error: {e}")
+
+
+# if __name__ == "__main__":
+#     total_runs = 10
+#     crash_count = 0
+
+#     for i in range(1, total_runs + 1):
+#         win_logger.info(f"\n\n\n\t{i}/{total_runs}\n\n\n")
+#         win_logger.info(f"--- Run {i}/{total_runs} ---")
+#         try:
+#             run()
+#         except RuntimeError as e:
+#             win_logger.error(f"Run {i} crashed (motion error): {e}")
+#             crash_count += 1
+#         except KeyboardInterrupt:
+#             win_logger.info("Program interrupted by user.")
+#             break
+#         except Exception as e:
+#             win_logger.error(f"Run {i} crashed (unexpected): {e}")
+#             crash_count += 1
+
+#     win_logger.info(f"\n\n\n\n\nResults: {crash_count}/{total_runs} crashes")
