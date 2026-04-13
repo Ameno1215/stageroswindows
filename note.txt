@@ -32,3 +32,5 @@ $env:PATH = "$env:PATH;c:\isaacsim\exts\isaacsim.ros2.bridge\humble\lib"
 $env:FASTRTPS_DEFAULT_PROFILES_FILE = "C:\.ros\fastdds.xml"
 $env:ROS_DOMAIN_ID = "0"
 & "C:\isaacsim\python.bat" "C:\Users\33648\Desktop\STAGE_ROS\launch_isaac.py"
+
+python .\launch_denso_stack.py --sim-backend isaac --launch-isaac
