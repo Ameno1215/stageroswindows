@@ -88,7 +88,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
+    print(robot.set_scaling(velocity_scale=1, accel_scale=1))
 
     print(robot.clear_environment())
 
@@ -116,7 +116,7 @@ def run():
 
     
     print(robot.set_servo_on(True))
-
+    robot.move_joints([0, 0, 0, 0, 0, 0])
     robot.move_to_home()
     
     print(robot.set_virtual_cage(
@@ -131,7 +131,7 @@ def run():
     
     inputStorage = box1
     outputStorage = box2
-    number_of_cards = 4
+    number_of_cards = 2
 
 
 
@@ -198,7 +198,7 @@ def run():
                             #     waypoints=storage_points,
                             #     rotation_format="RPY",
                             #     is_relative=False, 
-                            #     cartesian_path=True
+                            #     cartesian_path=False
                             # )
 
                         
@@ -214,7 +214,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -228,7 +228,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -243,7 +243,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
                     
@@ -258,7 +258,7 @@ def run():
                             #         r1=0, r2=0, r3=0,
                             #         rotation_format="RPY",
                             #         reference_frame="WORLD",
-                            #         cartesian_path=True,
+                            #         cartesian_path=False,
                             #         is_relative=True,
                             #         execute=True
                             #     )
@@ -268,7 +268,7 @@ def run():
                                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                 z_offset=0.12,
                                 rotation_format="RPY",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -277,7 +277,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 is_relative=True,
                                 execute=True
                             )
@@ -287,7 +287,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 is_relative=True,
                                 execute=True
                             )
@@ -319,7 +319,7 @@ def run():
                             #     waypoints=storage_points,
                             #     rotation_format="RPY",
                             #     is_relative=False, 
-                            #     cartesian_path=True
+                            #     cartesian_path=False
                             # )
 
                             win_logger.info(f'Robot is going to release card: {card} by move pose')
@@ -334,7 +334,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -348,7 +348,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -362,7 +362,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
                     

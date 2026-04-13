@@ -26,5 +26,9 @@ tool:=effecteur_v1
 
 ps aux | grep gazebo
 
-
+$env:ROS_DISTRO = "humble"
+$env:RMW_IMPLEMENTATION = "rmw_fastrtps_cpp"
+$env:PATH = "$env:PATH;c:\isaacsim\exts\isaacsim.ros2.bridge\humble\lib"
+$env:FASTRTPS_DEFAULT_PROFILES_FILE = "C:\.ros\fastdds.xml"
+$env:ROS_DOMAIN_ID = "0"
 & "C:\isaacsim\python.bat" "C:\Users\33648\Desktop\STAGE_ROS\launch_isaac.py"

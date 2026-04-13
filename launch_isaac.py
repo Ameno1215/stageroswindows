@@ -7,10 +7,11 @@ import omni.usd
 import omni.graph.core as og
 import carb
 from isaacsim.core.utils.extensions import enable_extension
-from pxr import UsdPhysics, UsdGeom, UsdLux, Gf, UsdShade
+from pxr import UsdPhysics, UsdGeom, UsdLux, Gf, UsdShade, PhysxSchema
 
 enable_extension("isaacsim.ros2.bridge")
 enable_extension("isaacsim.asset.importer.urdf")
+enable_extension("omni.kit.window.script_editor")
 from isaacsim.asset.importer.urdf import _urdf
 
 
@@ -20,9 +21,9 @@ ROBOT_PRIM_PATH = "/World/vs060"
 GRAPH_PATH = "/World/DensoActionGraph"
 JOINT_STATES_TOPIC = "/joint_states"
 JOINT_COMMAND_TOPIC = "/joint_command"
-TARGET_STIFFNESS = 100000000.0
-TARGET_DAMPING = 5000000.0
-TARGET_MAX_FORCE = 1e10
+TARGET_STIFFNESS = 30000000000.0
+TARGET_DAMPING = 300000000.0
+TARGET_MAX_FORCE = 1e16
 
 def import_urdf():
     urdf_interface = _urdf.acquire_urdf_interface()
@@ -69,6 +70,8 @@ def configure_physics():
 def configure_drives():
     stage = omni.usd.get_context().get_stage()
 
+    HEADROOM = 2.0
+
     for prim in stage.Traverse():
         if prim.IsA(UsdPhysics.RevoluteJoint):
             drive_api = UsdPhysics.DriveAPI.Get(prim, "angular")
@@ -79,7 +82,15 @@ def configure_drives():
             drive_api.GetDampingAttr().Set(TARGET_DAMPING)
             drive_api.GetMaxForceAttr().Set(TARGET_MAX_FORCE)
 
-            print(f"  {prim.GetPath()}: stiffness={TARGET_STIFFNESS}, damping={TARGET_DAMPING}")
+            # Increase velocity limit for PD tracking headroom
+            physx_joint = PhysxSchema.PhysxJointAPI(prim)
+            if physx_joint:
+                current_vel = physx_joint.GetMaxJointVelocityAttr().Get()
+                new_vel = current_vel * HEADROOM
+                physx_joint.GetMaxJointVelocityAttr().Set(new_vel)
+                print(f"  {prim.GetPath()}: stiffness={TARGET_STIFFNESS}, damping={TARGET_DAMPING}, maxVel={current_vel:.1f}->{new_vel:.1f}")
+            else:
+                print(f"  {prim.GetPath()}: stiffness={TARGET_STIFFNESS}, damping={TARGET_DAMPING}")
 
     print("Joint drives configured")
 

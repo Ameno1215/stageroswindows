@@ -10,9 +10,9 @@ ROBOT_PRIM_PATH = "/World/vs060"
 GRAPH_PATH = "/World/DensoActionGraph"
 JOINT_STATES_TOPIC = "/joint_states"
 JOINT_COMMAND_TOPIC = "/joint_command"
-TARGET_STIFFNESS = 1000000000.0
-TARGET_DAMPING = 50000000.0
-TARGET_MAX_FORCE = 1e12
+TARGET_STIFFNESS = 30000000000.0
+TARGET_DAMPING =   300000000.0
+TARGET_MAX_FORCE = 1e16
 ON_PHYSICS_STEP_NODE_TYPES = (
     "isaacsim.core.nodes.OnPhysicsStep",
     "omni.isaac.core_nodes.OnPhysicsStep",
