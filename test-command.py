@@ -37,14 +37,32 @@ def run():
     win_logger.info(f"Initialising robot")
     print(robot.init_robot(model=MODEL, 
                            planning_group="arm", 
-                           velocity_scale=0.4, 
-                           accel_scale=0.4, 
+                           velocity_scale=0.05, 
+                           accel_scale=0.05, 
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
     
-    robot.set_servo_on(True)
+    robot.set_servo_on(False)
+
+    # robot.pump_release()
+    # return
+
+    
+    print(robot.pump_grab())
+
+    t = time.time()
+
+    while time.time() - t < 5:
+        print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+        if robot.pump_is_grabbed()["grabbed"]:
+            win_logger.info("Card is grabbed")
+            break
+    
+    print(robot.pump_release())
+
+    return
     
     robot.move_to_home()
 

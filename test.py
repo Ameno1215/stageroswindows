@@ -88,7 +88,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=1, accel_scale=1)
+    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
 
     robot.manage_mesh(
         mesh_id="box1",
@@ -97,7 +97,7 @@ def run():
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
-        a=1, r=1, g=0, b=0,
+        a=1, r=0.5, g=0.5, b=0.5,
         action="ADD"
     )
 
@@ -108,7 +108,7 @@ def run():
         r1=0.0, r2=0.0, r3=0.0,
         scale_x=0.001, scale_y=0.001, scale_z=0.001,
         rotation_format="RPY",
-        a=0.5, r=0, g=0, b=1,
+        a=1, r=0.5, g=0.5, b=0.5,
         action="ADD"
     )
 
@@ -123,6 +123,24 @@ def run():
 
     
     print(robot.set_servo_on(True))
+    
+    # robot.pump_release()
+    # return
+
+    # robot.pump_grab()
+
+    # t = time.time()
+
+    # while time.time() - t < 5:
+    #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+    #     if robot.pump_is_grabbed()["grabbed"]:
+    #         win_logger.info("Card is grabbed")
+    #         break
+    
+    # robot.pump_release()
+    
+    # return
+
 
     robot.move_to_home()
     
@@ -132,7 +150,7 @@ def run():
 
 
 
-    plates_dir = base_path / "plates"
+    plates_dir = base_path / "plates2"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -204,7 +222,7 @@ def run():
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.01,
+                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
@@ -229,6 +247,20 @@ def run():
                                 execute=True
                             )
 
+                            robot.pump_grab()
+
+                            t = time.time()
+
+                            bool_grabbed = False
+                            while time.time() - t < 5:
+                                print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+                                if robot.pump_is_grabbed()["grabbed"]:
+                                    bool_grabbed = True
+                                    win_logger.info("Card is grabbed")
+                                    break
+                            
+                            if not bool_grabbed:
+                                robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
@@ -270,7 +302,7 @@ def run():
                             )
 
                             robot.move_to_pose(
-                                x=0, y=0, z=0.12,
+                                x=0, y=0, z=0.12 - 0.005,
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
@@ -280,7 +312,7 @@ def run():
                             )
 
                             robot.move_to_pose(
-                                x=0, y=0, z=-0.12,
+                                x=0, y=0, z=-0.12 + 0.005,
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
@@ -348,6 +380,8 @@ def run():
                                 cartesian_path=True,
                                 execute=True
                             )
+
+                            robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
