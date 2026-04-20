@@ -11,7 +11,7 @@ GRAPH_PATH = "/World/DensoActionGraph"
 JOINT_STATES_TOPIC = "/joint_states"
 JOINT_COMMAND_TOPIC = "/joint_command"
 TARGET_STIFFNESS = 30000000000.0
-TARGET_DAMPING =   300000000.0
+TARGET_DAMPING = 300000000.0
 TARGET_MAX_FORCE = 1e16
 ON_PHYSICS_STEP_NODE_TYPES = (
     "isaacsim.core.nodes.OnPhysicsStep",
@@ -141,3 +141,5 @@ print("  Physics: 240 Hz | V-Sync: off")
 print(f"  Publishing {JOINT_STATES_TOPIC}")
 print(f"  Subscribing {JOINT_COMMAND_TOPIC}")
 print("  Click Play, then launch ROS2 with use_sim_time:=true")
+
+

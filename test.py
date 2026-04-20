@@ -88,7 +88,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
 
-    print(robot.set_scaling(velocity_scale=1, accel_scale=1))
+    print(robot.set_scaling(velocity_scale=0.1, accel_scale=0.1))
 
     print(robot.clear_environment())
 
@@ -203,11 +203,12 @@ def run():
 
                         
                             win_logger.info(f'Robot is going to take card {card} by move pose')
+                            win_logger.info(f'\n\n Robot state : {robot.get_joint_state()}\nRobot posse : {robot.get_current_pose()} \n\n')
 
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.1,
+                                z=inputStorage["position"]["z"] + 0.3 + 0.015,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
@@ -217,6 +218,9 @@ def run():
                                 cartesian_path=True,
                                 execute=True
                             )
+
+                            
+                            win_logger.info(f'\n\n Robot state before taking card: {robot.get_joint_state()}\nRobot posse : {robot.get_current_pose()} \n\n')
 
                             robot.move_to_pose(
                                 x=0,
@@ -327,7 +331,7 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.1,
+                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],

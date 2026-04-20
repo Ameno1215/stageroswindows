@@ -70,7 +70,7 @@ def configure_physics():
 def configure_drives():
     stage = omni.usd.get_context().get_stage()
 
-    HEADROOM = 2.0
+    HEADROOM = 10.0
 
     for prim in stage.Traverse():
         if prim.IsA(UsdPhysics.RevoluteJoint):
