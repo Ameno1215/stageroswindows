@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 
@@ -36,7 +36,7 @@ def run():
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
     print(robot.init_robot(model=MODEL, 
-                           planning_group="arm", 
+                           planning_group="manipulator", 
                            velocity_scale=0.05, 
                            accel_scale=0.05, 
                            planning_time=10, 
@@ -44,27 +44,27 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect"))
     
-    robot.set_servo_on(False)
+    robot.set_servo_on(True)
 
     # robot.pump_release()
     # return
 
     
-    print(robot.pump_grab())
+    # print(robot.pump_grab())
 
-    t = time.time()
+    # t = time.time()
 
-    while time.time() - t < 5:
-        print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-        if robot.pump_is_grabbed()["grabbed"]:
-            win_logger.info("Card is grabbed")
-            break
+    # while time.time() - t < 5:
+    #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+    #     if robot.pump_is_grabbed()["grabbed"]:
+    #         win_logger.info("Card is grabbed")
+    #         break
     
-    print(robot.pump_release())
+    # print(robot.pump_release())
 
-    return
+    # return
     
-    robot.move_to_home()
+    # robot.move_to_home()
 
 
     for i in range(10):
