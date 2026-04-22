@@ -13,11 +13,13 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l"], default="vs060",
+                    help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
 
 SIM = args.real_robot
-
+MODEL = args.model
 
 box_source = 1
 box1 = {
@@ -79,8 +81,7 @@ def run():
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
-    robot.init_robot(model="vs060", 
-                           planning_group="arm", 
+    robot.init_robot(model=MODEL, 
                            velocity_scale=0.1, 
                            accel_scale=0.1, 
                            planning_time=10, 
@@ -88,7 +89,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
+    robot.set_scaling(velocity_scale=1, accel_scale=1)
 
     robot.manage_mesh(
         mesh_id="box1",

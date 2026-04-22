@@ -35,10 +35,9 @@ def run():
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
-    print(robot.init_robot(model=MODEL, 
-                           planning_group="manipulator", 
-                           velocity_scale=0.05, 
-                           accel_scale=0.05, 
+    print(robot.init_robot(model=MODEL,
+                           velocity_scale=0.5, 
+                           accel_scale=0.1, 
                            planning_time=10, 
                            planning_attempts=20, 
                            allow_replanning=True, 
@@ -69,25 +68,23 @@ def run():
 
     for i in range(10):
         robot.move_to_pose(
-            0.2, 0.0, 0,
+            0, 0.0, -0.2,
             0, 0.0, 0.0,
             rotation_format="RPY",
             angle_format="DEG",
+            cartesian_path=True,
             is_relative=True,
-            joint_constraints=[
-                {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
-            ]
+            execute=True,
         )
 
         robot.move_to_pose(
-            -0.2, 0.0, 0,
+            0, 0.0, 0.2,
             0, 0.0, 0.0,
             rotation_format="RPY",
             angle_format="DEG",
+            cartesian_path=True,
             is_relative=True,
-            joint_constraints=[
-                {"joint_name": "joint_4", "min": -2, "max": 2, "relative": True},
-            ]
+            execute=True,
         )
 
     return

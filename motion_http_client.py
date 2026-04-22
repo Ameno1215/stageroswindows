@@ -40,14 +40,13 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def init_robot(self, model="vs060", planning_group="arm", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="PRMstar"):
+    def init_robot(self, model="vs060", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="PRMstar"):
         """
         Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
 
         Examples:
             ret = robot.init_robot(
                 model="vp5243", 
-                planning_group="arm", 
                 velocity_scale=0.2, 
                 planning_time=10.0,
                 planner_id="RRTstar"
@@ -55,7 +54,6 @@ class MotionRobotClient:
 
         Args:
             model (str): Robot model name (e.g., "vs060", "vp5243").
-            planning_group (str): MoveIt planning group name (e.g., "arm").
             velocity_scale (float): Global velocity scaling factor (0.0 to 1.0).
             accel_scale (float): Global acceleration scaling factor (0.0 to 1.0).
             planning_time (float): Maximum time (in seconds) allowed for the solver to compute the path.
@@ -77,8 +75,6 @@ class MotionRobotClient:
             dict: Initialization result containing 'success' (bool) and 'message' (str).
         """
         payload = {
-            "model": model,
-            "planning_group": planning_group,
             "sim": self.sim,
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
@@ -312,6 +308,8 @@ class MotionRobotClient:
             home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         if self.model == "vp5243":
             home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
+        else:
+            home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         return self.move_joints(home_position, is_relative=False)
 
     def set_virtual_cage(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0, r=0.0, g=0.6, b=1.0, a=0.15):
