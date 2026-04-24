@@ -13,23 +13,27 @@ parser.add_argument("--solver", choices=["pick_ik", "kdl"], default="pick_ik",
                     help="IK solver to use (default: pick_ik)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
+parser.add_argument("--tool", default=None,
+                      help="Tool name (ex: effecteur_v2, none)")
+
 
 args = parser.parse_args()
+
 
 SHOW_TERMINALS = args.show_terminals
 SOLVER = args.solver
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
-if MODEL == "tx2_60l" and args.real_robot:
-    parser.error("tx2_60l is simulation-only in this launcher")
+IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
+DEFAULT_TOOL = "none" if IS_STAUBLI else "effecteur_v2"
+TOOL = args.tool or DEFAULT_TOOL
+
+if IS_STAUBLI and args.real_robot:
+    parser.error("Staubli robots are simulation-only in this launcher")
 
 
-# SHOW_TERMINALS = True  # Set to False to hide WSL terminals
-# SOLVER = "pick_ik"
-# SIM = "false"
-# SOLVER = "kdl"
 
 # --- Commands ----------------------------------------------------------------
 
@@ -42,35 +46,35 @@ SETUP = (
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
 )
 
-if MODEL == "tx2_60l":
+if IS_STAUBLI:
     TERMINAL_1 = (
         f"{SETUP} && "
-        "ros2 launch staubli_tx2_60l_moveit_config "
-        "staubli_tx2_60l_planning_execution_sim.launch.py"
+        f"ros2 launch staubli_{MODEL}_moveit_config "
+        f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL}"
     )
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:=staubli_tx2_60l sim:=true tool:=none ik_solver:={SOLVER}"
+        f"model:=staubli_{MODEL} sim:=true tool:={TOOL} ik_solver:={SOLVER}"
     )
 else:
     TERMINAL_1 = (
         f"{SETUP} && "
         "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-        f"model:={MODEL} sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
+        f"model:={MODEL} sim:=true tool:={TOOL} ik_solver:={SOLVER}"
     )
     if SIM == "false":
         TERMINAL_1 = (
             f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
             f"model:={MODEL} sim:=false ip_address:=169.254.139.249 "
-            f"send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
+            f"send_format:=256 recv_format:=258 tool:={TOOL} ik_solver:={SOLVER}"
         )
 
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:={MODEL} sim:={SIM} tool:=effecteur_v2 ik_solver:={SOLVER}"
+        f"model:={MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
     )
 
 TERMINAL_3 = (
@@ -189,7 +193,7 @@ def main():
     mode = "visible" if SHOW_TERMINALS else "hidden (background)"
     print(f"Starting {MODEL} stack (mode: {mode})...\n")
 
-    total = 3 if MODEL == "tx2_60l" else 4
+    total = 3 if IS_STAUBLI else 4
     step = 1
 
     print(f"[{step}/{total}] Starting Gazebo & RViz...")
@@ -206,7 +210,7 @@ def main():
     print("      Waiting 2s...")
     time.sleep(2)
 
-    if MODEL != "tx2_60l":
+    if not IS_STAUBLI:
         print(f"[{step}/{total}] Starting Pump Control...")
         launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
         step += 1

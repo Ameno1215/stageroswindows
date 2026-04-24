@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 
@@ -65,6 +65,9 @@ def run():
     
     # robot.move_to_home()
 
+    print(robot.get_current_pose())
+
+    robot.move_to_home()
 
     for i in range(10):
         robot.move_to_pose(

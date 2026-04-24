@@ -13,13 +13,16 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
 
 SIM = args.real_robot
 MODEL = args.model
+
+
+STAUBLI_PLATE_OFFSET = 0.11
 
 box_source = 1
 box1 = {
@@ -38,6 +41,28 @@ box2 = {
     "position": {
         "x": 0.2618,
         "y": -0.1192,
+        "z": 0.0,
+        "rx": 180*pi/180,
+        "ry": 0,
+        "rz": -90*pi/180
+    }
+}
+box1_staubli = {
+    "box_number": 1,
+    "position": {
+        "x": 0.05,
+        "y": 0.2,
+        "z": 0.0,
+        "rx": 180*pi/180,
+        "ry": 0,
+        "rz": -90*pi/180
+    }
+}
+box2_staubli = {
+    "box_number": 2,
+    "position": {
+        "x": 0.05,
+        "y": -0.2,
         "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
@@ -91,28 +116,50 @@ def run():
 
     robot.set_scaling(velocity_scale=1, accel_scale=1)
 
-    robot.manage_mesh(
-        mesh_id="box1",
-        mesh_path=to_path_real(rel_path_to_stl),
-        x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
-        r1=0.0, r2=0.0, r3=0.0,
-        scale_x=0.001, scale_y=0.001, scale_z=0.001,
-        rotation_format="RPY",
-        a=1, r=0.5, g=0.5, b=0.5,
-        action="ADD"
-    )
+    robot.clear_environment()
 
-    robot.manage_mesh(
-        mesh_id="box2",
-        mesh_path=to_path_real(rel_path_to_stl),
-        x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
-        r1=0.0, r2=0.0, r3=0.0,
-        scale_x=0.001, scale_y=0.001, scale_z=0.001,
-        rotation_format="RPY",
-        a=1, r=0.5, g=0.5, b=0.5,
-        action="ADD"
-    )
-
+    if MODEL == "tx40":
+        robot.manage_mesh(
+            mesh_id="box1",
+            mesh_path=to_path_real(rel_path_to_stl),
+            x=box1_staubli["position"]["x"], y=box1_staubli["position"]["y"], z=box1_staubli["position"]["z"],
+            r1=0.0, r2=0.0, r3=0.0,
+            scale_x=0.001, scale_y=0.001, scale_z=0.001,
+            rotation_format="RPY",
+            a=1, r=0.5, g=0.5, b=0.5,
+            action="ADD"
+        )
+        robot.manage_mesh(
+            mesh_id="box2",
+            mesh_path=to_path_real(rel_path_to_stl),
+            x=box2_staubli["position"]["x"], y=box2_staubli["position"]["y"], z=box2_staubli["position"]["z"],
+            r1=0.0, r2=0.0, r3=0.0,
+            scale_x=0.001, scale_y=0.001, scale_z=0.001,
+            rotation_format="RPY",
+            a=1, r=0.5, g=0.5, b=0.5,
+            action="ADD"
+        )
+    else:
+        robot.manage_mesh(
+            mesh_id="box1",
+            mesh_path=to_path_real(rel_path_to_stl),
+            x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
+            r1=0.0, r2=0.0, r3=0.0,
+            scale_x=0.001, scale_y=0.001, scale_z=0.001,
+            rotation_format="RPY",
+            a=1, r=0.5, g=0.5, b=0.5,
+            action="ADD"
+        )
+        robot.manage_mesh(
+            mesh_id="box2",
+            mesh_path=to_path_real(rel_path_to_stl),
+            x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
+            r1=0.0, r2=0.0, r3=0.0,
+            scale_x=0.001, scale_y=0.001, scale_z=0.001,
+            rotation_format="RPY",
+            a=1, r=0.5, g=0.5, b=0.5,
+            action="ADD"
+        )
 
     robot.set_virtual_cage(
         enable=True, 
@@ -144,14 +191,20 @@ def run():
 
 
     robot.move_to_home()
-    
-    inputStorage = box1
-    outputStorage = box2
+    inputStorage = None
+    outputStorage = None
+    if MODEL == "tx40":
+        inputStorage = box1_staubli
+        outputStorage = box2_staubli
+    else:
+        inputStorage = box1
+        outputStorage = box2
+
     number_of_cards = 1
 
 
 
-    plates_dir = base_path / "plates2"
+    plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -172,24 +225,45 @@ def run():
 
                 for reader in plate.readers:
                     for pos in reader.positions:
-                        robot.manage_box(
-                            box_id=f"{reader.reader_name}_{pos.position_label}",
-                            x=pos.x, y=pos.y, z=pos.z,
-                            r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                            size_x=0.06, size_y=0.09, size_z=0.02,
-                            action="ADD",
-                            enable_collision=False
-                        )
+                        if MODEL == "tx40":
+                            robot.manage_box(
+                                box_id=f"{reader.reader_name}_{pos.position_label}",
+                                x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
+                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                                size_x=0.06, size_y=0.09, size_z=0.02,
+                                action="ADD",
+                                enable_collision=False
+                            )
+                        else:
+                            robot.manage_box(
+                                box_id=f"{reader.reader_name}_{pos.position_label}",
+                                x=pos.x, y=pos.y, z=pos.z,
+                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                                size_x=0.06, size_y=0.09, size_z=0.02,
+                                action="ADD",
+                                enable_collision=False
+                            )
                 
-                robot.manage_mesh(
-                    mesh_id=f"plaque{plate.plate_number}",
-                    mesh_path=to_path_real(plate.mesh_path),
-                    x=0.557+0.135/2, y=-0.25, z=0,
-                    r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
-                    rotation_format="RPY",
-                    a=1, r=0, g=1, b=0,
-                    action="ADD"
-                )       
+                if MODEL == "tx40":
+                    robot.manage_mesh(
+                        mesh_id=f"plaque{plate.plate_number}",
+                        mesh_path=to_path_real(plate.mesh_path),
+                        x=0.557+0.135/2-STAUBLI_PLATE_OFFSET, y=-0.25, z=0,
+                        r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
+                        rotation_format="RPY",
+                        a=1, r=0, g=1, b=0,
+                        action="ADD"
+                    )
+                else:
+                    robot.manage_mesh(
+                        mesh_id=f"plaque{plate.plate_number}",
+                        mesh_path=to_path_real(plate.mesh_path),
+                        x=0.557+0.135/2, y=-0.25, z=0,
+                        r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
+                        rotation_format="RPY",
+                        a=1, r=0, g=1, b=0,
+                        action="ADD"
+                    )       
 
                 for reader_index, reader in enumerate(plate.readers):
                     win_logger.info(f'Testing reader: {reader.reader_name}')
@@ -219,6 +293,7 @@ def run():
 
                         
                             win_logger.info(f'Robot is going to take card {card} by move pose')
+
 
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
@@ -294,7 +369,7 @@ def run():
                             #     )
 
                             robot.move_approach(
-                                x=pos.x, y=pos.y, z=pos.z,
+                                x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
                                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                 z_offset=0.12,
                                 rotation_format="RPY",
@@ -398,13 +473,20 @@ def run():
                                 execute=True
                             )
                     
-
-                    if inputStorage is box1:
-                        inputStorage = box2
-                        outputStorage = box1
+                    if MODEL == "tx40":
+                        if inputStorage is box1_staubli:
+                            inputStorage = box2_staubli
+                            outputStorage = box1_staubli
+                        else:
+                            inputStorage = box1_staubli
+                            outputStorage = box2_staubli
                     else:
-                        inputStorage = box1
-                        outputStorage = box2
+                        if inputStorage is box1:
+                            inputStorage = box2
+                            outputStorage = box1
+                        else:
+                            inputStorage = box1
+                            outputStorage = box2
                 win_logger.info("Going home")
                 robot.move_to_home()     
 
