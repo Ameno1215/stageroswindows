@@ -386,6 +386,63 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
     
+    def compute_approach_pose(self, x, y, z, r1, r2, r3, r4=0.0,
+                            rotation_format="RPY", angle_format="RAD",
+                            reference_frame="WORLD", z_offset=0.1):
+        """
+        Computes the approach pose for a given target WITHOUT moving the robot.
+        The backoff is applied along the target tool's local Z-axis (same
+        convention as move_approach). The returned pose is always in the WORLD
+        frame, so it can be fed directly into move_to_pose / move_to_pose_via_joint.
+
+        Examples:
+            # Target in world frame (degrees for readability)
+            res = robot.compute_approach_pose(
+                0.5, 0.0, 0.3, 180, 0, 0,
+                rotation_format="RPY", angle_format="DEG", z_offset=0.1
+            )
+            pos = res["position"]
+            quat = res["orientation_quat"]
+
+            # Target expressed relative to the current tool pose
+            res = robot.compute_approach_pose(
+                0.0, 0.0, 0.05, 0, 0, 0,
+                reference_frame="TOOL", z_offset=0.1
+            )
+
+        Args:
+            x, y, z (float): Target position (final grasp point, meters).
+            r1, r2, r3, r4 (float): Target orientation (r4 ignored if RPY).
+            rotation_format (str): "RPY" or "QUAT".
+            angle_format (str): "RAD" or "DEG" (only applies to RPY).
+            reference_frame (str): "WORLD" or "TOOL". If "TOOL", the target is
+                expressed relative to the current end-effector pose and is
+                resolved server-side using the current robot state.
+            z_offset (float): Backoff distance along the target tool's local
+                Z-axis, in meters.
+
+        Returns:
+            dict: {
+                "success", "message", "frame_id",
+                "position":          {"x", "y", "z"},
+                "orientation_quat":  {"x", "y", "z", "w"},
+                "orientation_euler": {"rx", "ry", "rz"},
+                "z_axis":            {"x", "y", "z"}
+            }
+        """
+        payload = {
+            "x": float(x), "y": float(y), "z": float(z),
+            "r1": float(r1), "r2": float(r2), "r3": float(r3), "r4": float(r4),
+            "rotation_format": str(rotation_format),
+            "angle_format": str(angle_format),
+            "reference_frame": str(reference_frame),
+            "z_offset": float(z_offset),
+        }
+        r = self.session.post(f"{self.base_url}/compute_approach",
+                            json=payload, timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+    
     def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD", enable_collision=True):
         """
         Adds or removes a collision box in MoveIt.
