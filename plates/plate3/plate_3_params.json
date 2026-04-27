@@ -1,6 +1,9 @@
 {
   "plate_number": 3,
   "mesh_path": "plates/plate3/plaque3.obj",
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
   "mesh_rotation_x": 0,
   "mesh_rotation_y": 0, 
   "mesh_rotation_z": 0,

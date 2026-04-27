@@ -1,9 +1,12 @@
 {
   "plate_number": 2,
   "mesh_path": "plates/plate2/plaque2.obj",
-   "mesh_rotation_x": 0,
-   "mesh_rotation_y": 0, 
-   "mesh_rotation_z": 90,
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 900,
   "list_readers": [
     {
       "reader_name": "ELYCTIS CL reader 000000000001A3AB 0",

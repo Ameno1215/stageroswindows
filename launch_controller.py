@@ -13,21 +13,27 @@ parser.add_argument("--solver", choices=["pick_ik", "kdl"], default="pick_ik",
                     help="IK solver to use (default: pick_ik)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
+parser.add_argument("--tool", default=None,
+                      help="Tool name (ex: effecteur_v2, none)")
+
 
 args = parser.parse_args()
+
 
 SHOW_TERMINALS = args.show_terminals
 SOLVER = args.solver
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
+IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
+DEFAULT_TOOL = "effecteur_v2"
+TOOL = args.tool or DEFAULT_TOOL
+
+if IS_STAUBLI and args.real_robot:
+    parser.error("Staubli robots are simulation-only in this launcher")
 
 
-# SHOW_TERMINALS = True  # Set to False to hide WSL terminals
-# SOLVER = "pick_ik"
-# SIM = "false"
-# SOLVER = "kdl"
 
 # --- Commands ----------------------------------------------------------------
 
@@ -40,23 +46,36 @@ SETUP = (
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA"
 )
 
-TERMINAL_1 = (
-    f"{SETUP} && "
-    "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-    f"model:={MODEL} sim:=true tool:=effecteur_v2 ik_solver:={SOLVER}"
-)
-
-if (SIM == "false"):
-       TERMINAL_1 = (f"{SETUP} && "
+if IS_STAUBLI:
+    TERMINAL_1 = (
+        f"{SETUP} && "
+        f"ros2 launch staubli_{MODEL}_moveit_config "
+        f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL}"
+    )
+    TERMINAL_2 = (
+        f"{SETUP} && "
+        "ros2 launch motion_control motion_server.launch.py "
+        f"model:=staubli_{MODEL} sim:=true tool:={TOOL} ik_solver:={SOLVER}"
+    )
+else:
+    TERMINAL_1 = (
+        f"{SETUP} && "
+        "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
+        f"model:={MODEL} sim:=true tool:={TOOL} ik_solver:={SOLVER}"
+    )
+    if SIM == "false":
+        TERMINAL_1 = (
+            f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-            f"model:={MODEL} sim:=false ip_address:=169.254.139.249 send_format:=256 recv_format:=258 tool:=effecteur_v2 ik_solver:={SOLVER}"
-       )
+            f"model:={MODEL} sim:=false ip_address:=169.254.139.249 "
+            f"send_format:=256 recv_format:=258 tool:={TOOL} ik_solver:={SOLVER}"
+        )
 
-TERMINAL_2 = (
-    f"{SETUP} && "
-    "ros2 launch motion_control motion_server.launch.py "
-    f"model:={MODEL} sim:={SIM} tool:=effecteur_v2 ik_solver:={SOLVER}"
-)
+    TERMINAL_2 = (
+        f"{SETUP} && "
+        "ros2 launch motion_control motion_server.launch.py "
+        f"model:={MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
+    )
 
 TERMINAL_3 = (
     f"{SETUP} && "
@@ -172,27 +191,34 @@ signal.signal(signal.SIGINT, handle_sigint)
 
 def main():
     mode = "visible" if SHOW_TERMINALS else "hidden (background)"
-    print(f"Starting DENSO VS060 simulation (mode: {mode})...\n")
+    print(f"Starting {MODEL} stack (mode: {mode})...\n")
 
-    print("[1/4] Starting Gazebo & RViz...")
+    total = 3 if IS_STAUBLI else 4
+    step = 1
+
+    print(f"[{step}/{total}] Starting Gazebo & RViz...")
     launch_wsl_tab(TAB_TITLES[0], TERMINAL_1)
+    step += 1
 
     print("      Waiting 5s for Gazebo to start...")
     time.sleep(5)
 
-    print("[2/4] Starting Motion Server...")
+    print(f"[{step}/{total}] Starting Motion Server...")
     launch_wsl_tab(TAB_TITLES[1], TERMINAL_2)
+    step += 1
 
     print("      Waiting 2s...")
     time.sleep(2)
 
-    print("[3/4] Starting Pump Control...")
-    launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
+    if not IS_STAUBLI:
+        print(f"[{step}/{total}] Starting Pump Control...")
+        launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
+        step += 1
 
-    print("[4/4] Starting HTTP Bridge...")
+    print(f"[{step}/{total}] Starting HTTP Bridge...")
     launch_wsl_tab(TAB_TITLES[3], TERMINAL_4)
 
-    print(f"\nAll 4 WSL processes launched (mode: {mode}).")
+    print(f"\nAll {total} WSL processes launched (mode: {mode}).")
     print("Press Ctrl+C to stop everything.\n")
 
     while True:
