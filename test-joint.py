@@ -22,8 +22,7 @@ SIM = args.real_robot
 MODEL = args.model
 
 
-# STAUBLI_PLATE_OFFSET = 0.11
-STAUBLI_PLATE_OFFSET = 0.2
+STAUBLI_PLATE_OFFSET = 0.11
 
 box_source = 1
 box1 = {
@@ -205,7 +204,7 @@ def run():
 
 
 
-    plates_dir = base_path / "plates3"
+    plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -296,7 +295,7 @@ def run():
                             win_logger.info(f'Robot is going to take card {card} by move pose')
 
 
-                            robot.move_to_pose(
+                            robot.move_to_pose_via_joint(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
                                 z=inputStorage["position"]["z"] + 0.3 + 0.005,
@@ -306,7 +305,6 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
                                 execute=True
                             )
 
@@ -375,7 +373,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=True,
+                                    cartesian_path=False,
                                     execute=True
                                 )
                             else:
@@ -384,7 +382,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=True,
+                                    cartesian_path=False,
                                     execute=True
                                 )
 
@@ -440,7 +438,7 @@ def run():
 
                             win_logger.info(f'Robot is going to release card: {card} by move pose')
                             
-                            robot.move_to_pose(
+                            robot.move_to_pose_via_joint(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
                                 z=outputStorage["position"]["z"] + 0.3 + 0.01,
@@ -450,7 +448,6 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
                                 execute=True
                             )
 

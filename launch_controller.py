@@ -27,7 +27,7 @@ SOLVER = args.solver
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
-DEFAULT_TOOL = "none" if IS_STAUBLI else "effecteur_v2"
+DEFAULT_TOOL = "effecteur_v2"
 TOOL = args.tool or DEFAULT_TOOL
 
 if IS_STAUBLI and args.real_robot:

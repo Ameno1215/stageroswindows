@@ -1,0 +1,117 @@
+{
+  "plate_number": 5,
+  "mesh_path": "plates/plate5/plaque5.obj",
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 90,
+  "list_readers": [
+    {
+      "reader_name": "ELYCTIS CL reader 0000000000017D4A 0",
+      "reader_brand": "ELYCTIS",
+      "reader_model": "IDBOX 121",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "5.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 1,
+      "wait_power": 8000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Antenna front (Glass): center",
+          "x": 5186,
+          "y": 1601,
+          "z": 812,
+          "rx": 1774,
+          "ry": 715,
+          "rz": -1223
+        },
+        {
+          "position_label": "Antenna front (Glass): left",
+          "x": 4998,
+          "y": 1705,
+          "z": 812,
+          "rx": 1774,
+          "ry": 715,
+          "rz": -1223
+        },
+        {
+          "position_label": "Antenna front (Glass): right",
+          "x": 5366,
+          "y": 1500,
+          "z": 812,
+          "rx": 1774,
+          "ry": 715,
+          "rz": -1223
+        }
+      ]
+    },
+    {
+      "reader_name": "OMNIKEY 5321 PAY-CL 0",
+      "reader_brand": "Omnikey",
+      "reader_model": "Omnikey 5321",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "5.2",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 2,
+      "wait_power": 5000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 4824,
+          "y": -172,
+          "z": 394,
+          "rx": 1800,
+          "ry": -1,
+          "rz": -900
+        },
+        {
+          "position_label": "Top",
+          "x": 5154,
+          "y": 50,
+          "z": 393,
+          "rx": 1800,
+          "ry": -1,
+          "rz": -900
+        },
+        {
+          "position_label": "Bottom",
+          "x": 4559,
+          "y": -484,
+          "z": 394,
+          "rx": 1800,
+          "ry": -1,
+          "rz": -900
+        }
+      ]
+    },
+    {
+      "reader_name": "Duali DE-620R Contactless Reader 0",
+      "reader_brand": "Duali",
+      "reader_model": "DE-620R",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "5.3",
+      "minimum_height": 100,
+      "maximum_height": 150,
+      "relay_number": 5,
+      "wait_power": 10000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 4741,
+          "y": -1640,
+          "z": 337,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -900
+        }
+      ]
+    }
+  ]
+}

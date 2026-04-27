@@ -1,0 +1,111 @@
+{
+  "plate_number": 4,
+  "mesh_path": "plates/plate4/plaque4.obj",
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": -90,
+  "list_readers": [
+    {
+      "reader_name": "HID Global OMNIKEY 5122CL Dual 0",
+      "reader_brand": "Thales",
+      "reader_model": "KR9000",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "4.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 1,
+      "wait_power": 5000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 4885,
+          "y": 1239,
+          "z": 1250,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top left",
+          "x": 5333,
+          "y": 1395,
+          "z": 1250,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top right",
+          "x": 5333,
+          "y": 959,
+          "z": 1250,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom left",
+          "x": 4408,
+          "y": 1466,
+          "z": 1250,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom right",
+          "x": 4408,
+          "y": 919,
+          "z": 1250,
+          "rx": 1800,
+          "ry": 0,
+          "rz": -1800
+        }
+      ]
+    },
+    {
+      "reader_name": "Identiv uTrust 4700 F CL Reader 1",
+      "reader_brand": "Identitiv uTrust",
+      "reader_model": "Cloud 4700F",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "4.2",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 2,
+      "wait_power": 5000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 4603,
+          "y": -1588,
+          "z": 366,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top left",
+          "x": 4720,
+          "y": -1571,
+          "z": 366,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom right",
+          "x": 4367,
+          "y": -1624,
+          "z": 366,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        }
+      ]
+    }
+  ]
+}

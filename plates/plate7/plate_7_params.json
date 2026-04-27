@@ -1,0 +1,65 @@
+{
+  "plate_number": 7,
+  "list_readers": [
+    {
+      "reader_name": "Access IS NFC0 0",
+      "reader_brand": "HID",
+      "reader_model": "ADR300",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "7.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "relay_number": 1,
+      "wait_power": 10000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 5047,
+          "y": 1380,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top left",
+          "x": 5097,
+          "y": 1553,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top right",
+          "x": 5116,
+          "y": 1204,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom left",
+          "x": 4291,
+          "y": 1560,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom right",
+          "x": 4310,
+          "y": 1204,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        }
+      ]
+    }
+  ]
+}
