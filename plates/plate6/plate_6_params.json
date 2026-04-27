@@ -1,9 +1,12 @@
 {
   "plate_number": 6,
   "mesh_path": "plates/plate6/plaque6.obj",
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
   "mesh_rotation_x": 0,
   "mesh_rotation_y": 0, 
-  "mesh_rotation_z": 90,
+  "mesh_rotation_z": 900,
   "list_readers": [
     {
       "reader_name": "ACS ACR122 0",

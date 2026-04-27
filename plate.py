@@ -45,9 +45,12 @@ class Reader:
 class Plate:
     plate_number: int
     mesh_path: str
-    mesh_rotation_x: int
-    mesh_rotation_y: int
-    mesh_rotation_z: int
+    mesh_rotation_x: float
+    mesh_rotation_y: float
+    mesh_rotation_z: float
+    mesh_offset_x: float
+    mesh_offset_y: float
+    mesh_offset_z: float
     readers: List[Reader]
 
 
@@ -78,9 +81,12 @@ def plate_from_json(json_data: dict) -> Plate:
     return Plate(
         plate_number=json_data["plate_number"],
         mesh_path=json_data["mesh_path"],
-        mesh_rotation_x=json_data["mesh_rotation_x"],
-        mesh_rotation_y=json_data["mesh_rotation_y"],
-        mesh_rotation_z=json_data["mesh_rotation_z"],
+        mesh_rotation_x=json_data["mesh_rotation_x"]/10,
+        mesh_rotation_y=json_data["mesh_rotation_y"]/10,
+        mesh_rotation_z=json_data["mesh_rotation_z"]/10,
+        mesh_offset_x=json_data["mesh_offset_x"]/10000,
+        mesh_offset_y=json_data["mesh_offset_y"]/10000,
+        mesh_offset_z=json_data["mesh_offset_z"]/10000,
         readers=readers
     )
 

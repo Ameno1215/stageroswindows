@@ -205,7 +205,7 @@ def run():
 
 
 
-    plates_dir = base_path / "plates3"
+    plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -249,7 +249,7 @@ def run():
                     robot.manage_mesh(
                         mesh_id=f"plaque{plate.plate_number}",
                         mesh_path=to_path_real(plate.mesh_path),
-                        x=0.557+0.135/2-STAUBLI_PLATE_OFFSET, y=-0.25, z=0,
+                        x=0.557+0.135/2-STAUBLI_PLATE_OFFSET+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
                         r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
                         rotation_format="RPY",
                         a=1, r=0, g=1, b=0,
@@ -259,7 +259,7 @@ def run():
                     robot.manage_mesh(
                         mesh_id=f"plaque{plate.plate_number}",
                         mesh_path=to_path_real(plate.mesh_path),
-                        x=0.557+0.135/2, y=-0.25, z=0,
+                        x=0.557+0.135/2+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
                         r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
                         rotation_format="RPY",
                         a=1, r=0, g=1, b=0,

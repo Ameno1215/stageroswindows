@@ -1,9 +1,12 @@
 {
   "plate_number": 4,
   "mesh_path": "plates/plate4/plaque4.obj",
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
   "mesh_rotation_x": 0,
   "mesh_rotation_y": 0, 
-  "mesh_rotation_z": -90,
+  "mesh_rotation_z": -900,
   "list_readers": [
     {
       "reader_name": "HID Global OMNIKEY 5122CL Dual 0",
