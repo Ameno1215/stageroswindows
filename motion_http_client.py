@@ -110,6 +110,21 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
+    
+    def get_scaling(self):
+        """
+        Retrieves the current velocity and acceleration scaling factors.
+
+        Examples:
+            ret = robot.get_scaling()
+            print(f"Velocity: {ret['velocity_scale']}, Accel: {ret['accel_scale']}")
+
+        Returns:
+            dict: Contains 'success' (bool), 'message' (str), 'velocity_scale' (float), and 'accel_scale' (float).
+        """
+        r = self.session.get(f"{self.base_url}/scaling", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
 
     def move_joints(self, joints, joint_constraints=None, angle_format="RAD", is_relative=False, execute=True):
         """
