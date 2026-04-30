@@ -40,7 +40,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return r.json()
     
-    def init_robot(self, model="vs060", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="PRMstar"):
+    def init_robot(self, model="vs060", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="RRTConnect"):
         """
         Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
 
