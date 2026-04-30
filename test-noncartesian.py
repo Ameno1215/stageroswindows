@@ -21,8 +21,11 @@ args = parser.parse_args()
 SIM = args.real_robot
 MODEL = args.model
 
+CARTESIAN_PATH = False
+CARTESIAN_PATH_ALL = False
 
-STAUBLI_PLATE_OFFSET = 0.11
+# STAUBLI_PLATE_OFFSET = 0.11
+STAUBLI_PLATE_OFFSET = 0.2
 
 box_source = 1
 box1 = {
@@ -294,6 +297,19 @@ def run():
                             win_logger.info(f'Robot is going to take card {card} by move pose')
 
 
+                            # robot.move_to_pose_via_joint(
+                            #     x=inputStorage["position"]["x"],
+                            #     y=inputStorage["position"]["y"],
+                            #     z=inputStorage["position"]["z"] + 0.3 + 0.005,
+                            #     r1=inputStorage["position"]["rx"],
+                            #     r2=inputStorage["position"]["ry"],
+                            #     r3=inputStorage["position"]["rz"],
+                            #     rotation_format="RPY",
+                            #     reference_frame="WORLD",
+                            #     is_relative=False,
+                            #     execute=True
+                            # )
+
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
@@ -304,7 +320,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
@@ -367,14 +383,14 @@ def run():
                             #         execute=True
                             #     )
 
+                            CARTESIAN_PATH_APPROACH = CARTESIAN_PATH if pos_index == 0 else True
                             if MODEL == "tx40":
                                 robot.move_approach(
                                     x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    # cartesian_path=False if pos_index == 0 else True,
-                                    cartesian_path=False,
+                                    cartesian_path=CARTESIAN_PATH_APPROACH,
                                     execute=True
                                 )
                             else:
@@ -383,8 +399,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=False,
-                                    # cartesian_path=False if pos_index == 0 else True,
+                                    cartesian_path=CARTESIAN_PATH_APPROACH,
                                     execute=True
                                 )
 
@@ -393,7 +408,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_PATH_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -403,7 +418,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_PATH_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -440,6 +455,19 @@ def run():
 
                             win_logger.info(f'Robot is going to release card: {card} by move pose')
                             
+                            # robot.move_to_pose_via_joint(
+                            #     x=outputStorage["position"]["x"],
+                            #     y=outputStorage["position"]["y"],
+                            #     z=outputStorage["position"]["z"] + 0.3 + 0.01,
+                            #     r1=outputStorage["position"]["rx"],
+                            #     r2=outputStorage["position"]["ry"],
+                            #     r3=outputStorage["position"]["rz"],
+                            #     rotation_format="RPY",
+                            #     reference_frame="WORLD",
+                            #     is_relative=False,
+                            #     execute=True
+                            # )
+
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
@@ -450,7 +478,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
