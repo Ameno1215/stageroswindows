@@ -114,7 +114,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=1, accel_scale=0.5)
+    robot.set_scaling(velocity_scale=0.5, accel_scale=0.3)
 
     robot.clear_environment()
 
@@ -202,8 +202,10 @@ def run():
 
     number_of_cards = 2
 
-
-    plates_dir = base_path / "plates"
+    if MODEL == "tx40":
+        plates_dir = base_path / "platesStaubli"
+    else:
+        plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):

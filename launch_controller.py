@@ -9,8 +9,6 @@ import argparse
 parser = argparse.ArgumentParser(description="Launch DENSO VS060 ROS 2 stack")
 parser.add_argument("--show-terminals", action="store_true",
                     help="Hide WSL terminals (run in background)")
-parser.add_argument("--solver", choices=["pick_ik", "kdl"], default="kdl",
-                    help="IK solver to use (default: pick_ik)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
 parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
@@ -23,7 +21,7 @@ args = parser.parse_args()
 
 
 SHOW_TERMINALS = args.show_terminals
-SOLVER = args.solver
+SOLVER = "kdl"
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}

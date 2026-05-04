@@ -319,6 +319,10 @@ class MotionRobotClient:
 
     def move_to_home(self):
         home_position = []
+        if self.get_current_pose()["position"]["z"] < 0.05:
+            print("Robot is in a low position, moving up first to avoid collisions...")
+            self.move_to_pose(0.0, 0.0, 0.1, 0.0, 0.0, 0.0, rotation_format="RPY", is_relative=True, cartesian_path=True)
+            
         if self.model == "vp5243":
             home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
         else:
