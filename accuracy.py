@@ -26,8 +26,8 @@ SIM = args.real_robot
 MODEL = args.model
 
 
-# STAUBLI_PLATE_OFFSET = 0.11
-STAUBLI_PLATE_OFFSET = 0.2
+STAUBLI_PLATE_OFFSET = 0.11
+# STAUBLI_PLATE_OFFSET = 0.2
 
 box1 = {
     "box_number": 1,
@@ -488,7 +488,7 @@ def run():
                            planning_time=5, 
                            planning_attempts=20, 
                            allow_replanning=True, 
-                           planner_id="RRTstar")
+                           planner_id="RRTConnect")
 
     robot.set_scaling(velocity_scale=1, accel_scale=1)
 
@@ -549,9 +549,9 @@ def run():
     print(robot.set_servo_on(True))
 
     
-    test(robot, csv_logger)
+    # test(robot, csv_logger)
 
-    return
+    # return
 
     robot.move_to_home()
 
@@ -566,7 +566,10 @@ def run():
 
     number_of_cards = 2
 
-    plates_dir = base_path / "plates2"
+    plates_dir = base_path / "plates"
+    
+    if MODEL == "tx40":
+        plates_dir = base_path / "platesStaubli"
 
     for plate_dir in plates_dir.glob("plate*"):
 
@@ -643,7 +646,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -705,7 +708,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=True,
+                                    cartesian_path=False,
                                     execute=True
                                 )
                             else:
@@ -716,7 +719,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=True,
+                                    cartesian_path=False,
                                     execute=True
                                 )
 
@@ -763,7 +766,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=True,
+                                cartesian_path=False,
                                 execute=True
                             )
 
@@ -833,7 +836,7 @@ def run():
 
     time.sleep(2)
 
-    test(robot, csv_logger)
+    # test(robot, csv_logger)
     
     print(robot.set_servo_on(False))
     

@@ -158,5 +158,5 @@ Once the simulation, motion server, and HTTP bridge are running in WSL, open a P
 ```bash
 PowerShell
 .\venv\Scripts\activate
-python ./test.py
+python ./test.py --model vs060
 ```
