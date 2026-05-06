@@ -124,6 +124,7 @@ Fetch the repository and build the ROS 2 workspace:
 mkdir ~/workspace
 cd ~/workspace
 git clone https://github.com/Ameno1215/stageroslinux.git .
+apt install python3-venv -y
 python3 -m venv venv
 source venv/bin/activate
 pip install requests numpy uvicorn fastapi
