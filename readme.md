@@ -124,6 +124,9 @@ Fetch the repository and build the ROS 2 workspace:
 mkdir ~/workspace
 cd ~/workspace
 git clone https://github.com/Ameno1215/stageroslinux.git .
+python3 -m venv venv
+source venv/bin/activate
+pip install requests numpy uvicorn fastapi
 
 # Initialize and update rosdep
 sudo rosdep init
@@ -141,6 +144,9 @@ colcon build
 PowerShell
 ```bash
 git clone https://github.com/Ameno1215/stageroswindows.git
+python -m venv venv
+.\venv\Scripts\activate
+pip install requests
 cd stageroswindows
 ```
 
