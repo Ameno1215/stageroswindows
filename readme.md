@@ -123,7 +123,7 @@ Fetch the repository and build the ROS 2 workspace:
 ```bash
 mkdir ~/workspace
 cd ~/workspace
-git clone [https://github.com/Ameno1215/stageroslinux](https://github.com/Ameno1215/stageroslinux)
+git clone https://github.com/Ameno1215/stageroslinux.git .
 
 # Initialize and update rosdep
 sudo rosdep init
@@ -137,11 +137,10 @@ colcon build
 
 
 #### Windows Environment
-Fetch the Windows repository and switch to the demo branch:
 
 PowerShell
 ```bash
-git clone [https://github.com/Ameno1215/stageroswindows](https://github.com/Ameno1215/stageroswindows)
+git clone https://github.com/Ameno1215/stageroswindows.git
 cd stageroswindows
 ```
 

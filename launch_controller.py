@@ -15,6 +15,11 @@ parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], d
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
                       help="Tool name (ex: effecteur_v2, none)")
+parser.add_argument("--ip", default="169.254.139.249",
+                      help="Robot IP (ex: 169.254.139.249)")
+
+
+
 
 
 args = parser.parse_args()
@@ -24,6 +29,7 @@ SHOW_TERMINALS = args.show_terminals
 SOLVER = "kdl"
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
+IP_ROBOT = args.ip
 IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
 DEFAULT_TOOL = "effecteur_v2"
 TOOL = args.tool or DEFAULT_TOOL
@@ -65,7 +71,7 @@ else:
         TERMINAL_1 = (
             f"{SETUP} && "
             "ros2 launch denso_robot_bringup denso_robot_bringup.launch.py "
-            f"model:={MODEL} sim:=false ip_address:=169.254.139.249 "
+            f"model:={MODEL} sim:=false ip_address:={IP_ROBOT} "
             f"send_format:=256 recv_format:=258 tool:={TOOL} ik_solver:={SOLVER}"
         )
 
