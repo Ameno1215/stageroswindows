@@ -455,6 +455,129 @@ def to_path_real(input):
     return f"file://{wsl_path}"
 
 
+def test(robot, csv_logger):
+    robot.move_to_home()
+    pose_targets_abs_world_rpy = [
+        {"x": 0.3,  "y": 0.1, "z": 0.22, "r1": pi, "r2":  0.00, "r3":  0},
+        {"x": 0.4,  "y": 0.1, "z": 0.32, "r1": pi, "r2":  0.00, "r3":  0},
+        {"x": 0.4,  "y": -0.1, "z": 0.22, "r1": pi, "r2":  0.00, "r3":  0},
+        {"x": 0.3,  "y": 0, "z": 0.22, "r1": pi, "r2":  0.00, "r3":  0},
+    ]
+    
+    for target in pose_targets_abs_world_rpy:
+        move_to_pose_logged(
+            robot, csv_logger,
+            x=target["x"], y=target["y"], z=target["z"],
+            r1=target["r1"], r2=target["r2"], r3=target["r3"],
+            rotation_format="RPY", reference_frame="WORLD",
+            is_relative=False, cartesian_path=False
+        )
+    for target in pose_targets_abs_world_rpy:
+        move_to_pose_logged(
+            robot, csv_logger,
+            x=target["x"], y=target["y"], z=target["z"],
+            r1=target["r1"], r2=target["r2"], r3=target["r3"],
+            rotation_format="RPY", reference_frame="WORLD",
+            is_relative=False, cartesian_path=True
+        )
+
+    
+    robot.move_to_home()
+
+    pose_targets_relative_world_rpy = [
+        {"x": 0,  "y": 0.1, "z": 0, "r1": 0, "r2":  0.00, "r3":  0},
+        {"x": 0.2,  "y": 0, "z": -0.2, "r1": 0, "r2":  0.00, "r3":  0},
+        {"x": 0,  "y": -0.2, "z": 0.15, "r1": 0, "r2":  0.00, "r3":  0},
+        {"x": -0.2,  "y": 0, "z": 0, "r1": 0, "r2":  0.00, "r3":  0},
+    ]
+    
+    for target in pose_targets_relative_world_rpy:
+        move_to_pose_logged(
+            robot, csv_logger,
+            x=target["x"], y=target["y"], z=target["z"],
+            r1=target["r1"], r2=target["r2"], r3=target["r3"],
+            rotation_format="RPY", reference_frame="WORLD",
+            is_relative=True, cartesian_path=False
+        )
+    for target in pose_targets_relative_world_rpy:
+        move_to_pose_logged(
+            robot, csv_logger,
+            x=target["x"], y=target["y"], z=target["z"],
+            r1=target["r1"], r2=target["r2"], r3=target["r3"],
+            rotation_format="RPY", reference_frame="WORLD",
+            is_relative=True, cartesian_path=True
+        )
+
+    # ---------------------------------------------------------
+    # 6. JOINT MOVEMENTS
+    # ---------------------------------------------------------
+    HOME = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+
+    RELATIVE_MOVES = [
+        [ 0.25,  0.00, -0.20,  0.15, -0.20,  0.10],
+        [-0.25,  0.20, -0.15, -0.15, -0.25, -0.10],
+        [ 0.00, -0.25, -0.25,  0.25, -0.15,  0.20],
+        [ 0.30,  0.20, -0.30, -0.20, -0.30,  0.15],
+        [-0.30, -0.20, -0.20,  0.20, -0.25, -0.15],
+    ]
+
+    ABSOLUTE_MOVES = [
+        [ 0.25,  0.00, 1.37,  0.15, 1.37,  0.10],
+        [-0.25,  0.20, 1.42, -0.15, 1.32, -0.10],
+        [ 0.00, -0.25, 1.32,  0.25, 1.42,  0.20],
+        [ 0.30,  0.20, 1.27, -0.20, 1.27,  0.15],
+        [-0.30, -0.20, 1.37,  0.20, 1.32, -0.15],
+    ]
+
+
+    win_logger.info("--- Hardcoded RELATIVE moves around HOME ---")
+
+    for i, delta in enumerate(RELATIVE_MOVES):
+
+
+        move_joints_logged(
+            robot,
+            csv_logger,
+            joints=HOME,
+            angle_format="RAD",
+            is_relative=False,
+        )
+
+        move_joints_logged(
+            robot,
+            csv_logger,
+            joints=delta,
+            angle_format="RAD",
+            is_relative=True,
+        )
+
+        move_joints_logged(
+            robot,
+            csv_logger,
+            joints=HOME,
+            angle_format="RAD",
+            is_relative=False,
+        )
+        
+    for i, target in enumerate(ABSOLUTE_MOVES):
+
+        move_joints_logged(
+            robot,
+            csv_logger,
+            joints=target,
+            angle_format="RAD",
+            is_relative=False,
+        )
+
+        # Retour HOME après chaque test.
+        move_joints_logged(
+            robot,
+            csv_logger,
+            joints=HOME,
+            angle_format="RAD",
+            is_relative=False,
+        )
+    
 
 
 def run():
@@ -490,7 +613,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=1, accel_scale=1)
+    robot.set_scaling(velocity_scale=0.4, accel_scale=0.1)
 
     robot.clear_environment()
 
@@ -549,294 +672,8 @@ def run():
     print(robot.set_servo_on(True))
 
     
-    # test(robot, csv_logger)
-
-    # return
-
-    robot.move_to_home()
-
-    inputStorage = None
-    outputStorage = None
-    if MODEL == "tx40":
-        inputStorage = box1_staubli
-        outputStorage = box2_staubli
-    else:
-        inputStorage = box1
-        outputStorage = box2
-
-    number_of_cards = 2
-
-    plates_dir = base_path / "plates"
-    
-    if MODEL == "tx40":
-        plates_dir = base_path / "platesStaubli"
-
-    for plate_dir in plates_dir.glob("plate*"):
-
-        if plate_dir.is_dir():
-            
-            json_files = list(plate_dir.glob("*.json"))
-            
-            if json_files:
-                json_path = json_files[0]
-                print(f'Loading plate from: {json_path.name}')
-                
-                plate = load_plate_from_file(json_path)
-                win_logger.info(f"Testing plate : {plate.plate_number}")
-
-                for reader in plate.readers:
-                    for pos in reader.positions:
-                        if MODEL == "tx40":
-                            robot.manage_box(
-                                box_id=f"{reader.reader_name}_{pos.position_label}",
-                                x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
-                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                size_x=0.06, size_y=0.09, size_z=0.02,
-                                action="ADD",
-                                enable_collision=False
-                            )
-                        else:
-                            robot.manage_box(
-                                box_id=f"{reader.reader_name}_{pos.position_label}",
-                                x=pos.x, y=pos.y, z=pos.z,
-                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                size_x=0.06, size_y=0.09, size_z=0.02,
-                                action="ADD",
-                                enable_collision=False
-                            )
-                
-                if MODEL == "tx40":
-                    robot.manage_mesh(
-                        mesh_id=f"plaque{plate.plate_number}",
-                        mesh_path=to_path_real(plate.mesh_path),
-                        x=0.557+0.135/2-STAUBLI_PLATE_OFFSET+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
-                        r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
-                        rotation_format="RPY",
-                        a=1, r=0, g=1, b=0,
-                        action="ADD"
-                    )
-                else:
-                    robot.manage_mesh(
-                        mesh_id=f"plaque{plate.plate_number}",
-                        mesh_path=to_path_real(plate.mesh_path),
-                        x=0.557+0.135/2+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
-                        r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
-                        rotation_format="RPY",
-                        a=1, r=0, g=1, b=0,
-                        action="ADD"
-                    )       
-
-                for reader_index, reader in enumerate(plate.readers):
-                    win_logger.info(f'Testing reader: {reader.reader_name}')
-                    for card in range(number_of_cards):
-                        if card == 0 and reader_index !=0:
-                            pass
-                        else:
-                            win_logger.info(f'Robot is going to take card {card} by move pose')
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=inputStorage["position"]["x"],
-                                y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
-                                r1=inputStorage["position"]["rx"],
-                                r2=inputStorage["position"]["ry"],
-                                r3=inputStorage["position"]["rz"],
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=False,
-                                cartesian_path=False,
-                                execute=True
-                            )
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0,
-                                y=0,
-                                z=-0.3,
-                                r1=0,
-                                r2=0,
-                                r3=0,
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=True,
-                                cartesian_path=True,
-                                execute=True
-                            )
-
-                            robot.pump_grab()
-
-                            t = time.time()
-
-                            bool_grabbed = False
-                            while time.time() - t < 5:
-                                print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-                                if robot.pump_is_grabbed()["grabbed"]:
-                                    bool_grabbed = True
-                                    win_logger.info("Card is grabbed")
-                                    break
-                            
-                            if not bool_grabbed:
-                                robot.pump_release()
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0,
-                                y=0,
-                                z=0.3,
-                                r1=0,
-                                r2=0,
-                                r3=0,
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=True,
-                                cartesian_path=True,
-                                execute=True
-                            )
-                    
-                        for pos_index, pos in enumerate(reader.positions):
-                            win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
-
-                            if MODEL == "tx40":
-                                move_approach_logged(
-                                    robot,
-                                    csv_logger,
-                                    x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
-                                    r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                    z_offset=0.12,
-                                    rotation_format="RPY",
-                                    cartesian_path=False,
-                                    execute=True
-                                )
-                            else:
-                                move_approach_logged(
-                                    robot,
-                                    csv_logger,
-                                    x=pos.x, y=pos.y, z=pos.z,
-                                    r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                    z_offset=0.12,
-                                    rotation_format="RPY",
-                                    cartesian_path=False,
-                                    execute=True
-                                )
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0, y=0, z=0.12 - 0.005,
-                                r1=0, r2=0, r3=0,
-                                rotation_format="RPY",
-                                reference_frame="TOOL",
-                                cartesian_path=True,
-                                is_relative=True,
-                                execute=True
-                            )
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0, y=0, z=-0.12 + 0.005,
-                                r1=0, r2=0, r3=0,
-                                rotation_format="RPY",
-                                reference_frame="TOOL",
-                                cartesian_path=True,
-                                is_relative=True,
-                                execute=True
-                            )
-
-                        if card == number_of_cards-1 and reader_index != len(plate.readers)-1:
-                            win_logger.info("Robot don't release the card to gain time")
-                            pass
-                        else:
-
-                            win_logger.info(f'Robot is going to release card: {card} by move pose')
-                            
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=outputStorage["position"]["x"],
-                                y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
-                                r1=outputStorage["position"]["rx"],
-                                r2=outputStorage["position"]["ry"],
-                                r3=outputStorage["position"]["rz"],
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=False,
-                                cartesian_path=False,
-                                execute=True
-                            )
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0,
-                                y=0,
-                                z=-0.3,
-                                r1=0,
-                                r2=0,
-                                r3=0,
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=True,
-                                cartesian_path=True,
-                                execute=True
-                            )
-
-                            robot.pump_release()
-
-                            move_to_pose_logged(
-                                robot,
-                                csv_logger,
-                                x=0,
-                                y=0,
-                                z=0.3,
-                                r1=0,
-                                r2=0,
-                                r3=0,
-                                rotation_format="RPY",
-                                reference_frame="WORLD",
-                                is_relative=True,
-                                cartesian_path=True,
-                                execute=True
-                            )
-                    
-                    if MODEL == "tx40":
-                        if inputStorage is box1_staubli:
-                            inputStorage = box2_staubli
-                            outputStorage = box1_staubli
-                        else:
-                            inputStorage = box1_staubli
-                            outputStorage = box2_staubli
-                    else:
-                        if inputStorage is box1:
-                            inputStorage = box2
-                            outputStorage = box1
-                        else:
-                            inputStorage = box1
-                            outputStorage = box2
-                win_logger.info("Going home")
-                
-                robot.move_to_home()
-
-                for reader in plate.readers:
-                    for pos in reader.positions:
-                        robot.manage_box(
-                            box_id=f"{reader.reader_name}_{pos.position_label}",
-                            action="REMOVE"
-                        )      
-
-                robot.manage_mesh(
-                    mesh_id=f"plaque{plate.plate_number}",
-                    action="REMOVE"
-                )
-
-    time.sleep(2)
-
-    # test(robot, csv_logger)
+    test(robot, csv_logger)
+   
     
     print(robot.set_servo_on(False))
     
@@ -852,301 +689,6 @@ def run():
     )
 
 
-    
-def test(robot, csv_logger):
-    # ---------------------------------------------------------
-    # 1. NON-CARTESIAN, NON-RELATIVE, WORLD (Absolute)
-    # ---------------------------------------------------------
-    win_logger.info("Testing move_to_pose & via_joint: non-cartesian, non-relative, WORLD")
-    # pose_targets_abs_world_quat = [
-    #     {"x": 0.45,  "y": -0.15,  "z": 0.22, "r1": 0, "r2": 0.72,  "r3": -0.69, "r4": 0.0},
-    #     {"x": -0.4, "y": -0.1, "z": 0.2, "r1": 0.91, "r2": 0.34,  "r3": -0.06, "r4": -0.2},
-    #     {"x": 0.2,  "y": 0.2,  "z": 0.3, "r1": 0.0, "r2": 1.0,  "r3": 0.0, "r4": 0.0},
-    #     {"x": -0.2, "y": -0.2, "z": 0.3, "r1": 0.0, "r2": -1.0, "r3": 0.0, "r4": 0.0},
-    # ]
-
-    pose_targets_abs_world_rpy = [
-        {"x": 0.45,  "y": -0.15, "z": 0.22, "r1": -1.61, "r2":  0.00, "r3":  3.14},
-        {"x": 0.40, "y": 0.10, "z": 0.20, "r1": -2.72, "r2": -0.03, "r3":  0.71},
-        {"x":  0.20, "y":  0.20, "z": 0.30, "r1":  3.14, "r2":  0.00, "r3":  3.14},
-        {"x": 0.20, "y": -0.20, "z": 0.30, "r1": -3.14, "r2":  0.00, "r3":  3.14},
-    ]
-    
-    for target in pose_targets_abs_world_rpy:
-        move_to_pose_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="WORLD",
-            is_relative=False, cartesian_path=False
-        )
-
-    for target in pose_targets_abs_world_rpy:
-        move_to_pose_via_joint_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="WORLD",
-            is_relative=False
-        )
-
-    # ---------------------------------------------------------
-    # 2. NON-CARTESIAN, RELATIVE, WORLD
-    # Small delta moves, letting the planner find the joint path
-    # ---------------------------------------------------------
-    win_logger.info("Testing move_to_pose: non-cartesian, relative, WORLD")
-    pose_targets_rel_world = [
-        {"x": 0.0, "y": 0.2, "z": -0.1, "r1": 0.1, "r2": 0, "r3": 0},
-        {"x": 0.1, "y": 0.0, "z": -0.05, "r1": 0.1, "r2": 0.2, "r3": 0},
-        {"x": 0.0, "y": -0.2, "z": +0.1, "r1": -0.1, "r2": 0, "r3": 0},
-        {"x": -0.1, "y": 0.0, "z": +0.05, "r1": -0.1, "r2": -0.2, "r3": 0},
-        {"x": 0.0, "y": 0.2, "z": 0, "r1": 0, "r2": 0, "r3": 0},
-    ]
-
-    robot.move_to_home() 
-    for target in pose_targets_rel_world:
-        move_to_pose_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="WORLD",
-            is_relative=True, cartesian_path=False
-        )
-
-    
-    robot.move_to_home() 
-    for target in pose_targets_rel_world:
-            move_to_pose_via_joint_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="WORLD",
-            is_relative=True
-        )
-            
-    # move_to_pose_logged(
-    #     robot, csv_logger,
-    #     x=-0.25, y=0.04, z=0.82,
-    #     r1=0, r2=-0.69, r3=-0.03,
-    #     rotation_format="RPY", reference_frame="WORLD",
-    #     is_relative=False, cartesian_path=False
-    # )
-    # for target in pose_targets_rel_world:
-    #     move_to_pose_logged(
-    #         robot, csv_logger,
-    #         x=target["x"], y=target["y"], z=target["z"],
-    #         r1=target["r1"], r2=target["r2"], r3=target["r3"],
-    #         rotation_format="RPY", reference_frame="WORLD",
-    #         is_relative=True, cartesian_path=False
-    #     )
-
-    
-    # move_to_pose_logged(
-    #     robot, csv_logger,
-    #     x=-0.25, y=0.04, z=0.82,
-    #     r1=0, r2=-0.69, r3=-0.03,
-    #     rotation_format="RPY", reference_frame="WORLD",
-    #     is_relative=False, cartesian_path=False
-    # )
-    # for target in pose_targets_rel_world:
-    #         move_to_pose_via_joint_logged(
-    #         robot, csv_logger,
-    #         x=target["x"], y=target["y"], z=target["z"],
-    #         r1=target["r1"], r2=target["r2"], r3=target["r3"],
-    #         rotation_format="RPY", reference_frame="WORLD",
-    #         is_relative=True
-    #     )
-
-
-    # ---------------------------------------------------------
-    # 3. CARTESIAN, RELATIVE, WORLD
-    # Strict straight lines in world axes
-    # ---------------------------------------------------------
-    win_logger.info("Testing move_to_pose: cartesian, relative, WORLD")
-    pose_targets_cart_rel_world = [
-        {"x": 0.0, "y": 0.2, "z": 0.1, "r1": -0.1, "r2": 0, "r3": 0},
-        {"x": 0.2, "y": 0.0, "z": -0.05, "r1": 0.1, "r2": 0.2, "r3": 0},
-        {"x": 0.0, "y": -0.4, "z": -0.1, "r1": -0.1, "r2": 0, "r3": 0},
-        {"x": -0.2, "y": 0.0, "z": +0.05, "r1": 0.1, "r2": -0.2, "r3": 0},
-        {"x": 0.0, "y": 0.2, "z": 0, "r1": 0, "r2": 0, "r3": 0},
-    ]
-
-    robot.move_to_home()
-    move_to_pose_logged(
-        robot, csv_logger,
-        x=0, y=0.0, z=-0.2,
-        r1=0, r2=0.0, r3=0.0,
-        rotation_format="RPY", reference_frame="WORLD",
-        is_relative=True, cartesian_path=False
-    )
-    for target in pose_targets_cart_rel_world:
-        move_to_pose_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="WORLD",
-            is_relative=True, cartesian_path=True
-        )
-
-    # move_to_pose_logged(
-    #     robot, csv_logger,
-    #     x=-0.25, y=0.04, z=0.32,
-    #     r1=0, r2=-0.69, r3=-0.03,
-    #     rotation_format="RPY", reference_frame="WORLD",
-    #     is_relative=False, cartesian_path=False
-    # )
-    # for target in pose_targets_rel_world:
-    #     move_to_pose_logged(
-    #         robot, csv_logger,
-    #         x=target["x"], y=target["y"], z=target["z"],
-    #         r1=target["r1"], r2=target["r2"], r3=target["r3"],
-    #         rotation_format="RPY", reference_frame="WORLD",
-    #         is_relative=True, cartesian_path=True
-    #     )
-
-
-    # ---------------------------------------------------------
-    # 5. TOOL FRAME (Relative)
-    # Moving relative to the End-Effector's current orientation
-    # ---------------------------------------------------------
-    win_logger.info("Testing move_to_pose: TOOL frame (cartesian and non-cartesian)")
-    robot.move_to_home()
-    d = 0.15
-    a = math.radians(0)
-
-    pose_targets_tool = [
-        {"x":  0, "y":  d, "z": 0, "r1":  -a, "r2":  a, "r3": 0},
-        {"x": d, "y":  0, "z": 0, "r1": 0, "r2":  -2*a, "r3": 0},
-        {"x": 0, "y": -d, "z": 0, "r1": 2*a, "r2": 0, "r3": 0},
-        {"x":  -d, "y": 0, "z": 0, "r1":  0, "r2": 2*a, "r3": 0},
-    ]
-
-    move_to_pose_logged(
-        robot, csv_logger,
-        x=0.37, y=-0.04, z=0.3,
-        r1=2.7, r2=0.2, r3=3,
-        rotation_format="RPY", reference_frame="WORLD",
-        is_relative=False, cartesian_path=True
-    )
-    # Test TOOL frame with Cartesian path
-    for target in pose_targets_tool:
-        move_to_pose_logged(
-            robot, csv_logger,
-            x=target["x"], y=target["y"], z=target["z"],
-            r1=target["r1"], r2=target["r2"], r3=target["r3"],
-            rotation_format="RPY", reference_frame="TOOL",
-            is_relative=True, cartesian_path=True
-        )
-
-    # TODO a tester quand le solveur sera bon 
-    # Test TOOL frame without Cartesian path
-    # for target in pose_targets_tool:
-    #     move_to_pose_logged(
-    #         robot, csv_logger,
-    #         x=target["x"], y=target["y"], z=target["z"],
-    #         r1=target["r1"], r2=target["r2"], r3=target["r3"],
-    #         rotation_format="RPY", reference_frame="TOOL",
-    #         is_relative=True, cartesian_path=False
-    #     )
-
-    # ---------------------------------------------------------
-    # 6. JOINT MOVEMENTS
-    # ---------------------------------------------------------
-    HOME = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
-
-    # Petits mouvements relatifs autour de HOME.
-    # Attention : comme J3 et J5 sont déjà à +1.57 rad,
-    # on évite de leur ajouter une valeur positive.
-    RELATIVE_MOVES = [
-        # Depuis HOME : petit balayage positif de la base + descente J3/J5
-        [ 0.25,  0.00, -0.20,  0.15, -0.20,  0.10],
-
-        # Balayage opposé avec J2
-        [-0.25,  0.20, -0.15, -0.15, -0.25, -0.10],
-
-        # Mouvement plus marqué sur J2/J4/J6
-        [ 0.00, -0.25, -0.25,  0.25, -0.15,  0.20],
-
-        # Diagonale articulaire
-        [ 0.30,  0.20, -0.30, -0.20, -0.30,  0.15],
-
-        # Diagonale inverse
-        [-0.30, -0.20, -0.20,  0.20, -0.25, -0.15],
-    ]
-
-    # Positions absolues proches de HOME.   
-    # Toutes les valeurs restent proches de HOME et dans [-1.57, +1.57].
-    ABSOLUTE_MOVES = [
-        [ 0.25,  0.00, 1.37,  0.15, 1.37,  0.10],
-        [-0.25,  0.20, 1.42, -0.15, 1.32, -0.10],
-        [ 0.00, -0.25, 1.32,  0.25, 1.42,  0.20],
-        [ 0.30,  0.20, 1.27, -0.20, 1.27,  0.15],
-        [-0.30, -0.20, 1.37,  0.20, 1.32, -0.15],
-    ]
-
-
-    # ---------- Relative: hardcoded delta moves around HOME ----------
-    win_logger.info("--- Hardcoded RELATIVE moves around HOME ---")
-
-    for i, delta in enumerate(RELATIVE_MOVES):
-
-        win_logger.info(
-            f"Hardcoded rel {i+1}/{len(RELATIVE_MOVES)}: {[round(d, 3) for d in delta]}"
-        )
-
-        # On repart toujours de HOME pour rester proche de la position sûre.
-        move_joints_logged(
-            robot,
-            csv_logger,
-            joints=HOME,
-            angle_format="RAD",
-            is_relative=False,
-        )
-
-        # Mouvement relatif depuis HOME.
-        move_joints_logged(
-            robot,
-            csv_logger,
-            joints=delta,
-            angle_format="RAD",
-            is_relative=True,
-        )
-
-        # Retour HOME après chaque test.
-        move_joints_logged(
-            robot,
-            csv_logger,
-            joints=HOME,
-            angle_format="RAD",
-            is_relative=False,
-        )
-
-
-    # ---------- Absolute: hardcoded absolute targets around HOME ----------
-    win_logger.info("--- Hardcoded ABSOLUTE moves around HOME ---")
-
-    for i, target in enumerate(ABSOLUTE_MOVES):
-
-        win_logger.info(
-            f"Hardcoded abs {i+1}/{len(ABSOLUTE_MOVES)}: {[round(t, 3) for t in target]}"
-        )
-
-        move_joints_logged(
-            robot,
-            csv_logger,
-            joints=target,
-            angle_format="RAD",
-            is_relative=False,
-        )
-
-        # Retour HOME après chaque test.
-        move_joints_logged(
-            robot,
-            csv_logger,
-            joints=HOME,
-            angle_format="RAD",
-            is_relative=False,
-        )
 
 if __name__ == "__main__":
     try:

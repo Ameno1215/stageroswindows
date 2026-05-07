@@ -1,10 +1,12 @@
 import math
+import random
 import time
+import csv
+from datetime import datetime
 from motion_http_client import MotionRobotClient
 from math import pi
 from plate import load_plate_from_file
 from pathlib import Path
-import urllib.parse
 from logger_worker import tail_linux_logs, win_logger
 import threading
 import argparse
@@ -15,19 +17,18 @@ parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
 parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
+parser.add_argument("--accuracy-csv", default=None,
+                    help="CSV file used to store desired and measured poses")
 
 args = parser.parse_args()
 
 SIM = args.real_robot
 MODEL = args.model
 
-CARTESIAN_PATH = False
-CARTESIAN_PATH_ALL = False
 
-# STAUBLI_PLATE_OFFSET = 0.11
-STAUBLI_PLATE_OFFSET = 0.2
+STAUBLI_PLATE_OFFSET = 0.11
+# STAUBLI_PLATE_OFFSET = 0.2
 
-box_source = 1
 box1 = {
     "box_number": 1,
     "position": {
@@ -77,6 +78,370 @@ box2_staubli = {
 base_path = Path.cwd()
 rel_path_to_stl = "card_storage/boitier.STL"
 
+# CSV layout
+# -----------
+# - movement       : the bridge function that was invoked
+# - cartesian_path : True/False when the function exposes the flag, "" otherwise
+# - reference_frame: WORLD/TOOL when the function exposes the flag, "" otherwise
+# - is_relative    : True/False when the function exposes the flag, "" otherwise
+# - velocity       : current velocity scaling at the time of the move, in percent
+# - acceleration   : current acceleration scaling at the time of the move, in percent
+# - desired_* : commanded pose or commanded joints
+# - measured_* : pose/joints read back via /state/pose or /state/joints right after the move completes
+CSV_FIELDNAMES = [
+    "robot_model",
+    "movement",
+    "cartesian_path",
+    "reference_frame",
+    "is_relative",
+    "velocity",
+    "acceleration",
+    "desired_x", "desired_y", "desired_z",
+    "desired_roll", "desired_pitch", "desired_yaw",
+    "measured_x", "measured_y", "measured_z",
+    "measured_roll", "measured_pitch", "measured_yaw",
+    # Joint data
+    "desired_j1", "desired_j2", "desired_j3", "desired_j4", "desired_j5", "desired_j6",
+    "measured_j1", "measured_j2", "measured_j3", "measured_j4", "measured_j5", "measured_j6"
+]
+
+from scipy.spatial.transform import Rotation as R
+def convert_quat_targets_to_rpy(quat_targets):
+    """
+    Converts a list of pose dictionaries from Quaternion format to RPY.
+    
+    Expected input format:  r1=x, r2=y, r3=z, r4=w
+    Output format:          r1=roll, r2=pitch, r3=yaw (r4 is removed)
+    """
+    rpy_targets = []
+    
+    for pose in quat_targets:
+        # Create a copy to avoid modifying the original dictionary
+        converted_pose = pose.copy()
+        
+        # Extract quaternion values (default w=1.0 for an unrotated state if missing)
+        qx = converted_pose.get("r1", 0.0)
+        qy = converted_pose.get("r2", 0.0)
+        qz = converted_pose.get("r3", 0.0)
+        qw = converted_pose.get("r4", 1.0)
+        
+        # Convert quaternion to Euler angles (extrinsic XYZ = Roll, Pitch, Yaw)
+        rot = R.from_quat([qx, qy, qz, qw])
+        roll, pitch, yaw = rot.as_euler('xyz', degrees=False)
+        
+        # Override the dictionary values with RPY
+        converted_pose["r1"] = roll
+        converted_pose["r2"] = pitch
+        converted_pose["r3"] = yaw
+        
+        # Remove r4 as it is no longer needed in RPY format
+        if "r4" in converted_pose:
+            del converted_pose["r4"]
+            
+        rpy_targets.append(converted_pose)
+        
+    return rpy_targets
+
+
+def _get_orientation_value(orientation, *keys):
+    for key in keys:
+        if key in orientation:
+            return orientation[key]
+    return ""
+
+
+def _pose_to_row(prefix, pose):
+    if not pose:
+        return {
+            f"{prefix}_x": "", f"{prefix}_y": "", f"{prefix}_z": "",
+            f"{prefix}_roll": "", f"{prefix}_pitch": "", f"{prefix}_yaw": "",
+        }
+
+    position = pose.get("position", {})
+    orientation = pose.get("orientation", pose.get("orientation_euler", {}))
+    return {
+        f"{prefix}_x": position.get("x", ""),
+        f"{prefix}_y": position.get("y", ""),
+        f"{prefix}_z": position.get("z", ""),
+        f"{prefix}_roll": _get_orientation_value(orientation, "roll", "rx", "r1"),
+        f"{prefix}_pitch": _get_orientation_value(orientation, "pitch", "ry", "r2"),
+        f"{prefix}_yaw": _get_orientation_value(orientation, "yaw", "rz", "r3"),
+    }
+
+def _joints_to_row(prefix, joints_list):
+    """Convert a list of joints to a dictionary row matching CSV headers."""
+    row = {}
+    for i in range(1, 7):
+        row[f"{prefix}_j{i}"] = ""
+        
+    if joints_list:
+        for i, val in enumerate(joints_list):
+            if i < 6:
+                row[f"{prefix}_j{i+1}"] = val
+    return row
+
+def _rpy_to_matrix(roll, pitch, yaw):
+    cr, sr = math.cos(roll), math.sin(roll)
+    cp, sp = math.cos(pitch), math.sin(pitch)
+    cy, sy = math.cos(yaw), math.sin(yaw)
+
+    return [
+        [cy * cp, cy * sp * sr - sy * cr, cy * sp * cr + sy * sr],
+        [sy * cp, sy * sp * sr + cy * cr, sy * sp * cr - cy * sr],
+        [-sp, cp * sr, cp * cr],
+    ]
+
+
+def _mat_vec_mul(matrix, vector):
+    return [
+        matrix[0][0] * vector[0] + matrix[0][1] * vector[1] + matrix[0][2] * vector[2],
+        matrix[1][0] * vector[0] + matrix[1][1] * vector[1] + matrix[1][2] * vector[2],
+        matrix[2][0] * vector[0] + matrix[2][1] * vector[1] + matrix[2][2] * vector[2],
+    ]
+
+
+def _rpy_from_kwargs(kwargs):
+    r1 = kwargs.get("r1", 0.0)
+    r2 = kwargs.get("r2", 0.0)
+    r3 = kwargs.get("r3", 0.0)
+    if kwargs.get("angle_format", "RAD").upper() == "DEG":
+        return math.radians(r1), math.radians(r2), math.radians(r3)
+    return r1, r2, r3
+
+
+def _pose_from_values(x, y, z, roll, pitch, yaw):
+    return {
+        "position": {"x": x, "y": y, "z": z},
+        "orientation": {"roll": roll, "pitch": pitch, "yaw": yaw},
+    }
+
+
+def _resolve_move_to_pose_target(robot, kwargs):
+    """Compute the absolute desired pose for a move_to_pose / move_to_pose_via_joint call."""
+    x = kwargs.get("x", 0.0)
+    y = kwargs.get("y", 0.0)
+    z = kwargs.get("z", 0.0)
+    roll, pitch, yaw = _rpy_from_kwargs(kwargs)
+    reference_frame = kwargs.get("reference_frame", "WORLD").upper()
+    is_relative = kwargs.get("is_relative", False)
+
+    if kwargs.get("rotation_format", "RPY").upper() != "RPY":
+        return None
+
+    if not is_relative:
+        return _pose_from_values(x, y, z, roll, pitch, yaw)
+
+    current_pose = robot.get_current_pose(output_format="euler")
+    position = current_pose.get("position", {})
+    orientation = current_pose.get("orientation", {})
+    current_roll = _get_orientation_value(orientation, "roll", "rx")
+    current_pitch = _get_orientation_value(orientation, "pitch", "ry")
+    current_yaw = _get_orientation_value(orientation, "yaw", "rz")
+
+    if reference_frame == "TOOL":
+        dx, dy, dz = _mat_vec_mul(_rpy_to_matrix(current_roll, current_pitch, current_yaw), [x, y, z])
+    else:
+        dx, dy, dz = x, y, z
+
+    return _pose_from_values(
+        position.get("x", 0.0) + dx,
+        position.get("y", 0.0) + dy,
+        position.get("z", 0.0) + dz,
+        current_roll + roll,
+        current_pitch + pitch,
+        current_yaw + yaw,
+    )
+
+def _resolve_move_joints_target(robot, kwargs):
+    """Compute the absolute desired joints for a move_joints call (returns radians)."""
+    target_joints = kwargs.get("joints")
+    if not target_joints:
+        return None
+
+    angle_format = kwargs.get("angle_format", "RAD").upper()
+    if angle_format == "DEG":
+        target_joints_rad = [math.radians(j) for j in target_joints]
+    else:
+        target_joints_rad = list(target_joints)
+
+    is_relative = kwargs.get("is_relative", False)
+    if not is_relative:
+        return target_joints_rad
+
+    # Handle relative joint move by fetching current joints
+    try:
+        state = robot.get_joint_state()
+        current_joints = state.get("joints", [])
+        return [c + t for c, t in zip(current_joints, target_joints_rad)]
+    except Exception as e:
+        win_logger.error(f"Could not get current joints for relative move: {e}")
+        return None
+
+def _resolve_approach_target(robot, kwargs):
+    """Compute the absolute (WORLD) approach pose using the bridge's compute_approach_pose."""
+    if kwargs.get("rotation_format", "RPY").upper() != "RPY":
+        return None
+
+    approach_pose = robot.compute_approach_pose(
+        x=kwargs.get("x", 0.0),
+        y=kwargs.get("y", 0.0),
+        z=kwargs.get("z", 0.0),
+        r1=kwargs.get("r1", 0.0),
+        r2=kwargs.get("r2", 0.0),
+        r3=kwargs.get("r3", 0.0),
+        r4=kwargs.get("r4", 0.0),
+        rotation_format=kwargs.get("rotation_format", "RPY"),
+        angle_format=kwargs.get("angle_format", "RAD"),
+        z_offset=kwargs.get("z_offset", 0.1),
+    )
+    return {
+        "position": approach_pose.get("position", {}),
+        "orientation": approach_pose.get("orientation_euler", {}),
+    }
+
+
+class MovementCsvLogger:
+    def __init__(self, csv_path, robot_model):
+        self.csv_path = Path(csv_path)
+        self.robot_model = robot_model
+        self.csv_path.parent.mkdir(parents=True, exist_ok=True)
+        self._ensure_header()
+
+    def _ensure_header(self):
+        if self.csv_path.exists() and self.csv_path.stat().st_size > 0:
+            return
+
+        with self.csv_path.open("w", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=CSV_FIELDNAMES)
+            writer.writeheader()
+
+    def log(self, robot, function, desired_pose=None, desired_joints=None,
+            reference_frame="", is_relative="", cartesian_path=""):
+        """Append one row to the CSV."""
+        try:
+            scaling = robot.get_scaling()
+            velocity = round(float(scaling.get("velocity_scale", 0.0)) * 100)
+            acceleration = round(float(scaling.get("accel_scale", 0.0)) * 100)
+        except Exception as exc:
+            velocity = ""
+            acceleration = ""
+            win_logger.error(f"Could not read scaling for {function}: {exc}")
+
+        row = {
+            "robot_model": self.robot_model,
+            "movement": function,
+            "cartesian_path": cartesian_path,
+            "reference_frame": reference_frame,
+            "is_relative": is_relative,
+            "velocity": velocity,
+            "acceleration": acceleration,
+        }
+        
+        # Add Cartesian Data
+        row.update(_pose_to_row("desired", desired_pose))
+        try:
+            measured_pose = robot.get_current_pose(output_format="euler")
+            row.update(_pose_to_row("measured", measured_pose))
+        except Exception as exc:
+            row.update(_pose_to_row("measured", None))
+            win_logger.error(f"Could not measure pose after {function}: {exc}")
+
+        # Add Joint Data
+        row.update(_joints_to_row("desired", desired_joints))
+        try:
+            measured_state = robot.get_joint_state()
+            row.update(_joints_to_row("measured", measured_state.get("joints")))
+        except Exception as exc:
+            row.update(_joints_to_row("measured", None))
+            win_logger.error(f"Could not measure joints after {function}: {exc}")
+
+
+        with self.csv_path.open("a", newline="", encoding="utf-8") as csv_file:
+            writer = csv.DictWriter(csv_file, fieldnames=CSV_FIELDNAMES)
+            writer.writerow(row)
+
+
+# ----------------------------------------------------------------------
+# Logged wrappers around the bridge client.
+# ----------------------------------------------------------------------
+
+def move_to_pose_logged(robot, csv_logger, **kwargs):
+    try:
+        desired_pose = _resolve_move_to_pose_target(robot, kwargs)
+    except Exception as exc:
+        desired_pose = None
+        win_logger.error(f"Could not resolve desired pose for move_to_pose: {exc}")
+
+    result = robot.move_to_pose(**kwargs)
+    csv_logger.log(
+        robot,
+        function="move_to_pose",
+        desired_pose=desired_pose,
+        reference_frame=kwargs.get("reference_frame", "WORLD"),
+        is_relative=kwargs.get("is_relative", False),
+        cartesian_path=kwargs.get("cartesian_path", False),
+    )
+    return result
+
+
+def move_to_pose_via_joint_logged(robot, csv_logger, **kwargs):
+    try:
+        desired_pose = _resolve_move_to_pose_target(robot, kwargs)
+    except Exception as exc:
+        desired_pose = None
+        win_logger.error(f"Could not resolve desired pose for move_to_pose_via_joint: {exc}")
+
+    result = robot.move_to_pose_via_joint(**kwargs)
+    csv_logger.log(
+        robot,
+        function="move_to_pose_via_joint",
+        desired_pose=desired_pose,
+        reference_frame=kwargs.get("reference_frame", "WORLD"),
+        is_relative=kwargs.get("is_relative", False),
+        cartesian_path=False,
+    )
+    return result
+
+
+def move_approach_logged(robot, csv_logger, **kwargs):
+    try:
+        desired_pose = _resolve_approach_target(robot, kwargs)
+    except Exception as exc:
+        desired_pose = None
+        win_logger.error(f"Could not resolve desired approach pose: {exc}")
+
+    result = robot.move_approach(**kwargs)
+    csv_logger.log(
+        robot,
+        function="move_approach",
+        desired_pose=desired_pose,
+        reference_frame="WORLD",
+        is_relative=False,
+        cartesian_path=kwargs.get("cartesian_path", False),
+    )
+    return result
+
+
+def move_joints_logged(robot, csv_logger, **kwargs):
+    try:
+        desired_joints = _resolve_move_joints_target(robot, kwargs)
+    except Exception as exc:
+        desired_joints = None
+        win_logger.error(f"Could not resolve desired joints: {exc}")
+
+    result = robot.move_joints(**kwargs)
+    csv_logger.log(
+        robot,
+        function="move_joints",
+        desired_pose=None,
+        desired_joints=desired_joints,
+        reference_frame="",
+        is_relative=kwargs.get("is_relative", False),
+        cartesian_path="",
+    )
+    return result
+
+
 def to_path_real(input):
     abs_path_to_stl = base_path / input
 
@@ -106,18 +471,26 @@ def run():
 
 
     robot = MotionRobotClient("http://localhost:8000", SIM)
+    if args.accuracy_csv:
+        csv_path = Path(args.accuracy_csv)
+        if not csv_path.is_absolute():
+            csv_path = base_path / csv_path
+    else:
+        csv_name = f"accuracy_{datetime.now().strftime('%Y-%m-%d_%H-%M')}.csv"
+        csv_path = base_path / "accuracy/data" / csv_name
+    csv_logger = MovementCsvLogger(csv_path, MODEL)
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
     robot.init_robot(model=MODEL, 
                            velocity_scale=0.1, 
                            accel_scale=0.1, 
-                           planning_time=10, 
+                           planning_time=5, 
                            planning_attempts=20, 
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=1, accel_scale=0.5)
+    robot.set_scaling(velocity_scale=1, accel_scale=1)
 
     robot.clear_environment()
 
@@ -174,26 +547,14 @@ def run():
 
     
     print(robot.set_servo_on(True))
+
     
-    # robot.pump_release()
+    # test(robot, csv_logger)
+
     # return
-
-    # robot.pump_grab()
-
-    # t = time.time()
-
-    # while time.time() - t < 5:
-    #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-    #     if robot.pump_is_grabbed()["grabbed"]:
-    #         win_logger.info("Card is grabbed")
-    #         break
-    
-    # robot.pump_release()
-    
-    # return
-
 
     robot.move_to_home()
+
     inputStorage = None
     outputStorage = None
     if MODEL == "tx40":
@@ -205,23 +566,21 @@ def run():
 
     number_of_cards = 2
 
-
     plates_dir = base_path / "plates"
+    
+    if MODEL == "tx40":
+        plates_dir = base_path / "platesStaubli"
 
-    # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
 
-        # Ensure it's actually a directory (and not a file named plate_something)
         if plate_dir.is_dir():
             
-            # Look for the JSON file inside this sub-directory
             json_files = list(plate_dir.glob("*.json"))
             
             if json_files:
-                json_path = json_files[0] # Take the first (and supposedly only) JSON file
+                json_path = json_files[0]
                 print(f'Loading plate from: {json_path.name}')
                 
-                # Load the plate
                 plate = load_plate_from_file(json_path)
                 win_logger.info(f"Testing plate : {plate.plate_number}")
 
@@ -273,44 +632,11 @@ def run():
                         if card == 0 and reader_index !=0:
                             pass
                         else:
-                            # win_logger.info(f'Robot is going to take card {card} by waypoints move')
-                            # storage_points = [
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.1,
-                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"],
-                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            #     { "x": inputStorage["position"]["x"], "y": inputStorage["position"]["y"], "z": inputStorage["position"]["z"]+0.1,
-                            #         "r1": inputStorage["position"]["rx"], "r2": inputStorage["position"]["ry"], "r3": inputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            # ]
-                            
-                            # robot.move_waypoints(
-                            #     waypoints=storage_points,
-                            #     rotation_format="RPY",
-                            #     is_relative=False, 
-                            #     cartesian_path=True
-                            # )
-
-                        
                             win_logger.info(f'Robot is going to take card {card} by move pose')
 
-
-                            # robot.move_to_pose_via_joint(
-                            #     x=inputStorage["position"]["x"],
-                            #     y=inputStorage["position"]["y"],
-                            #     z=inputStorage["position"]["z"] + 0.3 + 0.005,
-                            #     r1=inputStorage["position"]["rx"],
-                            #     r2=inputStorage["position"]["ry"],
-                            #     r3=inputStorage["position"]["rz"],
-                            #     rotation_format="RPY",
-                            #     reference_frame="WORLD",
-                            #     is_relative=False,
-                            #     execute=True
-                            # )
-
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
                                 z=inputStorage["position"]["z"] + 0.3 + 0.005,
@@ -320,11 +646,13 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=CARTESIAN_PATH,
+                                cartesian_path=False,
                                 execute=True
                             )
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0,
                                 y=0,
                                 z=-0.3,
@@ -353,7 +681,9 @@ def run():
                             if not bool_grabbed:
                                 robot.pump_release()
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0,
                                 y=0,
                                 z=0.3,
@@ -369,106 +699,64 @@ def run():
                     
                         for pos_index, pos in enumerate(reader.positions):
                             win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
-                            # if pos_index > 0:
-                            #     dx = pos.x - reader.positions[pos_index-1].x
-                            #     dy = pos.y - reader.positions[pos_index-1].y
 
-                            #     robot.move_to_pose(
-                            #         x=dx, y=dy, z=0,
-                            #         r1=0, r2=0, r3=0,
-                            #         rotation_format="RPY",
-                            #         reference_frame="WORLD",
-                            #         cartesian_path=True,
-                            #         is_relative=True,
-                            #         execute=True
-                            #     )
-
-                            CARTESIAN_PATH_APPROACH = CARTESIAN_PATH if pos_index == 0 else True
                             if MODEL == "tx40":
-                                robot.move_approach(
+                                move_approach_logged(
+                                    robot,
+                                    csv_logger,
                                     x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=CARTESIAN_PATH_APPROACH,
+                                    cartesian_path=False,
                                     execute=True
                                 )
                             else:
-                                robot.move_approach(
+                                move_approach_logged(
+                                    robot,
+                                    csv_logger,
                                     x=pos.x, y=pos.y, z=pos.z,
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=CARTESIAN_PATH_APPROACH,
+                                    cartesian_path=False,
                                     execute=True
                                 )
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0, y=0, z=0.12 - 0.005,
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=CARTESIAN_PATH_ALL,
+                                cartesian_path=True,
                                 is_relative=True,
                                 execute=True
                             )
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0, y=0, z=-0.12 + 0.005,
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=CARTESIAN_PATH_ALL,
+                                cartesian_path=True,
                                 is_relative=True,
                                 execute=True
                             )
-
-                            
-                            if pos_index > 0:
-                                pass
-                                # peut etre si au retour de la position 2 ca fait un truc bizarre
 
                         if card == number_of_cards-1 and reader_index != len(plate.readers)-1:
                             win_logger.info("Robot don't release the card to gain time")
                             pass
                         else:
 
-                            # win_logger.info(f'Robot is going to release card: {card} by waypoints move')
-                            # storage_points = [
-                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3+0.005,
-                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"],
-                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            #     { "x": outputStorage["position"]["x"], "y": outputStorage["position"]["y"], "z": outputStorage["position"]["z"]+0.3+0.005,
-                            #         "r1": outputStorage["position"]["rx"], "r2": outputStorage["position"]["ry"], "r3": outputStorage["position"]["rz"],
-                            #         "is_relative": False, "reference_frame": "WORLD" },
-                            # ]
-
-                            # robot.move_waypoints(
-                            #     waypoints=storage_points,
-                            #     rotation_format="RPY",
-                            #     is_relative=False, 
-                            #     cartesian_path=True
-                            # )
-
                             win_logger.info(f'Robot is going to release card: {card} by move pose')
                             
-                            # robot.move_to_pose_via_joint(
-                            #     x=outputStorage["position"]["x"],
-                            #     y=outputStorage["position"]["y"],
-                            #     z=outputStorage["position"]["z"] + 0.3 + 0.01,
-                            #     r1=outputStorage["position"]["rx"],
-                            #     r2=outputStorage["position"]["ry"],
-                            #     r3=outputStorage["position"]["rz"],
-                            #     rotation_format="RPY",
-                            #     reference_frame="WORLD",
-                            #     is_relative=False,
-                            #     execute=True
-                            # )
-
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
                                 z=outputStorage["position"]["z"] + 0.3 + 0.01,
@@ -478,11 +766,13 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=CARTESIAN_PATH,
+                                cartesian_path=False,
                                 execute=True
                             )
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0,
                                 y=0,
                                 z=-0.3,
@@ -498,7 +788,9 @@ def run():
 
                             robot.pump_release()
 
-                            robot.move_to_pose(
+                            move_to_pose_logged(
+                                robot,
+                                csv_logger,
                                 x=0,
                                 y=0,
                                 z=0.3,
@@ -527,7 +819,8 @@ def run():
                             inputStorage = box1
                             outputStorage = box2
                 win_logger.info("Going home")
-                robot.move_to_home()     
+                
+                robot.move_to_home()
 
                 for reader in plate.readers:
                     for pos in reader.positions:
@@ -542,7 +835,7 @@ def run():
                 )
 
     time.sleep(2)
-
+    
     print(robot.set_servo_on(False))
     
     print(robot.set_virtual_cage(enable=False))  
@@ -556,8 +849,6 @@ def run():
         action="REMOVE"
     )
 
-    
-         
 
 if __name__ == "__main__":
     try:
@@ -568,25 +859,3 @@ if __name__ == "__main__":
         win_logger.info("Program interrupted by user.")
     except Exception as e:
         win_logger.error(f"Unexpected error: {e}")
-
-
-# if __name__ == "__main__":
-#     total_runs = 10
-#     crash_count = 0
-
-#     for i in range(1, total_runs + 1):
-#         win_logger.info(f"\n\n\n\t{i}/{total_runs}\n\n\n")
-#         win_logger.info(f"--- Run {i}/{total_runs} ---")
-#         try:
-#             run()
-#         except RuntimeError as e:
-#             win_logger.error(f"Run {i} crashed (motion error): {e}")
-#             crash_count += 1
-#         except KeyboardInterrupt:
-#             win_logger.info("Program interrupted by user.")
-#             break
-#         except Exception as e:
-#             win_logger.error(f"Run {i} crashed (unexpected): {e}")
-#             crash_count += 1
-
-#     win_logger.info(f"\n\n\n\n\nResults: {crash_count}/{total_runs} crashes")

@@ -114,7 +114,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=0.5, accel_scale=0.3)
+    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
 
     robot.clear_environment()
 
