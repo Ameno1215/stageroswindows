@@ -14,8 +14,8 @@ parser.add_argument("--real-robot", action="store_true",
 parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
-                      help="Tool name (ex: effecteur_v2, none)")
-parser.add_argument("--ip", default="192.168.10.100",
+                      help="Tool name (ex: effecteur_v3, none)")
+parser.add_argument("--ip", default="169.254.75.249",
                       help="Robot IP (ex: 169.254.139.249)")
 
 
@@ -31,7 +31,7 @@ SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IP_ROBOT = args.ip
 IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
-DEFAULT_TOOL = "effecteur_v2"
+DEFAULT_TOOL = "effecteur_v3"
 TOOL = args.tool or DEFAULT_TOOL
 
 if IS_STAUBLI and args.real_robot:
@@ -45,7 +45,7 @@ SETUP = (
     "cd ~/workspace/denso_ros2_ws && "
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
-    "export OMPL_CONSOLE_LOG_LEVEL=DEBUG && "
+    "export OMPL_CONSOLE_LOG_LEVEL=DEV2 && "
     "export LIBGL_ALWAYS_SOFTWARE=0 && "
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA && "
     "export GAZEBO_MODEL_DATABASE_URI= && "

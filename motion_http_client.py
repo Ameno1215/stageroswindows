@@ -194,32 +194,28 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_waypoints(self, waypoints, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=True, execute=True):
+    def move_waypoints(self, waypoints, rotation_format="RPY", angle_format="RAD", cartesian_path=True, execute=True):
         """
         Moves the robot through a list of points without stopping.
 
         Examples:
             points = [
-                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # +10cm X
-                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0}, # then +10cm Y
+                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True, "reference_frame": "WORLD"}, # +10cm X
+                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True, "reference_frame": "WORLD"}, # then +10cm Y
             ]
-            robot.move_waypoints(points, is_relative=True, reference_frame="TOOL")
+            robot.move_waypoints(points)
 
         Args:
             waypoints (list[dict]): List of dictionaries with keys x, y, z, r1, r2, r3, (r4).
             rotation_format (str): "RPY" or "QUAT" for all points.
-            reference_frame (str): "WORLD" or "TOOL".
             angle_format (str): "RAD" or "DEG"
-            is_relative (bool): If True, Point 1 is relative to start, Point N is relative to Point N-1.
             cartesian_path (bool): True = straight lines between points.
             execute (bool): Execute or simply plan.
         """
         payload = {
             "waypoints": waypoints,
             "rotation_format": str(rotation_format),
-            "reference_frame": str(reference_frame),
             "angle_format": str(angle_format),
-            "is_relative": bool(is_relative),
             "cartesian_path": bool(cartesian_path),
             "execute": bool(execute)
         }

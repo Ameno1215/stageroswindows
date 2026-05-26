@@ -23,6 +23,11 @@ MODEL = args.model
 
 
 STAUBLI_PLATE_OFFSET = 0.11
+OFFSET = 0.015
+# OFFSET = 0.05
+CARTESIAN_PATH = False
+SPEED = 1
+ACCEL = 1
 
 box_source = 1
 box1 = {
@@ -100,8 +105,6 @@ def run():
     )
     log_thread.start()
 
-
-
     robot = MotionRobotClient("http://localhost:8000", SIM)
 
     win_logger.info(f"Health: {robot.health()}")
@@ -114,7 +117,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
+    robot.set_scaling(velocity_scale=SPEED, accel_scale=ACCEL)
 
     robot.clear_environment()
 
@@ -191,6 +194,18 @@ def run():
 
 
     robot.move_to_home()
+
+
+    points = [
+            {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+            {"x": 0.1, "y": 0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+            {"x": 0.0, "y": -0.2, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+            {"x": -0.1, "y": 0, "z": 0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+            {"x": 0.0, "y": 0.1, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+        ]
+    robot.move_waypoints(points, cartesian_path=True)
+
+
     inputStorage = None
     outputStorage = None
     if MODEL == "tx40":
@@ -299,14 +314,14 @@ def run():
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
+                                z=inputStorage["position"]["z"] + 0.3 + OFFSET,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
@@ -324,20 +339,20 @@ def run():
                                 execute=True
                             )
 
-                            robot.pump_grab()
+                            # robot.pump_grab()
 
-                            t = time.time()
+                            # t = time.time()
 
-                            bool_grabbed = False
-                            while time.time() - t < 5:
-                                print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-                                if robot.pump_is_grabbed()["grabbed"]:
-                                    bool_grabbed = True
-                                    win_logger.info("Card is grabbed")
-                                    break
+                            # bool_grabbed = False
+                            # while time.time() - t < 5:
+                            #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+                            #     if robot.pump_is_grabbed()["grabbed"]:
+                            #         bool_grabbed = True
+                            #         win_logger.info("Card is grabbed")
+                            #         break
                             
-                            if not bool_grabbed:
-                                robot.pump_release()
+                            # if not bool_grabbed:
+                            #     robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
@@ -375,8 +390,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    # cartesian_path=False if pos_index == 0 else True,
-                                    cartesian_path=False,
+                                    cartesian_path=CARTESIAN_PATH,
                                     execute=True
                                 )
                             else:
@@ -385,8 +399,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=False,
-                                    # cartesian_path=False if pos_index == 0 else True,
+                                    cartesian_path=CARTESIAN_PATH,
                                     execute=True
                                 )
 
@@ -445,14 +458,14 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
+                                z=outputStorage["position"]["z"] + 0.3 + OFFSET,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
@@ -470,7 +483,7 @@ def run():
                                 execute=True
                             )
 
-                            robot.pump_release()
+                            # robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
