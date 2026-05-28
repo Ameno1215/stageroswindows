@@ -203,7 +203,7 @@ def run():
             {"x": -0.1, "y": 0, "z": 0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
             {"x": 0.0, "y": 0.1, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
         ]
-    robot.move_waypoints(points, cartesian_path=True)
+    robot.move_waypoints(points, cartesian_path=False)
 
 
     inputStorage = None

@@ -34,8 +34,7 @@ IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
 DEFAULT_TOOL = "effecteur_v3"
 TOOL = args.tool or DEFAULT_TOOL
 
-if IS_STAUBLI and args.real_robot:
-    parser.error("Staubli robots are simulation-only in this launcher")
+
 
 
 
@@ -54,16 +53,28 @@ SETUP = (
 )
 
 if IS_STAUBLI:
-    TERMINAL_1 = (
-        f"{SETUP} && "
-        f"ros2 launch staubli_{MODEL}_moveit_config "
-        f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL}"
-    )
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:=staubli_{MODEL} sim:=true tool:={TOOL} ik_solver:={SOLVER}"
+        f"model:=staubli_{MODEL} sim:=SIM tool:={TOOL} ik_solver:={SOLVER}"
     )
+    if SIM == "true":
+        TERMINAL_1 = (
+            f"{SETUP} && "
+            f"ros2 launch staubli_{MODEL}_moveit_config "
+            f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL}"
+        )
+    else:
+        TERMINAL_1 = (
+            f"{SETUP} && "
+            f"ros2 launch staubli_{MODEL}_moveit_config "
+            f"staubli_{MODEL}_planning_execution_real.launch.py"
+        )
+        # TERMINAL_1 = (
+        #     f"{SETUP} && "
+        #     f"ros2 launch staubli_{MODEL}_moveit_config "
+        #     f"staubli_{MODEL}_planning_execution_real.launch.py tool:={TOOL}"
+        # )
 else:
     TERMINAL_1 = (
         f"{SETUP} && "
