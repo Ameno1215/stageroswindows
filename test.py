@@ -173,7 +173,8 @@ def run():
     time.sleep(2)
 
     
-    print(robot.set_servo_on(True))
+    if not MODEL == "tx40":
+        print(robot.set_servo_on(True))
     
     # robot.pump_release()
     # return
@@ -196,14 +197,14 @@ def run():
     robot.move_to_home()
 
 
-    points = [
-            {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
-            {"x": 0.1, "y": 0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
-            {"x": 0.0, "y": -0.2, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
-            {"x": -0.1, "y": 0, "z": 0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
-            {"x": 0.0, "y": 0.1, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
-        ]
-    robot.move_waypoints(points, cartesian_path=False)
+    # points = [
+    #         {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.1, "y": 0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.0, "y": -0.2, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": -0.1, "y": 0, "z": 0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.0, "y": 0.1, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #     ]
+    # robot.move_waypoints(points, cartesian_path=False)
 
 
     inputStorage = None
@@ -530,7 +531,8 @@ def run():
 
     time.sleep(2)
 
-    print(robot.set_servo_on(False))
+    if not MODEL == "tx40":
+        print(robot.set_servo_on(False))
     
     print(robot.set_virtual_cage(enable=False))  
 

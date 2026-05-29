@@ -39,6 +39,11 @@ TOOL = args.tool or DEFAULT_TOOL
 
 
 # --- Commands ----------------------------------------------------------------
+TERMINAL_1 = None
+TERMINAL_2 = None
+TERMINAL_3 = None
+TERMINAL_4 = None
+TERMINAL_5 = None
 
 SETUP = (
     "cd ~/workspace/denso_ros2_ws && "
@@ -53,11 +58,6 @@ SETUP = (
 )
 
 if IS_STAUBLI:
-    TERMINAL_2 = (
-        f"{SETUP} && "
-        "ros2 launch motion_control motion_server.launch.py "
-        f"model:=staubli_{MODEL} sim:=SIM tool:={TOOL} ik_solver:={SOLVER}"
-    )
     if SIM == "true":
         TERMINAL_1 = (
             f"{SETUP} && "
@@ -67,14 +67,23 @@ if IS_STAUBLI:
     else:
         TERMINAL_1 = (
             f"{SETUP} && "
-            f"ros2 launch staubli_{MODEL}_moveit_config "
-            f"staubli_{MODEL}_planning_execution_real.launch.py"
+            f"ros2 launch staubli_{MODEL}_moveit_config staubli_{MODEL}_planning_execution_real.launch.py --debug"
         )
         # TERMINAL_1 = (
         #     f"{SETUP} && "
         #     f"ros2 launch staubli_{MODEL}_moveit_config "
         #     f"staubli_{MODEL}_planning_execution_real.launch.py tool:={TOOL}"
         # )
+        TERMINAL_5 = (
+            f"{SETUP} && "
+            f"ros2 launch staubli_val3_driver robot_interface_streaming.launch.py robot_ip:=172.31.64.1"
+        )
+            
+    TERMINAL_2 = (
+        f"{SETUP} && "
+        "ros2 launch motion_control motion_server.launch.py "
+        f"model:=staubli_{MODEL} sim:=SIM tool:={TOOL} ik_solver:={SOLVER}"
+    )
 else:
     TERMINAL_1 = (
         f"{SETUP} && "
@@ -111,7 +120,7 @@ TERMINAL_4 = (
     # "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
 )
 
-TAB_TITLES = ["DENSO_Bringup", "DENSO_MotionServer", "Pump Control", "DENSO_Bridge"]
+TAB_TITLES = ["Bringup", "MotionServer", "Pump Control", "WSL_Bridge", "Staubli_Connection"]
 
 # --- Launched processes ------------------------------------------------------
 
@@ -267,7 +276,7 @@ def main():
     # time.sleep(2)
 
 
-    total = 3 if IS_STAUBLI else 4
+    total = 3 if (IS_STAUBLI and SIM == "true") else 4
     step = 1
 
     print(f"[{step}/{total}] Starting Gazebo & RViz...")
@@ -279,7 +288,7 @@ def main():
 
     print(f"[{step}/{total}] Starting Motion Server...")
     launch_wsl_tab(TAB_TITLES[1], TERMINAL_2)
-    step += 1
+    step += 1                                   
 
     print("      Waiting 2s...")
     time.sleep(2)
@@ -287,6 +296,12 @@ def main():
     if not IS_STAUBLI:
         print(f"[{step}/{total}] Starting Pump Control...")
         launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
+        step += 1
+
+    if (IS_STAUBLI and SIM == "false"):
+        time.sleep(5)
+        print(f"[{step}/{total}] Starting Staubli robot_interface_streaming...")
+        launch_wsl_tab(TAB_TITLES[4], TERMINAL_5)
         step += 1
 
     print(f"[{step}/{total}] Starting HTTP Bridge...")
