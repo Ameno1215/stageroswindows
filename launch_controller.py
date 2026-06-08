@@ -81,6 +81,12 @@ if IS_STAUBLI:
         "ros2 launch motion_control motion_server.launch.py "
         f"model:=staubli_{MODEL} sim:=SIM tool:={TOOL} ik_solver:={SOLVER}"
     )
+
+    TERMINAL_3 = (
+        f"{SETUP} && "
+        f"ros2 launch command_pump_staubli pump_controller.launch.py robot_ip_address:={IP_ROBOT} use_direct_io:=false "   
+    )
+    
 else:
     TERMINAL_1 = (
         f"{SETUP} && "
@@ -340,10 +346,10 @@ def main():
         launch_wsl_tab(TAB_TITLES[4], TERMINAL_5)
         step += 1
 
-    if not IS_STAUBLI:    
-        print(f"[{step}/{total}] Starting Pump Control...")
-        launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
-        step += 1
+
+    print(f"[{step}/{total}] Starting Pump Control...")
+    launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
+    step += 1
 
     print(f"[{step}/{total}] Starting HTTP Bridge...")
     launch_wsl_tab(TAB_TITLES[3], TERMINAL_4)
