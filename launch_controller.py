@@ -3,6 +3,7 @@ import time
 import signal
 import sys
 import argparse
+import shlex
 
 # --- CLI args ----------------------------------------------------------------
 
@@ -156,46 +157,85 @@ def kill_wsl_processes():
     """Kills ROS 2, Gazebo and Uvicorn processes on the WSL side."""
     print("\nStopping WSL processes...")
 
-    all_targets = [
+    launch_targets = [
+        "ros2 launch denso_robot_bringup",
+        "denso_robot_bringup.launch.py",
+        "ros2 launch motion_control",
+        "motion_server.launch.py",
+        "ros2 launch command_pump_denso",
+        "pump_controller.launch.py",
+        f"ros2 launch staubli_{MODEL}_moveit_config",
+        f"staubli_{MODEL}_planning_execution",
+        "ros2 launch staubli_val3_driver",
+        "robot_interface_streaming.launch.py",
+        "uvicorn wsl_ros_bridge:app",
+    ]
+
+    node_targets = [
         "denso_robot", "move_group", "robot_state_publisher", "rviz2",
         "motion_server", "motion_control",
         "pump_controller", "command_pump_denso",
+        "staubli_val3_driver", "robot_interface_streaming", "robot_interface",
         "gzserver", "gzclient", "gazebo", "gzweb",
         "spawn_entity", "controller_manager", "ros2_control_node",
         "uvicorn",
     ]
 
-    # --- Step 1: SIGINT on ROS2 nodes (allows on_deactivate to run)
-    print("   Sending SIGINT to ROS2 nodes...")
-    for target in all_targets:
-        subprocess.run(
-            ["wsl.exe", "bash", "-c", f"pkill -SIGINT -f {target} 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
+    all_targets = launch_targets + node_targets
 
-    # --- Step 2: Long wait (RC8 controller needs time to close the b-CAP session)
-    wait_time = 15 if SIM == "false" else 3
-    print(f"   Waiting {wait_time}s for graceful b-CAP disconnect...")
-    time.sleep(wait_time)
+    def pkill(signal_name, targets):
+        for target in targets:
+            target = shlex.quote(target)
+            subprocess.run(
+                ["wsl.exe", "bash", "-c", f"pkill -{signal_name} -f -- {target} 2>/dev/null || true"],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            )
 
-    # --- Step 3: SIGTERM for any remaining processes
-    print("   Sending SIGTERM to remaining processes...")
-    for target in all_targets:
-        subprocess.run(
-            ["wsl.exe", "bash", "-c", f"pkill -SIGTERM -f {target} 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
+    # --- Step 1: SIGINT on ros2 launch supervisors first
+    # If a launch process survives, it can restart children that were just killed.
+    print("   Sending SIGINT to ros2 launch supervisors...")
+    pkill("SIGINT", launch_targets)
     time.sleep(2)
 
-    # --- Step 4: SIGKILL as last resort only
-    print("   Force-killing remaining processes...")
-    for target in all_targets:
-        subprocess.run(
-            ["wsl.exe", "bash", "-c", f"pkill -9 -f {target} 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        )
+    # --- Step 2: SIGINT on ROS2 nodes (allows on_deactivate to run)
+    print("   Sending SIGINT to ROS2 nodes...")
+    pkill("SIGINT", node_targets)
 
-    # Step 4.5: clean Gazebo and DDS state
+    # --- Step 3: Long wait (RC8 controller needs time to close the b-CAP session)
+    wait_time = 15 if SIM == "false" else 3
+    print(f"   Waiting {wait_time}s for graceful controller disconnection...")
+    time.sleep(wait_time)
+
+    # --- Step 4: SIGTERM for any remaining launch supervisors and nodes
+    print("   Sending SIGTERM to remaining processes...")
+    pkill("SIGTERM", all_targets)
+    time.sleep(2)
+
+    # --- Step 5: SIGKILL as last resort only
+    print("   Force-killing remaining processes...")
+    pkill("9", all_targets)
+
+    # Also kill orphaned ros2 launch processes that contain this workspace stack.
+    launch_regex = (
+        "ros2 launch (denso_robot_bringup|motion_control|command_pump_denso|"
+        f"staubli_{MODEL}_moveit_config|staubli_val3_driver)"
+    )
+    subprocess.run(
+        ["wsl.exe", "bash", "-c",
+         f"pgrep -f {shlex.quote(launch_regex)} | xargs -r kill -9 2>/dev/null || true"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    )
+
+    # Terminate Windows-side wrappers after the WSL processes are gone.
+    for proc in launched_processes:
+        if proc.poll() is None:
+            proc.terminate()
+    time.sleep(1)
+    for proc in launched_processes:
+        if proc.poll() is None:
+            proc.kill()
+
+    # Step 5.5: clean Gazebo and DDS state
     print("   Cleaning Gazebo lock files and DDS shared memory...")
     subprocess.run(
         ["wsl.exe", "bash", "-c",
@@ -206,16 +246,21 @@ def kill_wsl_processes():
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
 
-    # Step 5: stop ROS daemon
+    # Step 6: stop ROS daemon
     subprocess.run(
         ["wsl.exe", "bash", "-c", "ros2 daemon stop 2>/dev/null || true"],
         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
     )
 
     print("   Verifying cleanup...")
+    verify_regex = (
+        "gazebo|gzserver|gzclient|move_group|controller_manager|ros2_control|"
+        "spawn_entity|motion_server|pump_controller|uvicorn|denso_robot|"
+        "staubli_|robot_interface_streaming|robot_interface|ros2 launch"
+    )
     result = subprocess.run(
         ["wsl.exe", "bash", "-c",
-        "pgrep -af 'gazebo|gzserver|gzclient|move_group|controller_manager|ros2_control|spawn_entity|motion_server|pump_controller|uvicorn|denso_robot' "
+        f"pgrep -af {shlex.quote(verify_regex)} "
         "| grep -v pgrep | grep -v 'bash -c' || echo CLEAN"],
         capture_output=True, text=True,
     )
@@ -225,7 +270,7 @@ def kill_wsl_processes():
         print("   Force-killing leftovers...")
         subprocess.run(
             ["wsl.exe", "bash", "-c",
-            "pgrep -f 'gazebo|gzserver|gzclient|move_group|controller_manager|ros2_control|spawn_entity|motion_server|pump_controller|uvicorn|denso_robot' "
+            f"pgrep -f {shlex.quote(verify_regex)} "
             "| xargs -r kill -9 2>/dev/null || true"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
         )
