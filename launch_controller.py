@@ -84,7 +84,7 @@ if IS_STAUBLI:
 
     TERMINAL_3 = (
         f"{SETUP} && "
-        f"ros2 launch command_pump_staubli pump_controller.launch.py robot_ip_address:={IP_ROBOT} use_direct_io:=false "   
+        f"ros2 launch command_pump_staubli pump_controller.launch.py use_direct_io:=false "   
     )
     
 else:
