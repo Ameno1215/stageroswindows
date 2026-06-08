@@ -23,9 +23,10 @@ MODEL = args.model
 
 
 STAUBLI_PLATE_OFFSET = 0.11
-OFFSET = 0.015
-# OFFSET = 0.05
+# OFFSET = 0.015
+OFFSET = 0.05
 CARTESIAN_PATH = False
+CARTESIAN_ALL = False
 SPEED = 1
 ACCEL = 1
 
@@ -172,9 +173,7 @@ def run():
     )
     time.sleep(2)
 
-    
-    if not MODEL == "tx40":
-        print(robot.set_servo_on(True))
+    print(robot.set_servo_on(True))
     
     # robot.pump_release()
     # return
@@ -195,7 +194,6 @@ def run():
 
 
     robot.move_to_home()
-
 
     # points = [
     #         {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
@@ -336,7 +334,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
 
@@ -365,7 +363,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
                     
@@ -409,7 +407,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -419,7 +417,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -480,7 +478,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
 
@@ -496,10 +494,10 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
-                    
+
                     if MODEL == "tx40":
                         if inputStorage is box1_staubli:
                             inputStorage = box2_staubli
@@ -531,8 +529,7 @@ def run():
 
     time.sleep(2)
 
-    if not MODEL == "tx40":
-        print(robot.set_servo_on(False))
+    print(robot.set_servo_on(False))
     
     print(robot.set_virtual_cage(enable=False))  
 

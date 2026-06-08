@@ -27,6 +27,7 @@ args = parser.parse_args()
 
 SHOW_TERMINALS = args.show_terminals
 SOLVER = "kdl"
+# SOLVER = "pick_ik"
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IP_ROBOT = args.ip
@@ -67,16 +68,11 @@ if IS_STAUBLI:
     else:
         TERMINAL_1 = (
             f"{SETUP} && "
-            f"ros2 launch staubli_{MODEL}_moveit_config staubli_{MODEL}_planning_execution_real.launch.py --debug"
+            f"ros2 launch staubli_{MODEL}_moveit_config staubli_{MODEL}_planning_execution_real.launch.py tool:={TOOL} --debug"
         )
-        # TERMINAL_1 = (
-        #     f"{SETUP} && "
-        #     f"ros2 launch staubli_{MODEL}_moveit_config "
-        #     f"staubli_{MODEL}_planning_execution_real.launch.py tool:={TOOL}"
-        # )
         TERMINAL_5 = (
             f"{SETUP} && "
-            f"ros2 launch staubli_val3_driver robot_interface_streaming.launch.py robot_ip:=172.31.64.1"
+            f"ros2 launch staubli_val3_driver robot_interface_streaming.launch.py robot_ip:={IP_ROBOT}"
         )
             
     TERMINAL_2 = (
@@ -104,11 +100,11 @@ else:
         f"model:={MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
     )
 
-TERMINAL_3 = (
-    f"{SETUP} && "
-    "ros2 launch command_pump_denso pump_controller.launch.py "
-    f"model:={MODEL} pump_pin:=25 valve_pin:=26 vacuum_sensor_pin:=8"
-)
+    TERMINAL_3 = (
+        f"{SETUP} && "
+        "ros2 launch command_pump_denso pump_controller.launch.py "
+        f"model:={MODEL} pump_pin:=25 valve_pin:=26 vacuum_sensor_pin:=8"
+    )
 
 
 TERMINAL_4 = (
@@ -293,15 +289,15 @@ def main():
     print("      Waiting 2s...")
     time.sleep(2)
 
-    if not IS_STAUBLI:
-        print(f"[{step}/{total}] Starting Pump Control...")
-        launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
-        step += 1
-
     if (IS_STAUBLI and SIM == "false"):
         time.sleep(5)
         print(f"[{step}/{total}] Starting Staubli robot_interface_streaming...")
         launch_wsl_tab(TAB_TITLES[4], TERMINAL_5)
+        step += 1
+
+    if not IS_STAUBLI:    
+        print(f"[{step}/{total}] Starting Pump Control...")
+        launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
         step += 1
 
     print(f"[{step}/{total}] Starting HTTP Bridge...")

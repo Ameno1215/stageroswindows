@@ -1,6 +1,7 @@
 import os
 import time
 import logging
+import re
 
 # Create a generic formatter that uses the logger's name dynamically
 formatter = logging.Formatter('%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
@@ -24,6 +25,23 @@ wsl_logger = logging.getLogger("WSL_APP")
 wsl_logger.setLevel(logging.DEBUG)
 wsl_logger.addHandler(console_handler)
 wsl_logger.addHandler(file_handler)
+
+
+ERROR_LEVEL_RE = re.compile(r"(?:^|\s-\s|\[)(?:ERROR|CRITICAL)(?:\]|\s-|$)")
+
+
+def log_wsl_line(line: str):
+    """
+    Log WSL output as DEBUG by default, but keep real errors visible as ERROR.
+    """
+    message = line.strip()
+    if not message:
+        return
+
+    if ERROR_LEVEL_RE.search(message):
+        wsl_logger.error(message)
+    else:
+        wsl_logger.debug(message)
 
 
 def tail_linux_logs(log_path: str):
@@ -59,4 +77,4 @@ def tail_linux_logs(log_path: str):
             continue
         
         # Inject the raw Linux line into the WSL logger
-        wsl_logger.info(line.strip())
+        log_wsl_line(line)
