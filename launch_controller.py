@@ -79,7 +79,7 @@ if IS_STAUBLI:
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:=staubli_{MODEL} sim:=SIM tool:={TOOL} ik_solver:={SOLVER}"
+        f"model:=staubli_{MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
     )
 
     TERMINAL_3 = (
@@ -208,7 +208,7 @@ def kill_wsl_processes():
     pkill("SIGINT", node_targets)
 
     # --- Step 3: Long wait (RC8 controller needs time to close the b-CAP session)
-    wait_time = 15 if SIM == "false" else 3
+    wait_time = 10 if SIM == "false" else 2
     print(f"   Waiting {wait_time}s for graceful controller disconnection...")
     time.sleep(wait_time)
 

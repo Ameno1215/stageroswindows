@@ -24,11 +24,11 @@ MODEL = args.model
 
 STAUBLI_PLATE_OFFSET = 0.11
 # OFFSET = 0.015
-OFFSET = 0.05
+OFFSET = 0.07
 CARTESIAN_PATH = False
 CARTESIAN_ALL = False
-SPEED = 1
-ACCEL = 1
+SPEED = 0.1
+ACCEL = 0.01
 
 box_source = 1
 box1 = {
@@ -56,8 +56,8 @@ box2 = {
 box1_staubli = {
     "box_number": 1,
     "position": {
-        "x": 0.05,
-        "y": 0.2,
+        "x": 0.15,
+        "y": 0.15,
         "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
@@ -67,8 +67,8 @@ box1_staubli = {
 box2_staubli = {
     "box_number": 2,
     "position": {
-        "x": 0.05,
-        "y": -0.2,
+        "x": 0.15,
+        "y": -0.15,
         "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
@@ -167,9 +167,9 @@ def run():
 
     robot.set_virtual_cage(
         enable=True, 
-        front=0.66, back=0.35, 
-        left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
+        front=0.5, back=0.35, 
+        left=0.30, right=0.30, 
+        top=0.87, bottom=-0.05
     )
     time.sleep(2)
 
@@ -194,7 +194,51 @@ def run():
 
 
     robot.move_to_home()
+    # print(robot.get_current_pose())
+    # print(robot.get_joint_state())
 
+    # robot.move_to_pose(
+    #     x=-0.05, y=-0.1, z=-0.1,
+    #     r1=0, r2=0, r3=0,
+    #     is_relative=True,
+    #     cartesian_path=True,
+    #     execute=True
+    # )
+
+    # for i in range(5):
+    #     robot.move_to_pose(
+    #         x=0, y=0.2, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=0.2, y=0, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=0, y=-0.2, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=-0.2, y=0, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+
+    # robot.move_to_home()
+
+    # robot.set_servo_on(False)
+    # return
     # points = [
     #         {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
     #         {"x": 0.1, "y": 0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
@@ -217,7 +261,7 @@ def run():
     number_of_cards = 2
 
     if MODEL == "tx40":
-        plates_dir = base_path / "platesStaubli"
+        plates_dir = base_path / "platesStaubliTest"
     else:
         plates_dir = base_path / "plates"
 
