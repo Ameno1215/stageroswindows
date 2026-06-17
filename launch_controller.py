@@ -64,7 +64,9 @@ if IS_STAUBLI:
         TERMINAL_1 = (
             f"{SETUP} && "
             f"ros2 launch staubli_{MODEL}_moveit_config "
-            f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL}"
+            f"staubli_{MODEL}_planning_execution_sim.launch.py tool:={TOOL} "
+            f"capabilities:='pilz_industrial_motion_planner/MoveGroupSequenceAction "
+            f"pilz_industrial_motion_planner/MoveGroupSequenceService'"
         )
     else:
         TERMINAL_1 = (
