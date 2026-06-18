@@ -166,23 +166,28 @@ def run():
             action="ADD"
         )
 
-    robot.set_virtual_cage(
-        enable=True, 
-        front=0.66, back=0.35, 
-        left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
-    )
-    time.sleep(2)
+    # robot.set_virtual_cage(
+    #     enable=True, 
+    #     front=0.66, back=0.35, 
+    #     left=0.325, right=0.325, 
+    #     top=0.9, bottom=0.0
+    # )
+    # time.sleep(2)
 
     print(robot.set_servo_on(True))
+    robot.move_to_home()
 
-    # robot.move_to_home()
+    robot.move_to_pose(x=0, y=0.1, z=0.35, r1=0, r2=-3.14/2, r3=0, is_relative=True, cartesian_path=False, execute=True)
+
+    robot.move_to_pose(x=0, y=-0.2, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
 
     # side = 0.15
     # robot.move_to_pose(x=0, y=0, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
 
+    # robot.clear_trace()
+    # robot.start_trace()
     # square = [
-    #     {"x":  -side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
+    #     {"x":  side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
     #     "is_relative": True, "reference_frame": "WORLD"},
     #     {"x":  0.0,  "y":  -side, "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
     #     "is_relative": True, "reference_frame": "WORLD"},
@@ -200,7 +205,7 @@ def run():
     #     cartesian_speed=0.3,
     # )
 
-
+    # robot.stop_trace()
     # return
     
     # robot.pump_release()
@@ -221,7 +226,6 @@ def run():
     # return
 
 
-    robot.move_to_home()
     # robot.move_to_pose(x=0, y=0.3, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
     # print(robot.get_current_pose())
     # print(robot.get_joint_state())
@@ -277,6 +281,13 @@ def run():
     #     ]
     # robot.move_waypoints(points, cartesian_path=False)
 
+    
+
+    robot.move_to_home()
+
+
+    robot.clear_trace()
+    robot.start_trace()
 
     inputStorage = None
     outputStorage = None
@@ -613,6 +624,7 @@ def run():
     time.sleep(2)
 
     print(robot.set_servo_on(False))
+    robot.stop_trace()
     
     print(robot.set_virtual_cage(enable=False))  
 
