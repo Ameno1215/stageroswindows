@@ -27,9 +27,8 @@ OFFSET = 0.015
 # OFFSET = 0.07
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
-CARTESIAN_SPEED = 0.3
-SPEED = 0.1
-ACCEL = 0.1
+SPEED = 1
+ACCEL = 1
 
 box_source = 1
 box1 = {
@@ -175,11 +174,11 @@ def run():
     # time.sleep(2)
 
     print(robot.set_servo_on(True))
-    robot.move_to_home()
+    # robot.move_to_home()
 
-    robot.move_to_pose(x=0, y=0.1, z=0.35, r1=0, r2=-3.14/2, r3=0, is_relative=True, cartesian_path=False, execute=True)
+    # robot.move_to_pose(x=0, y=0.1, z=0.35, r1=0, r2=-3.14/2, r3=0, is_relative=True, cartesian_path=False, execute=True)
 
-    robot.move_to_pose(x=0, y=-0.2, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
+    # robot.move_to_pose(x=0, y=-0.2, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
 
     # side = 0.15
     # robot.move_to_pose(x=0, y=0, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
@@ -202,7 +201,6 @@ def run():
     #     cartesian_path=True,
     #     blend_radius=0.06,
     #     path_tolerance=0.1,
-    #     cartesian_speed=0.3,
     # )
 
     # robot.stop_trace()
@@ -405,7 +403,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=False,
                                 cartesian_path=CARTESIAN_PATH,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
 
@@ -420,7 +417,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=True,
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
 
@@ -450,7 +446,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=True,
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
                     
@@ -477,7 +472,6 @@ def run():
                                     z_offset=0.12,
                                     rotation_format="RPY",
                                     cartesian_path=CARTESIAN_PATH,
-                                cartesian_speed=CARTESIAN_SPEED,
                                     execute=True
                                 )
                             else:
@@ -487,7 +481,6 @@ def run():
                                     z_offset=0.12,
                                     rotation_format="RPY",
                                     cartesian_path=CARTESIAN_PATH,
-                                cartesian_speed=SPEED,
                                     execute=True
                                 )
 
@@ -497,7 +490,6 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 is_relative=True,
                                 execute=True
                             )
@@ -508,7 +500,6 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 is_relative=True,
                                 execute=True
                             )
@@ -556,7 +547,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=False,
                                 cartesian_path=CARTESIAN_PATH,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
 
@@ -571,7 +561,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=True,
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
 
@@ -588,7 +577,6 @@ def run():
                                 reference_frame="WORLD",
                                 is_relative=True,
                                 cartesian_path=CARTESIAN_ALL,
-                                cartesian_speed=CARTESIAN_SPEED,
                                 execute=True
                             )
 

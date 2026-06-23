@@ -172,7 +172,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, cartesian_speed=0.0, execute=True):
+    def move_to_pose(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, cartesian_path=False, execute=True):
         """
         The universal function for point-to-point Cartesian movement.
 
@@ -185,7 +185,7 @@ class MotionRobotClient:
             robot.move_to_pose(0.5, 0.0, 0.4, 3.14/2, 0.0, 0.0, rotation_format="RPY", reference_frame="WORLD")
 
             # 2. Relative Move in Tool frame (Fly-by-wire: advance 10cm on Z, straight line)
-            robot.move_to_pose(0.0, 0.0, 0.10, 0.0, 0.0, 0.0, rotation_format="RPY", reference_frame="TOOL", is_relative=True, cartesian_path=True, cartesian_speed=0.1)
+            robot.move_to_pose(0.0, 0.0, 0.10, 0.0, 0.0, 0.0, rotation_format="RPY", reference_frame="TOOL", is_relative=True, cartesian_path=True)
 
             # 3. Absolute Move with Quaternion
             robot.move_to_pose(0.4, 0.0, 0.4, 0.0, 1.0, 0.0, 0.0, rotation_format="QUAT")
@@ -201,7 +201,6 @@ class MotionRobotClient:
             reference_frame (str): "WORLD" or "TOOL".
             is_relative (bool): True = Delta from current pos, False = Absolute target.
             cartesian_path (bool): True = Strict straight line (Pilz LIN), False = Fluid joint-space path.
-            cartesian_speed (float): Absolute TCP speed in m/s for cartesian moves (0 = use current scaling).
             execute (bool): Execute or simply plan.
 
         Returns:
@@ -216,7 +215,6 @@ class MotionRobotClient:
             "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "cartesian_path": bool(cartesian_path),
-            "cartesian_speed": float(cartesian_speed),
             "execute": bool(execute)
         }
         current_timeout = 120.0 if execute else self.timeout
@@ -228,8 +226,7 @@ class MotionRobotClient:
     def move_waypoints(self, waypoints,
                     rotation_format=None, angle_format=None,
                     is_relative=None, reference_frame=None,
-                    cartesian_path=True, cartesian_speed=0.0,
-                    blend_radius=0.01, path_tolerance=0.05, execute=True):
+                    cartesian_path=True, blend_radius=0.01, path_tolerance=0.05, execute=True):
         """
         Moves the robot through a list of points without stopping.
 
@@ -239,7 +236,7 @@ class MotionRobotClient:
         waypoints. If it is left as None, each waypoint keeps its own value (or a
         default: RPY / RAD / is_relative=False / reference_frame="WORLD").
 
-        cartesian_path, cartesian_speed, blend_radius, path_tolerance and execute are global-only.
+        cartesian_path, blend_radius, path_tolerance and execute are global-only.
 
         Examples:
             # 1) Everything specified INSIDE each waypoint (no global args)
@@ -262,7 +259,7 @@ class MotionRobotClient:
                 points,
                 rotation_format="RPY", angle_format="DEG",
                 is_relative=True, reference_frame="WORLD",
-                cartesian_path=True, cartesian_speed=0.05, blend_radius=0.01)
+                cartesian_path=True, blend_radius=0.01)
 
         Args:
             waypoints (list[dict]): Points with keys x, y, z, r1, r2, r3, (r4) and
@@ -272,7 +269,6 @@ class MotionRobotClient:
             is_relative (bool|None): If set, overrides every point.
             reference_frame (str|None): "WORLD" or "TOOL". If set, overrides every point.
             cartesian_path (bool): True = straight lines (global).
-            cartesian_speed (float): TCP speed m/s, cartesian only (global).
             blend_radius (float): Corner blend in m, Cartesian only (cartesian_path=True).
                 Rounds the corner between consecutive LIN segments.
                 0.0          -> stop dead at each waypoint (most precise, jerky)
@@ -324,7 +320,6 @@ class MotionRobotClient:
         payload = {
             "waypoints": resolved_waypoints,
             "cartesian_path": bool(cartesian_path),
-            "cartesian_speed": float(cartesian_speed),
             "blend_radius": float(blend_radius),
             "path_tolerance": float(path_tolerance),
             "execute": bool(execute),
@@ -501,7 +496,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, angle_format="RAD", rotation_format="RPY", z_offset=0.1, cartesian_path=False, cartesian_speed=0.0, execute=True):
+    def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, angle_format="RAD", rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
         """
         Asks the ROS server to compute and execute an approach position above an object.
 
@@ -518,7 +513,6 @@ class MotionRobotClient:
             rotation_format (str): "RPY" or "QUAT".
             z_offset (float): Retreat distance in meters (e.g., 0.1 for 10 cm above).
             cartesian_path (bool): True = straight line, False = joint space path.
-            cartesian_speed (float): Speed for cartesian movements.
             execute (bool): True = execute motion, False = plan only.
 
         Returns:
@@ -532,7 +526,6 @@ class MotionRobotClient:
             "rotation_format": str(rotation_format),
             "z_offset": float(z_offset),
             "cartesian_path": bool(cartesian_path),
-            "cartesian_speed": float(cartesian_speed),
             "execute": bool(execute)
         }
         current_timeout = 120.0 if execute else self.timeout
