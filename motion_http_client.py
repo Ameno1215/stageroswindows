@@ -4,13 +4,16 @@ import requests
 class MotionRobotClient:
     def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0):
         """
-        Initializes the Denso client.
-        
+        Initializes the motion client (HTTP bridge to the ROS 2 motion_server).
+
         Examples:
-            robot = DensoRobotClient("http://localhost:8000")
-        
+            robot = MotionRobotClient("http://localhost:8000")
+            robot = MotionRobotClient("http://localhost:8000", sim=False, timeout=120.0)
+
         Args:
             base_url (str): The URL of the wsl_ros_bridge server.
+            sim (bool): True = simulation mode.
+                False = real hardware. Forwarded to the server on init_robot().
             timeout (float): Default HTTP request timeout in seconds.
         """
         self.base_url = base_url.rstrip("/")
@@ -39,17 +42,17 @@ class MotionRobotClient:
         r = self.session.get(f"{self.base_url}/health", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
-    
+
     def init_robot(self, model="vs060", velocity_scale=0.1, accel_scale=0.1, planning_time=5.0, planning_attempts=10, allow_replanning=True, planner_id="RRTConnect"):
         """
         Initializes the robot on the ROS side (MoveIt). Must be called once at startup.
 
         Examples:
             ret = robot.init_robot(
-                model="vp5243", 
-                velocity_scale=0.2, 
+                model="vp5243",
+                velocity_scale=0.2,
                 planning_time=10.0,
-                planner_id="RRTstar"
+                planner_id="RRTConnect"
             )
 
         Args:
@@ -59,14 +62,14 @@ class MotionRobotClient:
             planning_time (float): Maximum time (in seconds) allowed for the solver to compute the path.
             planning_attempts (int): Number of solver attempts (with different random seeds) before failing.
             allow_replanning (bool): If True, MoveIt will attempt to replan a path on the fly if an obstacle appears.
-            planner_id (str): Identifier of the OMPL planning algorithm to use. 
+            planner_id (str): Identifier of the OMPL planning algorithm to use.
                 Here are the most relevant choices:
-                
+
                 -- Optimizing Planners (Smooth and short trajectories) --
                 * "RRTstar"   : Excellent for smooth and direct movements. It uses the entire 'planning_time' to refine and shorten the path as much as possible. No more useless contortions!
                 * "PRMstar"   : Very powerful in confined environments or with many obstacles (like your virtual cage). It pre-calculates a roadmap of possible movements.
                 * "FMT"       : (Fast Marching Tree) A modern algorithm, very fast to converge towards an optimal solution without making detours.
-                
+
                 -- Fast Planners (First found path = validated) --
                 * "RRTConnect": MoveIt's default algorithm. Ultra-fast (often < 0.1s), but very erratic. It can cause the robot to make large detours or strange wrist rotations.
                 * "BiTRRT"    : A good compromise. It is fast like RRTConnect, but incorporates a slight notion of optimization to avoid overly absurd movements.
@@ -88,29 +91,43 @@ class MotionRobotClient:
         self.get_solver()
         self.model = model
         return self._check(r.json())
-    
-    def set_scaling(self, velocity_scale, accel_scale):
+
+    def set_scaling(self, velocity_scale, accel_scale, cartesian_speed=0.0):
         """
-        Updates velocity and acceleration scaling factors for future movements.
+        Updates the velocity / acceleration scaling factors for future movements.
+
+        Three independent knobs:
+        - velocity_scale : joint-space velocity scaling (OMPL / move_joints / move_to_pose).
+        - accel_scale    : acceleration scaling (all moves).
+        - cartesian_speed: velocity scaling for Cartesian (Pilz LIN/Sequence) moves only,
+                            i.e. move_to_pose(cartesian_path=True) and move_waypoints.
+                            0.0 = use velocity_scale for Cartesian moves too.
 
         Examples:
-            ret = robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+            # Same speed everywhere
+            robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+
+            # Fast joint moves, but slow precise straight-line Cartesian moves
+            robot.set_scaling(velocity_scale=0.8, accel_scale=0.5, cartesian_speed=0.15)
 
         Args:
-            velocity_scale (float): Velocity factor (0.0 to 1.0).
+            velocity_scale (float): Joint velocity factor (0.0 to 1.0).
             accel_scale (float): Acceleration factor (0.0 to 1.0).
+            cartesian_speed (float): Cartesian velocity factor (0.0 to 1.0).
+                0.0 means "fall back to velocity_scale" for Cartesian moves.
 
         Returns:
-            dict: Update status.
+            dict: Update status ('success', 'message').
         """
         payload = {
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
+            "cartesian_speed": float(cartesian_speed),
         }
         r = self.session.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+        
     def get_scaling(self):
         """
         Retrieves the current velocity and acceleration scaling factors.
@@ -128,24 +145,43 @@ class MotionRobotClient:
 
     def move_joints(self, joints, joint_constraints=None, angle_format="RAD", is_relative=False, execute=True):
         """
-        Commands a movement to target joint angles.
+        Commands a movement to target joint angles (joint-space planning).
+
+        Examples:
+            # Absolute joint target (radians)
+            robot.move_joints([0.0, 0.0, 1.57, 0.0, 1.57, 0.0])
+
+            # Relative offset in degrees
+            robot.move_joints([10, 0, 0, 0, 0, 0], angle_format="DEG", is_relative=True)
+
+            # With a joint constraint restricting the planning amplitude
+            robot.move_joints(
+                [0.3, 0.0, 1.57, 0.0, 1.3, -0.5],
+                joint_constraints=[{"joint_name": "joint_2", "min": -0.3, "max": 0.3}],
+            )
 
         Args:
             joints (list[float]): List of target angles in radians or in degrees (must match the number of axes).
-            joint_constraints (list[dict], optional): List of joint constraints. Each dict: {"joint_name": str, "min": float, "max": float} (radians).
-            angle_format(string): Angle format, RAD or DEG
+            joint_constraints (list[dict], optional): List of joint constraints. Each dict:
+                {"joint_name": str, "min": float, "max": float, "relative": bool}.
+                Bounds use the same angle_format as `joints`. If "relative" is True, the
+                [min, max] window is applied around the current joint value.
+            angle_format (str): Angle format, "RAD" or "DEG".
             is_relative (bool): If True, adds the angles to the current position. If False, goes to absolute angles.
             execute (bool): If True, physically moves the robot. If False, only plans.
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
         """
         payload = {
-            "joints": [float(x) for x in joints], 
+            "joints": [float(x) for x in joints],
             "joint_constraints": joint_constraints or [],
             "angle_format": str(angle_format),
             "is_relative": bool(is_relative),
             "execute": bool(execute)
         }
         current_timeout = 120.0 if execute else self.timeout
-    
+
         r = self.session.post(f"{self.base_url}/move_joints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
@@ -154,11 +190,15 @@ class MotionRobotClient:
         """
         The universal function for point-to-point Cartesian movement.
 
+        cartesian_path=False -> the goal pose is solved with IK and reached with a
+        free-form joint-space path (OMPL). cartesian_path=True -> the TCP follows a
+        strict straight line (Pilz LIN); joint_constraints are then IGNORED.
+
         Examples:
             # 1. Absolute Move in World (Euler)
             robot.move_to_pose(0.5, 0.0, 0.4, 3.14/2, 0.0, 0.0, rotation_format="RPY", reference_frame="WORLD")
 
-            # 2. Relative Move in Tool frame (Fly-by-wire: advance 10cm on Z)
+            # 2. Relative Move in Tool frame (Fly-by-wire: advance 10cm on Z, straight line)
             robot.move_to_pose(0.0, 0.0, 0.10, 0.0, 0.0, 0.0, rotation_format="RPY", reference_frame="TOOL", is_relative=True, cartesian_path=True)
 
             # 3. Absolute Move with Quaternion
@@ -167,15 +207,18 @@ class MotionRobotClient:
         Args:
             x, y, z (float): Translation.
             r1, r2, r3, r4 (float): Rotation (r4 is ignored if format is RPY).
-            joint_constraints (list[dict], optional): List of joint constraints.
-            Each dict: {"joint_name": str, "min": float, "max": float} (radians).
-            Ignored when cartesian_path=True.
+            joint_constraints (list[dict], optional): List of joint constraints. Each dict:
+                {"joint_name": str, "min": float, "max": float, "relative": bool}.
+                Bounds use `angle_format`. IGNORED when cartesian_path=True.
             rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
             angle_format (str): "DEG" for degrees or "RAD" for radians.
             reference_frame (str): "WORLD" or "TOOL".
             is_relative (bool): True = Delta from current pos, False = Absolute target.
-            cartesian_path (bool): True = Strict straight line, False = Fluid joint-space path.
+            cartesian_path (bool): True = Strict straight line (Pilz LIN), False = Fluid joint-space path.
             execute (bool): Execute or simply plan.
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
         """
         payload = {
             "x": float(x), "y": float(y), "z": float(z),
@@ -194,37 +237,113 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def move_waypoints(self, waypoints, rotation_format="RPY", angle_format="RAD", cartesian_path=True, execute=True):
+    def move_waypoints(self, waypoints,
+                    rotation_format=None, angle_format=None,
+                    is_relative=None, reference_frame=None,
+                    cartesian_path=True, blend_radius=0.01, path_tolerance=0.05, execute=True):
         """
         Moves the robot through a list of points without stopping.
 
+        Per-point fields (rotation_format, angle_format, is_relative, reference_frame)
+        can be set INSIDE each waypoint dict, OR globally via the function arguments.
+        If a global argument is given (not None), it OVERRIDES that field for ALL
+        waypoints. If it is left as None, each waypoint keeps its own value (or a
+        default: RPY / RAD / is_relative=False / reference_frame="WORLD").
+
+        cartesian_path, blend_radius, path_tolerance and execute are global-only.
+
         Examples:
+            # 1) Everything specified INSIDE each waypoint (no global args)
             points = [
-                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True, "reference_frame": "WORLD"}, # +10cm X
-                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True, "reference_frame": "WORLD"}, # then +10cm Y
+                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0,
+                "is_relative": True, "reference_frame": "WORLD",
+                "rotation_format": "RPY", "angle_format": "DEG"},
+                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0,
+                "is_relative": True, "reference_frame": "WORLD",
+                "rotation_format": "RPY", "angle_format": "DEG"},
             ]
             robot.move_waypoints(points)
 
+            # 2) Everything specified GLOBALLY (the global values overwrite every point)
+            points = [
+                {"x": 0.1, "y": 0.0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0},
+                {"x": 0.0, "y": 0.1, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0},
+            ]
+            robot.move_waypoints(
+                points,
+                rotation_format="RPY", angle_format="DEG",
+                is_relative=True, reference_frame="WORLD",
+                cartesian_path=True, blend_radius=0.01)
+
         Args:
-            waypoints (list[dict]): List of dictionaries with keys x, y, z, r1, r2, r3, (r4).
-            rotation_format (str): "RPY" or "QUAT" for all points.
-            angle_format (str): "RAD" or "DEG"
-            cartesian_path (bool): True = straight lines between points.
-            execute (bool): Execute or simply plan.
+            waypoints (list[dict]): Points with keys x, y, z, r1, r2, r3, (r4) and
+                optionally is_relative, reference_frame, rotation_format, angle_format.
+            rotation_format (str|None): "RPY" or "QUAT". If set, overrides every point.
+            angle_format (str|None): "RAD" or "DEG". If set, overrides every point.
+            is_relative (bool|None): If set, overrides every point.
+            reference_frame (str|None): "WORLD" or "TOOL". If set, overrides every point.
+            cartesian_path (bool): True = straight lines (global).
+            blend_radius (float): Corner blend in m, Cartesian only (cartesian_path=True).
+                Rounds the corner between consecutive LIN segments.
+                0.0          -> stop dead at each waypoint (most precise, jerky)
+                0.005-0.02   -> recommended: smooth chaining for fine trajectories
+                0.03-0.05    -> large sweeping moves, heavily rounded corners
+                MUST stay below half the shortest segment length, else the Pilz
+                Sequence planning fails.
+            path_tolerance (float): TOTG corner rounding in rad, joint-space only
+                (cartesian_path=False). How much the re-timing may deviate from the
+                planned path to smooth segment junctions. Joint-space analogue of
+                blend_radius.
+                0.001-0.01   -> follows the path almost exactly: safest vs.
+                                collisions, but more jerk at corners
+                0.05         -> default / recommended: good fluidity vs. fidelity
+                0.1-0.2      -> smoother/faster but deviates more from the path
+                Server clamps any value > 0 to [0.001, 0.5].
+                The final trajectory is re-checked for collisions before execution,
+                so a too-large value is refused rather than executed blindly.
+            execute (bool): Execute or just plan (global).
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
         """
+        # Per-point fields: global override (if not None) else default-of-last-resort.
+        per_point_overrides = {
+            "rotation_format": rotation_format,
+            "angle_format": angle_format,
+            "is_relative": is_relative,
+            "reference_frame": reference_frame,
+        }
+        per_point_defaults = {
+            "rotation_format": "RPY",
+            "angle_format": "RAD",
+            "is_relative": False,
+            "reference_frame": "WORLD",
+        }
+
+        resolved_waypoints = []
+        for wp in waypoints:
+            item = dict(wp)  # copy so we never mutate the caller's dicts
+            for key, default in per_point_defaults.items():
+                if per_point_overrides[key] is not None:
+                    item[key] = per_point_overrides[key]   # global wins
+                elif key not in item:
+                    item[key] = default                     # neither given -> default
+                # else: keep the value already present in the waypoint
+            resolved_waypoints.append(item)
+
         payload = {
-            "waypoints": waypoints,
-            "rotation_format": str(rotation_format),
-            "angle_format": str(angle_format),
+            "waypoints": resolved_waypoints,
             "cartesian_path": bool(cartesian_path),
-            "execute": bool(execute)
+            "blend_radius": float(blend_radius),
+            "path_tolerance": float(path_tolerance),
+            "execute": bool(execute),
         }
         current_timeout = 120.0 if execute else self.timeout
 
         r = self.session.post(f"{self.base_url}/move_waypoints", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def get_joint_state(self):
         """
         Retrieves the current joint angles of the robot.
@@ -238,7 +357,7 @@ class MotionRobotClient:
         r = self.session.get(f"{self.base_url}/state/joints", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def get_current_pose(self, frame_id=None, child_frame_id=None, output_format="euler"):
         """
         Retrieves the current Cartesian pose (Position + Orientation).
@@ -264,7 +383,7 @@ class MotionRobotClient:
 
         Returns:
             dict: The pose with the requested orientation format.
-        
+
         Raises:
             ValueError: If output_format is not 'quaternion', 'euler', or 'both'.
         """
@@ -283,7 +402,7 @@ class MotionRobotClient:
         # If the request failed on the server side, return the error immediately
         if not raw_data.get("success"):
             return raw_data
-        
+
         # Build the base response
         result = {
             "success": raw_data["success"],
@@ -296,29 +415,45 @@ class MotionRobotClient:
         # Select the orientation format explicitly
         if output_format == "euler":
             result["orientation"] = raw_data["orientation_euler"]
-        
+
         elif output_format == "quaternion":
             result["orientation"] = raw_data["orientation_quat"]
-            
+
         elif output_format == "both":
             result["orientation"] = {
                 "quaternion": raw_data["orientation_quat"],
                 "euler": raw_data["orientation_euler"]
             }
-        
-        else: 
+
+        else:
             # RAISE ERROR instead of default behavior
             raise ValueError(f"Invalid output_format '{output_format}'. Must be 'quaternion', 'euler', or 'both'.")
 
         return result
-    
 
     def move_to_home(self):
+        """
+        Moves the robot back to its predefined "home" joint configuration.
+
+        For safety, if the TCP is currently low (z < 0.05 m in world), it first
+        lifts straight up by 10 cm (Cartesian) to avoid dragging through obstacles,
+        then performs an absolute joint move to the home configuration.
+
+        The home configuration depends on the model:
+            - "vp5243": [0.0, 0.0, 1.57, 1.57, 0.0]
+            - any other model: [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
+
+        Examples:
+            robot.move_to_home()
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str) from the final joint move.
+        """
         home_position = []
         if self.get_current_pose()["position"]["z"] < 0.05:
             print("Robot is in a low position, moving up first to avoid collisions...")
             self.move_to_pose(0.0, 0.0, 0.1, 0.0, 0.0, 0.0, rotation_format="RPY", is_relative=True, cartesian_path=True)
-            
+
         if self.model == "vp5243":
             home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
         else:
@@ -330,16 +465,23 @@ class MotionRobotClient:
         Enables or disables a virtual collision cage around the robot.
         Distances are measured in meters from the world's zero point.
 
+        Examples:
+            robot.set_virtual_cage(enable=True, front=0.6, back=0.6, top=1.0)
+            robot.set_virtual_cage(enable=False)
+
         Args:
-        enable(bool): Enables or disables the cage.
-        front(float): Maximum distance forward (+X).
-        back(float): Maximum distance backward (-X).
-        left(float): Maximum distance left (+Y).
-        right(float): Maximum distance right (-Y).
-        top(float): Maximum height (+Z).
-        bottom(float): Maximum depth (-Z).
-        r, g, b(float): Color of the cage in RGB (0.0 to 1.0).
-        a(float): Alpha (transparency) of the cage (0.0 to 1.0).
+            enable (bool): Enables or disables the cage.
+            front (float): Maximum distance forward (+X).
+            back (float): Maximum distance backward (-X).
+            left (float): Maximum distance left (+Y).
+            right (float): Maximum distance right (-Y).
+            top (float): Maximum height (+Z).
+            bottom (float): Maximum depth (-Z).
+            r, g, b (float): Color of the cage in RGB (0.0 to 1.0).
+            a (float): Alpha (transparency) of the cage (0.0 to 1.0).
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
         """
         payload = {
             "enable": bool(enable),
@@ -370,20 +512,25 @@ class MotionRobotClient:
 
     def move_approach(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, angle_format="RAD", rotation_format="RPY", z_offset=0.1, cartesian_path=False, execute=True):
         """
-        Asks the Linux ROS server to calculate and execute an approach position above an object.
-        
+        Asks the ROS server to compute and execute an approach position above an object.
+
+        Examples:
+            robot.move_approach(0.45, 0.08, 0.12, 3.1416, 0.0, -2.478, z_offset=0.12)
+
         Args:
             x, y, z (float): Position of the object (final target).
             r1, r2, r3, r4 (float): Desired orientation of the tool.
-            joint_constraints (list[dict], optional): Joint constraints. Ignored when cartesian_path=True.
+            joint_constraints (list[dict], optional): Joint constraints. Each dict:
+                {"joint_name": str, "min": float, "max": float, "relative": bool}.
+                IGNORED when cartesian_path=True.
             angle_format (str): "RAD" or "DEG".
             rotation_format (str): "RPY" or "QUAT".
             z_offset (float): Retreat distance in meters (e.g., 0.1 for 10 cm above).
             cartesian_path (bool): True = straight line, False = joint space path.
             execute (bool): True = execute motion, False = plan only.
-            
+
         Returns:
-            dict: The response from the motion server.
+            dict: The response from the motion server ('success', 'message').
         """
         payload = {
             "x": float(x), "y": float(y), "z": float(z),
@@ -400,7 +547,7 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/move_approach", json=payload, timeout=current_timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def compute_approach_pose(self, x, y, z, r1, r2, r3, r4=0.0,
                             rotation_format="RPY", angle_format="RAD",
                             reference_frame="WORLD", z_offset=0.1):
@@ -457,22 +604,31 @@ class MotionRobotClient:
                             json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def manage_box(self, box_id, x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", size_x=0.1, size_y=0.1, size_z=0.1, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD", enable_collision=True):
         """
         Adds or removes a collision box in MoveIt.
-        If adding, the coordinates provided should be the TOP SURFACE center of the box, 
+        If adding, the coordinates provided should be the TOP SURFACE center of the box,
         where the robot will grasp. The box center will be automatically calculated downward.
+
+        Examples:
+            robot.manage_box("target_cube", x=0.4, y=0.0, z=0.1, size_x=0.05, size_y=0.05, size_z=0.05)
+            robot.manage_box("target_cube", action="REMOVE")
 
         Args:
             box_id (str): Unique name for the object (e.g., "target_cube").
-            x, y, z (float): Position of the grasp point.
+            x, y, z (float): Position of the grasp point (top surface center).
             r1, r2, r3, r4 (float): Orientation of the grasp point.
+            rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
             size_x, size_y, size_z (float): Dimensions of the box in meters.
             r, g, b (float): RGB color values from 0.0 to 1.0 (default is light gray).
             a (float): Alpha/transparency from 0.0 (invisible) to 1.0 (solid).
             action (str): "ADD" to spawn the box, "REMOVE" to delete it.
-            enable_collision (bool): Enable collision of the box or not.
+            enable_collision (bool): If True the box is a real collision obstacle; if
+                False it is drawn as a visual-only marker (no effect on planning).
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
         """
         payload = {
             "box_id": str(box_id),
@@ -522,8 +678,9 @@ class MotionRobotClient:
             rotation_format (str): "RPY" (Roll, Pitch, Yaw) or "QUAT" (x, y, z, w).
             scale_x, scale_y, scale_z (float): Scaling factors for the mesh along its X, Y, and Z axes (default is 1.0).
             r, g, b (float): RGB color values from 0.0 to 1.0 (default is light gray).
+            a (float): Alpha/transparency from 0.0 (invisible) to 1.0 (solid).
             action (str): "ADD" to spawn/update the mesh, "REMOVE" to delete it from the scene.
-            
+
         Returns:
             dict: The response from the motion server containing 'success' and 'message'.
         """
@@ -537,11 +694,11 @@ class MotionRobotClient:
             "r": float(r), "g": float(g), "b": float(b), "a": float(a),
             "action": str(action).upper()
         }
-        
+
         r = self.session.post(f"{self.base_url}/manage_mesh", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def clear_environment(self):
         """
         Removes all collision objects (boxes, meshes, cage walls) from the
@@ -556,12 +713,13 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/clear_environment", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def move_to_pose_via_joint(self, x, y, z, r1, r2, r3, r4=0.0, joint_constraints=None, rotation_format="RPY", angle_format="RAD", reference_frame="WORLD", is_relative=False, execute=True):
         """
         Moves to a Cartesian pose by first solving Inverse Kinematics, then planning
         and executing in joint space. Useful when you want a free-form joint-space
         trajectory to a known Cartesian goal (avoids Cartesian path constraints).
+        Always joint-space, so joint_constraints are always honored.
 
         Examples:
             # Absolute pose in world frame (RPY)
@@ -571,10 +729,18 @@ class MotionRobotClient:
             robot.move_to_pose_via_joint(0.0, 0.0, 0.1, 0.0, 0.0, 0.0,
                                         reference_frame="TOOL", is_relative=True)
 
+            # With a joint constraint (e.g. keep base near 0)
+            robot.move_to_pose_via_joint(
+                0.25, 0.13, 0.30, 3.1416, 0.0, -1.5708,
+                joint_constraints=[{"joint_name": "joint_1", "min": -0.5, "max": 0.5}],
+            )
+
         Args:
             x, y, z (float): Translation target.
             r1, r2, r3, r4 (float): Rotation (r4 ignored if RPY).
-            joint_constraints (list[dict], optional): Joint constraints.
+            joint_constraints (list[dict], optional): Joint constraints. Each dict:
+                {"joint_name": str, "min": float, "max": float, "relative": bool}.
+                Bounds use `angle_format`.
             rotation_format (str): "RPY" or "QUAT".
             angle_format (str): "RAD" or "DEG".
             reference_frame (str): "WORLD" or "TOOL".
@@ -619,49 +785,97 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/set_servo_on", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-    
+
     def pump_grab(self):
         """
         Activates the vacuum pump + valve to grab an object.
         (Rob6x: valve in series with pump, both must be ON)
- 
+
         Examples:
             robot.pump_grab()
- 
+
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
         r = self.session.post(f"{self.base_url}/pump/grab", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
- 
+
     def pump_release(self):
         """
         Deactivates the vacuum pump + valve to release an object.
- 
+
         Examples:
             robot.pump_release()
- 
+
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
         """
         r = self.session.post(f"{self.base_url}/pump/release", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
- 
+
     def pump_is_grabbed(self):
         """
         Checks if the vacuum sensor detects an object is grabbed.
- 
+
         Examples:
             result = robot.pump_is_grabbed()
             if result["grabbed"]:
                 print("Object is held!")
- 
+
         Returns:
             dict: Contains 'success' (bool), 'grabbed' (bool), and 'message' (str).
         """
         r = self.session.get(f"{self.base_url}/pump/is_grabbed", timeout=self.timeout)
         r.raise_for_status()
         return r.json()
-    
+
+    def start_trace(self):
+        """
+        Starts the continuous TCP path trace.
+
+        The server samples the real tool-tip position (via TF) and publishes it as a
+        marker, so the actual travelled path is shown live in RViz, regardless of the
+        motion type (joint, Cartesian/Pilz, waypoints, manual jog).
+
+        Examples:
+            robot.start_trace()
+            robot.move_waypoints(points)
+            robot.stop_trace()
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        r = self.session.post(f"{self.base_url}/trace/start", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+
+    def stop_trace(self):
+        """
+        Stops sampling the TCP path. The existing trace stays displayed in RViz;
+        call clear_trace() to erase it.
+
+        Examples:
+            robot.stop_trace()
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        r = self.session.post(f"{self.base_url}/trace/stop", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())
+
+    def clear_trace(self):
+        """
+        Clears the recorded TCP trace and erases its marker in RViz.
+
+        Examples:
+            robot.clear_trace()
+
+        Returns:
+            dict: Contains 'success' (bool) and 'message' (str).
+        """
+        r = self.session.post(f"{self.base_url}/trace/clear", timeout=self.timeout)
+        r.raise_for_status()
+        return self._check(r.json())

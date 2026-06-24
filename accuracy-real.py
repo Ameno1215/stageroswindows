@@ -666,20 +666,20 @@ def run():
                                 execute=True
                             )
 
-                            robot.pump_grab()
+                            # robot.pump_grab()
 
-                            t = time.time()
+                            # t = time.time()
 
-                            bool_grabbed = False
-                            while time.time() - t < 5:
-                                print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-                                if robot.pump_is_grabbed()["grabbed"]:
-                                    bool_grabbed = True
-                                    win_logger.info("Card is grabbed")
-                                    break
+                            # bool_grabbed = False
+                            # while time.time() - t < 5:
+                            #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+                            #     if robot.pump_is_grabbed()["grabbed"]:
+                            #         bool_grabbed = True
+                            #         win_logger.info("Card is grabbed")
+                            #         break
                             
-                            if not bool_grabbed:
-                                robot.pump_release()
+                            # if not bool_grabbed:
+                            #     robot.pump_release()
 
                             move_to_pose_logged(
                                 robot,
@@ -786,7 +786,7 @@ def run():
                                 execute=True
                             )
 
-                            robot.pump_release()
+                            # robot.pump_release()
 
                             move_to_pose_logged(
                                 robot,
