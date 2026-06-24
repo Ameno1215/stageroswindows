@@ -92,28 +92,42 @@ class MotionRobotClient:
         self.model = model
         return self._check(r.json())
 
-    def set_scaling(self, velocity_scale, accel_scale):
+    def set_scaling(self, velocity_scale, accel_scale, cartesian_speed=0.0):
         """
-        Updates velocity and acceleration scaling factors for future movements.
+        Updates the velocity / acceleration scaling factors for future movements.
+
+        Three independent knobs:
+        - velocity_scale : joint-space velocity scaling (OMPL / move_joints / move_to_pose).
+        - accel_scale    : acceleration scaling (all moves).
+        - cartesian_speed: velocity scaling for Cartesian (Pilz LIN/Sequence) moves only,
+                            i.e. move_to_pose(cartesian_path=True) and move_waypoints.
+                            0.0 = use velocity_scale for Cartesian moves too.
 
         Examples:
-            ret = robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+            # Same speed everywhere
+            robot.set_scaling(velocity_scale=0.5, accel_scale=0.5)
+
+            # Fast joint moves, but slow precise straight-line Cartesian moves
+            robot.set_scaling(velocity_scale=0.8, accel_scale=0.5, cartesian_speed=0.15)
 
         Args:
-            velocity_scale (float): Velocity factor (0.0 to 1.0).
+            velocity_scale (float): Joint velocity factor (0.0 to 1.0).
             accel_scale (float): Acceleration factor (0.0 to 1.0).
+            cartesian_speed (float): Cartesian velocity factor (0.0 to 1.0).
+                0.0 means "fall back to velocity_scale" for Cartesian moves.
 
         Returns:
-            dict: Update status.
+            dict: Update status ('success', 'message').
         """
         payload = {
             "velocity_scale": float(velocity_scale),
             "accel_scale": float(accel_scale),
+            "cartesian_speed": float(cartesian_speed),
         }
         r = self.session.post(f"{self.base_url}/scaling", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
-
+        
     def get_scaling(self):
         """
         Retrieves the current velocity and acceleration scaling factors.
