@@ -313,6 +313,8 @@ def handle_sigint(sig, frame):
     cleanup()
 
 signal.signal(signal.SIGINT, handle_sigint)
+if sys.platform == "win32":
+    signal.signal(signal.SIGBREAK, handle_sigint)
 
 # --- Main --------------------------------------------------------------------
 

@@ -1,6 +1,6 @@
 import math
 import time
-from motion_http_client import MotionRobotClient
+from lib.robotcontroller.robot_controller import MotionRobotClient
 from math import pi
 from plate import load_plate_from_file
 from pathlib import Path
