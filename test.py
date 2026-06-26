@@ -23,6 +23,12 @@ MODEL = args.model
 
 
 STAUBLI_PLATE_OFFSET = 0.11
+OFFSET = 0.015
+# OFFSET = 0.07
+CARTESIAN_PATH = False
+CARTESIAN_ALL = True
+SPEED = 1
+ACCEL = 1
 
 box_source = 1
 box1 = {
@@ -50,8 +56,8 @@ box2 = {
 box1_staubli = {
     "box_number": 1,
     "position": {
-        "x": 0.05,
-        "y": 0.2,
+        "x": 0.15,
+        "y": 0.15,
         "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
@@ -61,8 +67,8 @@ box1_staubli = {
 box2_staubli = {
     "box_number": 2,
     "position": {
-        "x": 0.05,
-        "y": -0.2,
+        "x": 0.15,
+        "y": -0.15,
         "z": 0.0,
         "rx": 180*pi/180,
         "ry": 0,
@@ -100,8 +106,6 @@ def run():
     )
     log_thread.start()
 
-
-
     robot = MotionRobotClient("http://localhost:8000", SIM)
 
     win_logger.info(f"Health: {robot.health()}")
@@ -114,7 +118,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=0.1, accel_scale=0.1)
+    robot.set_scaling(velocity_scale=SPEED, accel_scale=ACCEL)
 
     robot.clear_environment()
 
@@ -161,16 +165,46 @@ def run():
             action="ADD"
         )
 
-    robot.set_virtual_cage(
-        enable=True, 
-        front=0.66, back=0.35, 
-        left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
-    )
-    time.sleep(2)
+    # robot.set_virtual_cage(
+    #     enable=True, 
+    #     front=0.66, back=0.35, 
+    #     left=0.325, right=0.325, 
+    #     top=0.9, bottom=0.0
+    # )
+    # time.sleep(2)
 
-    
     print(robot.set_servo_on(True))
+    # robot.move_to_home()
+
+    # robot.move_to_pose(x=0, y=0.1, z=0.35, r1=0, r2=-3.14/2, r3=0, is_relative=True, cartesian_path=False, execute=True)
+
+    # robot.move_to_pose(x=0, y=-0.2, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
+
+    # side = 0.15
+    # robot.move_to_pose(x=0, y=0, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
+
+    # robot.clear_trace()
+    # robot.start_trace()
+    # square = [
+    #     {"x":  side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x":  0.0,  "y":  -side, "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x": -side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x":  0.0,  "y": side, "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    # ]
+
+    # robot.move_waypoints(
+    #     square,
+    #     cartesian_path=True,
+    #     blend_radius=0.06,
+    #     path_tolerance=0.1,
+    # )
+
+    # robot.stop_trace()
+    # return
     
     # robot.pump_release()
     # return
@@ -190,7 +224,69 @@ def run():
     # return
 
 
+    # robot.move_to_pose(x=0, y=0.3, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
+    # print(robot.get_current_pose())
+    # print(robot.get_joint_state())
+
+    # robot.move_to_pose(
+    #     x=-0.05, y=-0.1, z=-0.1,
+    #     r1=0, r2=0, r3=0,
+    #     is_relative=True,
+    #     cartesian_path=True,
+    #     execute=True
+    # )
+
+    # for i in range(5):
+    #     robot.move_to_pose(
+    #         x=0, y=0.2, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=0.2, y=0, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=0, y=-0.2, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+    #     robot.move_to_pose(
+    #         x=-0.2, y=0, z=0,
+    #         r1=0, r2=0, r3=0,
+    #         is_relative=True,
+    #         cartesian_path=False,
+    #         execute=True
+    #     )
+
+    # robot.move_to_home()
+
+    # robot.set_servo_on(False)
+    # return
+    # points = [
+    #         {"x": 0.0, "y": 0.1, "z": -0.2, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.1, "y": 0, "z": 0.0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.0, "y": -0.2, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": -0.1, "y": 0, "z": 0, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #         {"x": 0.0, "y": 0.1, "z": 0.1, "r1": 0.0, "r2": 0.0, "r3": 0.0, "is_relative": True},
+    #     ]
+    # robot.move_waypoints(points, cartesian_path=False)
+
+    
+
     robot.move_to_home()
+
+
+    robot.clear_trace()
+    robot.start_trace()
+
     inputStorage = None
     outputStorage = None
     if MODEL == "tx40":
@@ -203,7 +299,7 @@ def run():
     number_of_cards = 2
 
     if MODEL == "tx40":
-        plates_dir = base_path / "platesStaubli"
+        plates_dir = base_path / "platesStaubliTest"
     else:
         plates_dir = base_path / "plates"
 
@@ -299,14 +395,14 @@ def run():
                             robot.move_to_pose(
                                 x=inputStorage["position"]["x"],
                                 y=inputStorage["position"]["y"],
-                                z=inputStorage["position"]["z"] + 0.3 + 0.005,
+                                z=inputStorage["position"]["z"] + 0.3 + OFFSET,
                                 r1=inputStorage["position"]["rx"],
                                 r2=inputStorage["position"]["ry"],
                                 r3=inputStorage["position"]["rz"],
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
@@ -320,24 +416,24 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
 
-                            robot.pump_grab()
+                            # robot.pump_grab()
 
-                            t = time.time()
+                            # t = time.time()
 
-                            bool_grabbed = False
-                            while time.time() - t < 5:
-                                print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-                                if robot.pump_is_grabbed()["grabbed"]:
-                                    bool_grabbed = True
-                                    win_logger.info("Card is grabbed")
-                                    break
+                            # bool_grabbed = False
+                            # while time.time() - t < 5:
+                            #     print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+                            #     if robot.pump_is_grabbed()["grabbed"]:
+                            #         bool_grabbed = True
+                            #         win_logger.info("Card is grabbed")
+                            #         break
                             
-                            if not bool_grabbed:
-                                robot.pump_release()
+                            # if not bool_grabbed:
+                            #     robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
@@ -349,7 +445,7 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
                     
@@ -375,8 +471,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    # cartesian_path=False if pos_index == 0 else True,
-                                    cartesian_path=False,
+                                    cartesian_path=CARTESIAN_PATH,
                                     execute=True
                                 )
                             else:
@@ -385,8 +480,7 @@ def run():
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
                                     z_offset=0.12,
                                     rotation_format="RPY",
-                                    cartesian_path=False,
-                                    # cartesian_path=False if pos_index == 0 else True,
+                                    cartesian_path=CARTESIAN_PATH,
                                     execute=True
                                 )
 
@@ -395,7 +489,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -405,7 +499,7 @@ def run():
                                 r1=0, r2=0, r3=0,
                                 rotation_format="RPY",
                                 reference_frame="TOOL",
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 is_relative=True,
                                 execute=True
                             )
@@ -445,14 +539,14 @@ def run():
                             robot.move_to_pose(
                                 x=outputStorage["position"]["x"],
                                 y=outputStorage["position"]["y"],
-                                z=outputStorage["position"]["z"] + 0.3 + 0.01,
+                                z=outputStorage["position"]["z"] + 0.3 + OFFSET,
                                 r1=outputStorage["position"]["rx"],
                                 r2=outputStorage["position"]["ry"],
                                 r3=outputStorage["position"]["rz"],
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=False,
-                                cartesian_path=False,
+                                cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
 
@@ -466,11 +560,11 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
 
-                            robot.pump_release()
+                            # robot.pump_release()
 
                             robot.move_to_pose(
                                 x=0,
@@ -482,10 +576,10 @@ def run():
                                 rotation_format="RPY",
                                 reference_frame="WORLD",
                                 is_relative=True,
-                                cartesian_path=True,
+                                cartesian_path=CARTESIAN_ALL,
                                 execute=True
                             )
-                    
+
                     if MODEL == "tx40":
                         if inputStorage is box1_staubli:
                             inputStorage = box2_staubli
@@ -518,6 +612,7 @@ def run():
     time.sleep(2)
 
     print(robot.set_servo_on(False))
+    robot.stop_trace()
     
     print(robot.set_virtual_cage(enable=False))  
 

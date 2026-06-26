@@ -1,29 +1,49 @@
 import os
 import time
 import logging
+import re
 
-# Create a generic formatter that uses the logger's name dynamically
+LOG_WSL_TO_WINDOWS_FILE = False
+
 formatter = logging.Formatter('%(asctime)s - [%(name)s] - %(levelname)s - %(message)s')
 
-# Set up shared Console output handler
 console_handler = logging.StreamHandler()
 console_handler.setFormatter(formatter)
 
-# Set up shared File output handler (will contain both Windows and Linux logs)
 file_handler = logging.FileHandler("windows_combined.log", mode='a', encoding='utf-8')
 file_handler.setFormatter(formatter)
 
-# 1. Windows Client Logger Configuration
 win_logger = logging.getLogger("WIN_APP")
 win_logger.setLevel(logging.DEBUG)
+win_logger.propagate = False
 win_logger.addHandler(console_handler)
 win_logger.addHandler(file_handler)
 
-# 2. WSL Client Logger Configuration
+# 2. WSL Client Logger
 wsl_logger = logging.getLogger("WSL_APP")
 wsl_logger.setLevel(logging.DEBUG)
+wsl_logger.propagate = False
 wsl_logger.addHandler(console_handler)
-wsl_logger.addHandler(file_handler)
+
+if LOG_WSL_TO_WINDOWS_FILE:
+    wsl_logger.addHandler(file_handler)
+
+
+ERROR_LEVEL_RE = re.compile(r"(?:^|\s-\s|\[)(?:ERROR|CRITICAL)(?:\]|\s-|$)")
+
+
+def log_wsl_line(line: str):
+    """
+    Log WSL output as DEBUG by default, but keep real errors visible as ERROR.
+    """
+    message = line.strip()
+    if not message:
+        return
+
+    if ERROR_LEVEL_RE.search(message):
+        wsl_logger.error(message)
+    else:
+        wsl_logger.debug(message)
 
 
 def tail_linux_logs(log_path: str):
@@ -59,4 +79,4 @@ def tail_linux_logs(log_path: str):
             continue
         
         # Inject the raw Linux line into the WSL logger
-        wsl_logger.info(line.strip())
+        log_wsl_line(line)

@@ -1,0 +1,44 @@
+source /opt/ros/humble/setup.bash
+export LIBGL_ALWAYS_SOFTWARE=0
+export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA
+
+source install/setup.bash
+
+
+
+rosdep install --ignore-src --from-paths src -y -r
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release
+
+
+colcon build --cmake-args -DCMAKE_BUILD_TYPE=Release --packages-select motion_control
+
+
+colcon build --packages-select motion_control
+
+colcon build --symlink-install
+
+ros2 launch denso_robot_bringup denso_robot_bringup.launch.py model:=vs060 sim:=true
+
+
+tool:=effecteur_v1
+
+
+
+ps aux | grep gazebo
+
+
+$env:ROS_DISTRO = "humble"
+$env:RMW_IMPLEMENTATION = "rmw_fastrtps_cpp"
+$env:PATH = "$env:PATH;c:\isaacsim\exts\isaacsim.ros2.bridge\humble\lib"
+$env:FASTRTPS_DEFAULT_PROFILES_FILE = "C:\.ros\fastdds.xml"
+$env:ROS_DOMAIN_ID = "0"
+
+& "C:\isaacsim\python.bat" "C:\Users\33648\Desktop\STAGE_ROS\launch_isaac.py"
+
+
+
+ip route show | grep -i default | awk '{print $3}'
+172.31.64.1
+nc -zv 172.31.64.1 11000 11001 11002 11003
+
+python .\launch_controller.py --model tx40 --real-robot --show-terminals --ip 172.29.64.1
