@@ -1,13 +1,16 @@
 import requests
 
+class RobotErrorException(Exception):
+    """Raised when the motion server reports a failed operation."""
 
-class MotionRobotClient:
+
+class RobotController:
     def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0):
         """
         Initializes the Denso client.
         
         Examples:
-            robot = DensoRobotClient("http://localhost:8000")
+            robot = RobotController("http://localhost:8000")
         
         Args:
             base_url (str): The URL of the wsl_ros_bridge server.
@@ -23,7 +26,7 @@ class MotionRobotClient:
     def _check(self, result: dict) -> dict:
         """Raises RuntimeError if the motion server returned a failure."""
         if not result.get("success"):
-            raise RuntimeError(f"Motion failed: {result.get('message', 'unknown error')}")
+            raise RuntimeError(f"Motion server failure: {result.get('message', 'unknown error')}")
         return result
 
     def health(self):

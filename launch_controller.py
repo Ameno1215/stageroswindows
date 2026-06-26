@@ -31,7 +31,7 @@ SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IP_ROBOT = args.ip
 IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
-DEFAULT_TOOL = "effecteur_v2"
+DEFAULT_TOOL = "effecteur_v3"
 TOOL = args.tool or DEFAULT_TOOL
 
 if IS_STAUBLI and args.real_robot:
@@ -244,6 +244,8 @@ def handle_sigint(sig, frame):
     cleanup()
 
 signal.signal(signal.SIGINT, handle_sigint)
+if sys.platform == "win32":
+    signal.signal(signal.SIGBREAK, handle_sigint)
 
 # --- Main --------------------------------------------------------------------
 
