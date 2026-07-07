@@ -15,7 +15,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--accuracy-csv", default=None,
                     help="CSV file used to store desired and measured poses")

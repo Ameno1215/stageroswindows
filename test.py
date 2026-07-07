@@ -13,7 +13,7 @@ import argparse
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
@@ -27,8 +27,11 @@ OFFSET = 0.015
 # OFFSET = 0.07
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
-SPEED = 1
-ACCEL = 1
+STAUBLI_SPEED = 0.1
+SPEED = 0.5
+ACCEL = 0.5
+
+NUMBER_OF_TEST = 5
 
 box_source = 1
 box1 = {
@@ -118,7 +121,10 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    robot.set_scaling(velocity_scale=SPEED, accel_scale=ACCEL)
+    if MODEL == "tx40":
+        robot.set_scaling(velocity_scale=STAUBLI_SPEED, accel_scale=ACCEL, cartesian_speed=SPEED)
+    else:
+        robot.set_scaling(velocity_scale=SPEED, accel_scale=ACCEL)
 
     robot.clear_environment()
 
@@ -165,46 +171,20 @@ def run():
             action="ADD"
         )
 
-    # robot.set_virtual_cage(
-    #     enable=True, 
-    #     front=0.66, back=0.35, 
-    #     left=0.325, right=0.325, 
-    #     top=0.9, bottom=0.0
-    # )
-    # time.sleep(2)
+    robot.set_virtual_cage(
+        enable=True, 
+        front=0.66, back=0.35, 
+        left=0.325, right=0.325, 
+        top=0.9, bottom=0.0
+    )
+    time.sleep(2)
 
     print(robot.set_servo_on(True))
-    # robot.move_to_home()
+   
 
-    # robot.move_to_pose(x=0, y=0.1, z=0.35, r1=0, r2=-3.14/2, r3=0, is_relative=True, cartesian_path=False, execute=True)
+    robot.start_trace()
 
-    # robot.move_to_pose(x=0, y=-0.2, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=True, execute=True)
-
-    # side = 0.15
-    # robot.move_to_pose(x=0, y=0, z=-0.1, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
-
-    # robot.clear_trace()
-    # robot.start_trace()
-    # square = [
-    #     {"x":  side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
-    #     "is_relative": True, "reference_frame": "WORLD"},
-    #     {"x":  0.0,  "y":  -side, "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
-    #     "is_relative": True, "reference_frame": "WORLD"},
-    #     {"x": -side, "y":  0.0,  "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
-    #     "is_relative": True, "reference_frame": "WORLD"},
-    #     {"x":  0.0,  "y": side, "z": 0.0, "r1": 0, "r2": 0, "r3": 0,
-    #     "is_relative": True, "reference_frame": "WORLD"},
-    # ]
-
-    # robot.move_waypoints(
-    #     square,
-    #     cartesian_path=True,
-    #     blend_radius=0.06,
-    #     path_tolerance=0.1,
-    # )
-
-    # robot.stop_trace()
-    # return
+    
     
     # robot.pump_release()
     # return
@@ -285,7 +265,7 @@ def run():
 
 
     robot.clear_trace()
-    robot.start_trace()
+    # robot.start_trace()
 
     inputStorage = None
     outputStorage = None
@@ -296,12 +276,12 @@ def run():
         inputStorage = box1
         outputStorage = box2
 
-    number_of_cards = 2
+    number_of_cards = 1
 
     if MODEL == "tx40":
         plates_dir = base_path / "platesStaubliTest"
     else:
-        plates_dir = base_path / "plates"
+        plates_dir = base_path / "plates3"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -484,30 +464,26 @@ def run():
                                     execute=True
                                 )
 
-                            robot.move_to_pose(
-                                x=0, y=0, z=0.12 - 0.005,
-                                r1=0, r2=0, r3=0,
-                                rotation_format="RPY",
-                                reference_frame="TOOL",
-                                cartesian_path=CARTESIAN_ALL,
-                                is_relative=True,
-                                execute=True
-                            )
+                            for k in range(NUMBER_OF_TEST):
+                                robot.move_to_pose(
+                                    x=0, y=0, z=0.12 - 0.005,
+                                    r1=0, r2=0, r3=0,
+                                    rotation_format="RPY",
+                                    reference_frame="TOOL",
+                                    cartesian_path=CARTESIAN_ALL,
+                                    is_relative=True,
+                                    execute=True
+                                )
 
-                            robot.move_to_pose(
-                                x=0, y=0, z=-0.12 + 0.005,
-                                r1=0, r2=0, r3=0,
-                                rotation_format="RPY",
-                                reference_frame="TOOL",
-                                cartesian_path=CARTESIAN_ALL,
-                                is_relative=True,
-                                execute=True
-                            )
-
-                            
-                            if pos_index > 0:
-                                pass
-                                # peut etre si au retour de la position 2 ca fait un truc bizarre
+                                robot.move_to_pose(
+                                    x=0, y=0, z=-0.12 + 0.005,
+                                    r1=0, r2=0, r3=0,
+                                    rotation_format="RPY",
+                                    reference_frame="TOOL",
+                                    cartesian_path=CARTESIAN_ALL,
+                                    is_relative=True,
+                                    execute=True
+                                )
 
                         if card == number_of_cards-1 and reader_index != len(plate.readers)-1:
                             win_logger.info("Robot don't release the card to gain time")
@@ -612,7 +588,7 @@ def run():
     time.sleep(2)
 
     print(robot.set_servo_on(False))
-    robot.stop_trace()
+    # robot.stop_trace()
     
     print(robot.set_virtual_cage(enable=False))  
 

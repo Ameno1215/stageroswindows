@@ -12,7 +12,7 @@ parser.add_argument("--show-terminals", action="store_true",
                     help="Hide WSL terminals (run in background)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx2_60l", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
                       help="Tool name (ex: effecteur_v3, none)")
@@ -32,7 +32,7 @@ SOLVER = "kdl"
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IP_ROBOT = args.ip
-IS_STAUBLI = MODEL in {"tx2_60l", "tx40"}
+IS_STAUBLI = MODEL in {"tx40"}
 DEFAULT_TOOL = "effecteur_v3"
 TOOL = args.tool or DEFAULT_TOOL
 
@@ -203,21 +203,21 @@ def kill_wsl_processes():
     # If a launch process survives, it can restart children that were just killed.
     print("   Sending SIGINT to ros2 launch supervisors...")
     pkill("SIGINT", launch_targets)
-    time.sleep(2)
+    time.sleep(1)
 
     # --- Step 2: SIGINT on ROS2 nodes (allows on_deactivate to run)
     print("   Sending SIGINT to ROS2 nodes...")
     pkill("SIGINT", node_targets)
 
     # --- Step 3: Long wait (RC8 controller needs time to close the b-CAP session)
-    wait_time = 10 if SIM == "false" else 2
+    wait_time = 7 if SIM == "false" else 2
     print(f"   Waiting {wait_time}s for graceful controller disconnection...")
     time.sleep(wait_time)
 
     # --- Step 4: SIGTERM for any remaining launch supervisors and nodes
     print("   Sending SIGTERM to remaining processes...")
     pkill("SIGTERM", all_targets)
-    time.sleep(2)
+    time.sleep(1)
 
     # --- Step 5: SIGKILL as last resort only
     print("   Force-killing remaining processes...")

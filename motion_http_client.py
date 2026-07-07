@@ -89,6 +89,8 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/init", json=payload, timeout=self.timeout)
         r.raise_for_status()
         self.get_solver()
+        self.get_current_pose()
+        self.get_joint_state()
         self.model = model
         return self._check(r.json())
 
