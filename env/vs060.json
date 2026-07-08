@@ -1,0 +1,82 @@
+{
+  "mesh_list": [
+    {
+        "id": "box1",
+        "path": "card_storage/boitier.STL",
+        "position": {
+            "x": 0.2581,
+            "y": 0.1360,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "scale": {
+            "x": 0.001,
+            "y": 0.001,
+            "z": 0.001
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 0.8, 
+        "g": 1, 
+        "b": 0.8
+    },
+    {
+        "id": "box2",
+        "path": "card_storage/boitier.STL",
+        "position": {
+            "x": 0.2618,
+            "y": -0.1192,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "scale": {
+            "x": 0.001,
+            "y": 0.001,
+            "z": 0.001
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 0.8, 
+        "g": 1, 
+        "b": 0.8
+    }    
+  ],
+  "box_list": [
+    {
+        "id": "boxtest",
+        "position": {
+            "x": 0.66,
+            "y": 0.0,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.1,
+            "y": 0.1,
+            "z": 0.1
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+     }
+  ],
+  "fence": {
+    "front": 0.66, 
+    "back": 0.35, 
+    "left": 0.325, 
+    "right": 0.325, 
+    "top": 0.9,
+    "bottom":0.0
+  }
+}

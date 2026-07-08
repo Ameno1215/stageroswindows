@@ -28,8 +28,8 @@ OFFSET = 0.015
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
 STAUBLI_SPEED = 0.1
-SPEED = 0.5
-ACCEL = 0.5
+SPEED = 0.2
+ACCEL = 0.2
 
 NUMBER_OF_TEST = 5
 
@@ -129,54 +129,12 @@ def run():
     robot.clear_environment()
 
     if MODEL == "tx40":
-        robot.manage_mesh(
-            mesh_id="box1",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box1_staubli["position"]["x"], y=box1_staubli["position"]["y"], z=box1_staubli["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-        robot.manage_mesh(
-            mesh_id="box2",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box2_staubli["position"]["x"], y=box2_staubli["position"]["y"], z=box2_staubli["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents\/DEV/ROS/env/tx40.json")
     else:
-        robot.manage_mesh(
-            mesh_id="box1",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-        robot.manage_mesh(
-            mesh_id="box2",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-
-    robot.set_virtual_cage(
-        enable=True, 
-        front=0.66, back=0.35, 
-        left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
-    )
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
+    
+    return
+    
     time.sleep(2)
 
     print(robot.set_servo_on(True))
@@ -590,7 +548,7 @@ def run():
     print(robot.set_servo_on(False))
     # robot.stop_trace()
     
-    print(robot.set_virtual_cage(enable=False))  
+    print(robot.set_virtual_fence(enable=False))  
 
     robot.manage_mesh(
         mesh_id="box1",

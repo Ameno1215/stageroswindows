@@ -171,7 +171,7 @@ def run():
             action="ADD"
         )
 
-    robot.set_virtual_cage(
+    robot.set_virtual_fence(
         enable=True, 
         front=0.66, back=0.35, 
         left=0.325, right=0.325, 
@@ -199,7 +199,7 @@ def run():
         "is_relative": True, "reference_frame": "WORLD"},
     ]
 
-    robot.move_waypoints(square, cartesian_path=True, blend_radius=0.05, path_tolerance=0.05)
+    robot.move_waypoints(square, cartesian_path=False, blend_radius=0.05, path_tolerance=0.05)
 
     return
 

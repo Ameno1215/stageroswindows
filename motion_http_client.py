@@ -1,5 +1,5 @@
 import requests
-
+from manage_env import load_env_from_file
 
 class MotionRobotClient:
     def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0):
@@ -67,7 +67,7 @@ class MotionRobotClient:
 
                 -- Optimizing Planners (Smooth and short trajectories) --
                 * "RRTstar"   : Excellent for smooth and direct movements. It uses the entire 'planning_time' to refine and shorten the path as much as possible. No more useless contortions!
-                * "PRMstar"   : Very powerful in confined environments or with many obstacles (like your virtual cage). It pre-calculates a roadmap of possible movements.
+                * "PRMstar"   : Very powerful in confined environments or with many obstacles (like your virtual fence). It pre-calculates a roadmap of possible movements.
                 * "FMT"       : (Fast Marching Tree) A modern algorithm, very fast to converge towards an optimal solution without making detours.
 
                 -- Fast Planners (First found path = validated) --
@@ -462,25 +462,25 @@ class MotionRobotClient:
             home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         return self.move_joints(home_position, is_relative=False)
 
-    def set_virtual_cage(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0, r=0.0, g=0.6, b=1.0, a=0.15):
+    def set_virtual_fence(self, enable=True, front=0.8, back=0.8, left=0.8, right=0.8, top=1.2, bottom=0.0, r=0.0, g=0.6, b=1.0, a=0.15):
         """
-        Enables or disables a virtual collision cage around the robot.
+        Enables or disables a virtual collision fence around the robot.
         Distances are measured in meters from the world's zero point.
 
         Examples:
-            robot.set_virtual_cage(enable=True, front=0.6, back=0.6, top=1.0)
-            robot.set_virtual_cage(enable=False)
+            robot.set_virtual_fence(enable=True, front=0.6, back=0.6, top=1.0)
+            robot.set_virtual_fence(enable=False)
 
         Args:
-            enable (bool): Enables or disables the cage.
+            enable (bool): Enables or disables the fence.
             front (float): Maximum distance forward (+X).
             back (float): Maximum distance backward (-X).
             left (float): Maximum distance left (+Y).
             right (float): Maximum distance right (-Y).
             top (float): Maximum height (+Z).
             bottom (float): Maximum depth (-Z).
-            r, g, b (float): Color of the cage in RGB (0.0 to 1.0).
-            a (float): Alpha (transparency) of the cage (0.0 to 1.0).
+            r, g, b (float): Color of the fence in RGB (0.0 to 1.0).
+            a (float): Alpha (transparency) of the fence (0.0 to 1.0).
 
         Returns:
             dict: Contains 'success' (bool) and 'message' (str).
@@ -492,7 +492,7 @@ class MotionRobotClient:
             "top": float(top), "bottom": float(bottom),
             "r": float(r), "g": float(g), "b": float(b), "a": float(a)
         }
-        r = self.session.post(f"{self.base_url}/set_virtual_cage", json=payload, timeout=self.timeout)
+        r = self.session.post(f"{self.base_url}/set_virtual_fence", json=payload, timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
 
@@ -646,7 +646,7 @@ class MotionRobotClient:
         r.raise_for_status()
         return self._check(r.json())
 
-    def manage_mesh(self, mesh_id, mesh_path="", x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", scale_x=1.0, scale_y=1.0, scale_z=1.0, r=0.8, g=0.8, b=0.8, a=1.0, action="ADD"):
+    def manage_mesh(self, mesh_id, mesh_path="", x=0.0, y=0.0, z=0.0, r1=0.0, r2=0.0, r3=0.0, r4=0.0, rotation_format="RPY", scale_x=1.0, scale_y=1.0, scale_z=1.0, r=0.8, g=0.8, b=0.8, a=1.0, enable_collision=True, action="ADD"):
         """
         Adds or removes a 3D mesh (STL or DAE file) as a collision object in MoveIt/RViz.
         The mesh is positioned relative to the world frame.
@@ -694,6 +694,7 @@ class MotionRobotClient:
             "rotation_format": str(rotation_format),
             "scale_x": float(scale_x), "scale_y": float(scale_y), "scale_z": float(scale_z),
             "r": float(r), "g": float(g), "b": float(b), "a": float(a),
+            "enable_collision": bool(enable_collision),
             "action": str(action).upper()
         }
 
@@ -703,7 +704,7 @@ class MotionRobotClient:
 
     def clear_environment(self):
         """
-        Removes all collision objects (boxes, meshes, cage walls) from the
+        Removes all collision objects (boxes, meshes, fence walls) from the
         planning scene, keeping only the robot and any attached tool objects.
 
         Examples:
@@ -881,3 +882,22 @@ class MotionRobotClient:
         r = self.session.post(f"{self.base_url}/trace/clear", timeout=self.timeout)
         r.raise_for_status()
         return self._check(r.json())
+    
+    def load_environnement(self, json_path: str):
+        env = load_env_from_file(json_path)
+
+        ret = self.set_virtual_fence(enable=True, front=env.fence.front, back=env.fence.back, left=env.fence.left,
+                               right=env.fence.right, top=env.fence.top, bottom=env.fence.bottom)
+
+        
+        for mesh in env.meshes:
+            ret = self.manage_mesh(mesh_id=mesh.id, mesh_path=mesh.path, x=mesh.position.x, y=mesh.position.y, z=mesh.position.z,
+                             r1=mesh.position.rx, r2=mesh.position.ry, r3=mesh.position.rz, scale_x=mesh.scale.x,
+                             scale_y=mesh.scale.y, scale_z=mesh.scale.z, r=mesh.r, g=mesh.g, b=mesh.b, a=mesh.a,
+                             enable_collision=True, action="ADD")
+        
+        for box in env.boxes:
+            ret = self.manage_box(box_id=box.id, x=box.position.x, y=box.position.y, z=box.position.z, r1=box.position.rx,
+                            r2=box.position.ry, r3=box.position.rz, size_x=box.size.x, size_y=box.size.y, size_z=box.size.z,
+                            r=box.r, g=box.g, b=box.b, a=box.a, action="ADD", enable_collision=box.enable_collision)
+        
