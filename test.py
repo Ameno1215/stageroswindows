@@ -1,6 +1,6 @@
 import math
 import time
-from lib.robotcontroller.robot_controller import MotionRobotClient
+from lib.robotcontroller.robot_controller import RobotController
 from math import pi
 from plate import load_plate_from_file
 from pathlib import Path
@@ -109,7 +109,7 @@ def run():
     )
     log_thread.start()
 
-    robot = MotionRobotClient("http://localhost:8000", SIM)
+    robot = RobotController("http://localhost:8000", SIM)
 
     win_logger.info(f"Health: {robot.health()}")
     win_logger.info(f"Initialising robot")
@@ -129,7 +129,7 @@ def run():
     robot.clear_environment()
 
     if MODEL == "tx40":
-        robot.load_environnement("C:/Users/Azur_Local_User/Documents\/DEV/ROS/env/tx40.json")
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
     else:
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
     

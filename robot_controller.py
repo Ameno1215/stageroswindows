@@ -1,5 +1,7 @@
 import requests
-from manage_env import load_env_from_file
+from lib.robotcontroller.manage_env import load_env_from_file
+
+
 class RobotErrorException(Exception):
     """Raised when the motion server reports a failed operation."""
 
@@ -885,21 +887,66 @@ class RobotController:
         r.raise_for_status()
         return self._check(r.json())
     
-    def load_environnement(self, json_path: str):
-        env = load_env_from_file(json_path)
+    def load_environnement(self, json_path: str, base_dir: str = None):
+        """
+        Loads a full environment (virtual fence + meshes + boxes) from a JSON file.
 
-        ret = self.set_virtual_fence(enable=True, front=env.fence.front, back=env.fence.back, left=env.fence.left,
-                               right=env.fence.right, top=env.fence.top, bottom=env.fence.bottom)
+        Returns:
+            dict: {"success": bool, "message": str}
+        """
+        try:
+            env = load_env_from_file(json_path, base_dir)
+        except Exception as e:
+            return {"success": False, "message": f"Failed to load env file '{json_path}': {e}"}
 
-        
+        errors = []
+        n_meshes = 0
+        n_boxes = 0
+
+        try:
+            self.set_virtual_fence(
+                enable=True, front=env.fence.front, back=env.fence.back,
+                left=env.fence.left, right=env.fence.right,
+                top=env.fence.top, bottom=env.fence.bottom,
+            )
+        except Exception as e:
+            errors.append(f"fence: {e}")
+
         for mesh in env.meshes:
-            ret = self.manage_mesh(mesh_id=mesh.id, mesh_path=mesh.path, x=mesh.position.x, y=mesh.position.y, z=mesh.position.z,
-                             r1=mesh.position.rx, r2=mesh.position.ry, r3=mesh.position.rz, scale_x=mesh.scale.x,
-                             scale_y=mesh.scale.y, scale_z=mesh.scale.z, r=mesh.r, g=mesh.g, b=mesh.b, a=mesh.a,
-                             enable_collision=True, action="ADD")
-        
+            try:
+                self.manage_mesh(
+                    mesh_id=mesh.id, mesh_path=mesh.path,
+                    x=mesh.position.x, y=mesh.position.y, z=mesh.position.z,
+                    r1=mesh.position.rx, r2=mesh.position.ry, r3=mesh.position.rz,
+                    scale_x=mesh.scale.x, scale_y=mesh.scale.y, scale_z=mesh.scale.z,
+                    r=mesh.r, g=mesh.g, b=mesh.b, a=mesh.a,
+                    enable_collision=True, action="ADD",
+                )
+                n_meshes += 1
+            except Exception as e:
+                errors.append(f"mesh '{mesh.id}': {e}")
+
         for box in env.boxes:
-            ret = self.manage_box(box_id=box.id, x=box.position.x, y=box.position.y, z=box.position.z, r1=box.position.rx,
-                            r2=box.position.ry, r3=box.position.rz, size_x=box.size.x, size_y=box.size.y, size_z=box.size.z,
-                            r=box.r, g=box.g, b=box.b, a=box.a, action="ADD", enable_collision=box.enable_collision)
-        
+            try:
+                self.manage_box(
+                    box_id=box.id,
+                    x=box.position.x, y=box.position.y, z=box.position.z,
+                    r1=box.position.rx, r2=box.position.ry, r3=box.position.rz,
+                    size_x=box.size.x, size_y=box.size.y, size_z=box.size.z,
+                    r=box.r, g=box.g, b=box.b, a=box.a,
+                    action="ADD", enable_collision=box.enable_collision,
+                )
+                n_boxes += 1
+            except Exception as e:
+                errors.append(f"box '{box.id}': {e}")
+
+        if errors:
+            return {
+                "success": False,
+                "message": f"{len(errors)} object(s) failed: " + " | ".join(errors),
+            }
+
+        return {
+            "success": True,
+            "message": f"Environment loaded: fence + {n_meshes} mesh(es) + {n_boxes} box(es)",
+        }
