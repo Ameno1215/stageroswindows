@@ -121,7 +121,7 @@ TERMINAL_4 = (
     "source venv/bin/activate && "
     "source /opt/ros/humble/setup.bash && "
     "source ~/workspace/denso_ros2_ws/install/setup.bash && "
-    "uvicorn wsl_ros_bridge:app --host 127.0.0.1 --port 8000"
+    "python wsl_ros_bridge.py --log-path /mnt/a/ROBOT_RF/lib/logs --log-name robot_rf --add-date"
     # "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
 )
 
