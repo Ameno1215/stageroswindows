@@ -45,13 +45,14 @@
         "r": 0.8, 
         "g": 1, 
         "b": 0.8
+   
     }    
   ],
   "box_list": [
     {
-        "id": "boxtest",
+        "id": "alimentation_robot",
         "position": {
-            "x": 0.66,
+            "x": -0.25,
             "y": 0.0,
             "z": 0.0,
             "rx": 0,
@@ -59,8 +60,140 @@
             "rz": 0
         },
         "size": {
+            "x": 0.2,
+            "y": 0.15,
+            "z": 0.15
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "relay",
+        "position": {
+            "x": -0.25,
+            "y": 0.2,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.2,
+            "y": 0.25,
+            "z": 0.03
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "door_sensor",
+        "position": {
+            "x": 0.25,
+            "y": 0.25,
+            "z": 0.85,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
             "x": 0.1,
-            "y": 0.1,
+            "y": 0.14,
+            "z": 0.05
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "hub_usb_and_arduino",
+        "position": {
+            "x": 0.29,
+            "y": -0.295,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.74,
+            "y": 0.05,
+            "z": 0.13
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "tube",
+        "position": {
+            "x": 0.635,
+            "y": 0.0,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.02,
+            "y": 0.535,
+            "z": 0.03
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "tube2",
+        "position": {
+            "x": 0.46,
+            "y": -0.255,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.35,
+            "y": 0.02,
+            "z": 0.03
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    },
+    {
+        "id": "camera",
+        "position": {
+            "x": 0.625,
+            "y": -0.26,
+            "z": 0.25,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.05,
+            "y": 0.15,
             "z": 0.1
         },
         "enable_collision": true,
@@ -69,13 +202,35 @@
         "r": 1, 
         "g": 0.4, 
         "b": 0.4
-     }
+    },
+    {
+        "id": "ralonge",
+        "position": {
+            "x": 0.645,
+            "y": 0.12,
+            "z": 0.0,
+            "rx": 0,
+            "ry": 0,
+            "rz": 0
+        },
+        "size": {
+            "x": 0.01,
+            "y": 0.15,
+            "z": 0.14
+        },
+        "enable_collision": true,
+        "angle_format": "DEG",
+        "a": 1,
+        "r": 1, 
+        "g": 0.4, 
+        "b": 0.4
+    }
   ],
   "fence": {
-    "front": 0.66, 
-    "back": 0.35, 
-    "left": 0.325, 
-    "right": 0.325, 
+    "front": 0.65, 
+    "back": 0.34, 
+    "left": 0.32, 
+    "right": 0.32, 
     "top": 0.9,
     "bottom":0.0
   }

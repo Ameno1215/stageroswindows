@@ -28,8 +28,9 @@ OFFSET = 0.015
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
 STAUBLI_SPEED = 0.1
-SPEED = 0.2
-ACCEL = 0.2
+SAFETY=0.005
+SPEED = 1
+ACCEL = 1
 
 NUMBER_OF_TEST = 5
 
@@ -129,19 +130,20 @@ def run():
     robot.clear_environment()
 
     if MODEL == "tx40":
-        robot.load_environnement("C:/Users/Azur_Local_User/Documents\/DEV/ROS/env/tx40.json")
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
     else:
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
+    robot.clear_trace()
     
-    return
     
     time.sleep(2)
 
     print(robot.set_servo_on(True))
-   
+    # return
 
     robot.start_trace()
 
+    return
     
     
     # robot.pump_release()
@@ -222,8 +224,6 @@ def run():
     robot.move_to_home()
 
 
-    robot.clear_trace()
-    # robot.start_trace()
 
     inputStorage = None
     outputStorage = None
@@ -239,7 +239,7 @@ def run():
     if MODEL == "tx40":
         plates_dir = base_path / "platesStaubliTest"
     else:
-        plates_dir = base_path / "plates3"
+        plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):
@@ -274,7 +274,7 @@ def run():
                                 box_id=f"{reader.reader_name}_{pos.position_label}",
                                 x=pos.x, y=pos.y, z=pos.z,
                                 r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                size_x=0.06, size_y=0.09, size_z=0.02,
+                                size_x=0.06, size_y=0.09, size_z=0.02, a=0.7,
                                 action="ADD",
                                 enable_collision=False
                             )
@@ -424,7 +424,7 @@ def run():
 
                             for k in range(NUMBER_OF_TEST):
                                 robot.move_to_pose(
-                                    x=0, y=0, z=0.12 - 0.005,
+                                    x=0, y=0, z=0.12 - SAFETY,
                                     r1=0, r2=0, r3=0,
                                     rotation_format="RPY",
                                     reference_frame="TOOL",
@@ -434,7 +434,7 @@ def run():
                                 )
 
                                 robot.move_to_pose(
-                                    x=0, y=0, z=-0.12 + 0.005,
+                                    x=0, y=0, z=-0.12 + SAFETY,
                                     r1=0, r2=0, r3=0,
                                     rotation_format="RPY",
                                     reference_frame="TOOL",
@@ -548,16 +548,7 @@ def run():
     print(robot.set_servo_on(False))
     # robot.stop_trace()
     
-    print(robot.set_virtual_fence(enable=False))  
-
-    robot.manage_mesh(
-        mesh_id="box1",
-        action="REMOVE"
-    )
-    robot.manage_mesh(
-        mesh_id="box2",
-        action="REMOVE"
-    )
+    robot.clear_environment()
 
     
          
