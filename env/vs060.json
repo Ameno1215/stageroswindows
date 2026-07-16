@@ -154,7 +154,7 @@
         },
         "enable_collision": true,
         "angle_format": "DEG",
-        "a": 1,
+        "a": 0.9,
         "r": 1, 
         "g": 0.4, 
         "b": 0.4
@@ -163,7 +163,7 @@
         "id": "tube2",
         "position": {
             "x": 0.46,
-            "y": -0.255,
+            "y": -0.26,
             "z": 0.0,
             "rx": 0,
             "ry": 0,
@@ -176,7 +176,7 @@
         },
         "enable_collision": true,
         "angle_format": "DEG",
-        "a": 1,
+        "a": 0.9,
         "r": 1, 
         "g": 0.4, 
         "b": 0.4

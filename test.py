@@ -28,7 +28,7 @@ OFFSET = 0.015
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
 STAUBLI_SPEED = 0.1
-SAFETY=0.005
+SAFETY=0.00
 SPEED = 1
 ACCEL = 1
 
@@ -142,8 +142,6 @@ def run():
     # return
 
     robot.start_trace()
-
-    return
     
     
     # robot.pump_release()
