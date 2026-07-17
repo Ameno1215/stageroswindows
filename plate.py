@@ -45,12 +45,12 @@ class Reader:
 class Plate:
     plate_number: int
     mesh_path: str
-    mesh_rotation_x: float
-    mesh_rotation_y: float
-    mesh_rotation_z: float
-    mesh_offset_x: float
-    mesh_offset_y: float
-    mesh_offset_z: float
+    mesh_rotation_x: float # must be in m
+    mesh_rotation_y: float # must be in m
+    mesh_rotation_z: float # must be in m
+    mesh_offset_x: float # must be in deg
+    mesh_offset_y: float # must be in deg
+    mesh_offset_z: float # must be in deg
     readers: List[Reader]
 
 

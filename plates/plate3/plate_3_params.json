@@ -1,12 +1,12 @@
 {
   "plate_number": 3,
-  "mesh_path": "plates/plate3/plaque3.obj",
-  "mesh_offset_x": 0,
+  "mesh_path": "plates3/plate3/plaque3.obj",
+  "mesh_offset_x": 0.00,
   "mesh_offset_y": 0, 
-  "mesh_offset_z": 0,
+  "mesh_offset_z": -0.001,
   "mesh_rotation_x": 0,
   "mesh_rotation_y": 0, 
-  "mesh_rotation_z": 0,
+  "mesh_rotation_z": -0,
   "list_readers": [
     {
       "reader_name": "HID Global OMNIKEY 5122CL Dual 0",
@@ -19,7 +19,7 @@
       "maximum_height": 50,
       "relay_number": 1,
       "wait_power": 5000,
-      "include_in_test": false,
+      "include_in_test": true,
       "list_position": [
         {
           "position_label": "Antenna Glass: center",
@@ -31,9 +31,81 @@
           "rz": -1800
         },
         {
+          "position_label": "Antenna Glass: top right",
+          "x": 5337,
+          "y": 1201,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna Glass: top left",
+          "x": 5337,
+          "y": 1471,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna Glass: bottom left",
+          "x": 5019,
+          "y": 1499,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna Glass: bottom right",
+          "x": 5019,
+          "y": 1100,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
           "position_label": "Antenna PVC: center",
           "x": 4371,
           "y": 1320,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna PVC: top right",
+          "x": 4449,
+          "y": 1106,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna PVC: top left",
+          "x": 4449,
+          "y": 1553,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna PVC: bottom left",
+          "x": 4309,
+          "y": 1579,
+          "z": 780,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Antenna PVC: bottom right",
+          "x": 4309,
+          "y": 1092,
           "z": 780,
           "rx": -1800,
           "ry": 0,
