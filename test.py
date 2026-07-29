@@ -139,7 +139,6 @@ def run():
     time.sleep(2)
 
     print(robot.set_servo_on(True))
-    # return
 
     robot.start_trace()
     
@@ -237,7 +236,7 @@ def run():
     if MODEL == "tx40":
         plates_dir = base_path / "platesStaubliTest"
     else:
-        plates_dir = base_path / "plates3"
+        plates_dir = base_path / "plates4"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):

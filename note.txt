@@ -47,3 +47,5 @@ python .\launch_controller.py --model tx40 --real-robot --show-terminals --ip 17
 ros2 run plotjuggler plotjuggler
 
 ros2 bag record /display_planned_path -o plan_pilz
+
+python .\prepare_mesh\prepare_plate_mesh.py --input .\plates4\plate1\plaque1in.obj --output out.obj --json .\plates4\plate1\plate_1_params.json --clean_space 0.001

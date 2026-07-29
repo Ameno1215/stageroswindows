@@ -6,7 +6,7 @@
   "mesh_offset_z": 0,
   "mesh_rotation_x": 0,
   "mesh_rotation_y": 0, 
-  "mesh_rotation_z": 900,
+  "mesh_rotation_z": 90,
   "list_readers": [
     {
       "reader_name": "ELYCTIS CL reader 0000000000017D4A 0",
