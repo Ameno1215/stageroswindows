@@ -55,9 +55,9 @@ The scanned mesh is never perfect, so the actual reading surfaces are rebuilt (f
 Add these fields to the plate JSON:
 
 ```json
-"mesh_offset_x": 0.00,
+"mesh_offset_x": 0,
 "mesh_offset_y": 0,
-"mesh_offset_z": -0.001,
+"mesh_offset_z": 0,
 "mesh_rotation_x": 0,
 "mesh_rotation_y": 0,
 "mesh_rotation_z": 0
@@ -78,17 +78,10 @@ Adapt the paths to your own files.
 - `--json` — the plate description file, listing the readers and their measured positions. Each position defines one rectangle that gets flattened onto its own plane.
 - `--clean_space` — clearance in meters between a measured position and the surface levelled underneath it, applied along the rectangle's own normal so it stays correct on tilted positions. `0.001` leaves 1 mm of gap; the default is `0`.
 - `--size` — dimensions `LX LY` of the flattened rectangle, in meters. Defaults to `0.06 0.09`, which covers a card footprint.
-- `--phase1_output` — path where the mesh obtained at the end of phase 1 is saved. Omit it and that intermediate mesh is not written at all. The format follows the extension you give here, so `--phase1_output .\checks\etape1.stl` works even when the final output is an `.obj`, and missing folders are created.
 
 ### What the script does
 
 Each position in the JSON defines a rectangle: a centre, an orientation (roll/pitch/yaw) and the `--size` dimensions. Positions are read in the plate frame and converted into the mesh frame using the transform hardcoded at the top of `prepare_plate_mesh.py`:
-
-```python
-T_mesh_F[:3, 3] = [0.6245, -0.25, 0.0]
-```
-
-If your scan's origin is not where this transform expects it, edit that line — everything downstream depends on it.
 
 Areas are then processed in two phases:
 

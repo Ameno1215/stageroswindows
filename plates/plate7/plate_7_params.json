@@ -1,0 +1,159 @@
+{
+  "plate_number": 7,
+  "mesh_path": "plates7/plate7/plaque7.obj",
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 0,
+  "list_readers": [
+    {
+      "reader_name": "Access IS NFC0 0",
+      "reader_brand": "HID",
+      "reader_model": "ADR300",
+      "baudrate": 848,
+      "reader_market": "Generic",
+      "reader_number": "7.1",
+      "minimum_height": 50,
+      "maximum_height": 150,
+      "relay_number": 1,
+      "wait_power": 10000,
+      "include_in_test": false,
+      "list_position": [
+        {
+          "position_label": "Center",
+          "x": 5047,
+          "y": 1380,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top left",
+          "x": 5097,
+          "y": 1553,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Top right",
+          "x": 5116,
+          "y": 1204,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom left",
+          "x": 4291,
+          "y": 1560,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        },
+        {
+          "position_label": "Bottom right",
+          "x": 4310,
+          "y": 1204,
+          "z": 709,
+          "rx": -1800,
+          "ry": 0,
+          "rz": -1800
+        }
+      ]
+    },
+    {
+      "reader_name": "DESKO GmbH SmartCard Reader 0",
+      "reader_brand": "Desko",
+      "reader_model": "Penta Cube",
+      "baudrate": 848,
+      "reader_market": "ID",
+      "reader_number": "7.2",
+      "minimum_height": 0,
+      "maximum_height": 400,
+      "relay_number": 2,
+      "wait_power": 10000,
+      "include_in_test": true,
+      "list_position": [
+        {
+          "position_label": "ANTENNA1_CENTER",
+          "x": 4819,
+          "y": -935,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA1_TOP_LEFT",
+          "x": 4997,
+          "y": -759,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA1_TOP_RIGHT",
+          "x": 4997,
+          "y": -1144,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA1_BOTTOM_LEFT",
+          "x": 4687,
+          "y": -746,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA1_BOTTOM_RIGHT",
+          "x": 4687,
+          "y": -1148,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA2_CENTER",
+          "x": 4028,
+          "y": -935,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA2_LEFT",
+          "x": 4028,
+          "y": -695,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        },
+        {
+          "position_label": "ANTENNA2_RIGHT",
+          "x": 4028,
+          "y": -1242,
+          "z": 1101,
+          "rx": 1800,
+          "ry": 0,
+          "rz": 1800
+        }
+      ]
+    }
+  ]
+}
