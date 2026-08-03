@@ -236,7 +236,7 @@ def run():
     if MODEL == "tx40":
         plates_dir = base_path / "platesStaubliTest"
     else:
-        plates_dir = base_path / "plates7"
+        plates_dir = base_path / "plates"
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):

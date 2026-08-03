@@ -1,6 +1,6 @@
 {
   "plate_number": 7,
-  "mesh_path": "plates7/plate7/plaque7.obj",
+  "mesh_path": "plates/plate7/plaque7.obj",
   "mesh_offset_x": 0,
   "mesh_offset_y": 0, 
   "mesh_offset_z": 0,

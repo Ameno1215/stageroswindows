@@ -26,7 +26,7 @@ The communication flow between the Windows host and the WSL simulation is as fol
 ### WSL Side
 - Ubuntu WSL2
 - ROS 2 Humble
-- Compiled workspace (`denso_ros2_ws`)
+- Compiled workspace (`ros2_ws`)
 - Packages:
   - `denso_robot_bringup`
   - `denso_robot_moveit_config`
@@ -134,7 +134,7 @@ sudo rosdep init
 sudo rosdep update
 
 # Install dependencies and build
-cd ~/workspace/denso_ros2_ws
+cd ~/workspace/ros2_ws
 rosdep install --from-paths src --ignore-src -r -y
 colcon build
 ```
