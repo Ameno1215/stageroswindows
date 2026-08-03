@@ -12,6 +12,8 @@ parser.add_argument("--show-terminals", action="store_true",
                     help="Hide WSL terminals (run in background)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
+parser.add_argument("--accuracy", action="store_true",
+                    help="log movement accuracy in debug mode.")
 parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
@@ -32,6 +34,7 @@ SOLVER = "kdl"
 SIM = "false" if args.real_robot else "true"
 MODEL = args.model
 IP_ROBOT = args.ip
+ACCURACY = args.accuracy
 IS_STAUBLI = MODEL in {"tx40"}
 DEFAULT_TOOL = "effecteur_v3"
 TOOL = args.tool or DEFAULT_TOOL
@@ -81,7 +84,7 @@ if IS_STAUBLI:
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:=staubli_{MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
+        f"model:=staubli_{MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER} accuracy:={ACCURACY}"
     )
 
     TERMINAL_3 = (
@@ -106,7 +109,7 @@ else:
     TERMINAL_2 = (
         f"{SETUP} && "
         "ros2 launch motion_control motion_server.launch.py "
-        f"model:={MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER}"
+        f"model:={MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER} accuracy:={ACCURACY}"
     )
 
     TERMINAL_3 = (

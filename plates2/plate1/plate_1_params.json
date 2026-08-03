@@ -1,6 +1,6 @@
 {
   "plate_number": 1,
-  "mesh_path": "platesStaubli/plate1/plaque1.obj",
+  "mesh_path": "plates2/plate1/plaque1.obj",
   "mesh_offset_x": 0,
   "mesh_offset_y": 0, 
   "mesh_offset_z": 0,
@@ -79,6 +79,15 @@
           "position_label": "Antenna front (PVC): top right",
           "x": 4622,
           "y": 298,
+          "z": 1006,
+          "rx": 1792,
+          "ry": 511,
+          "rz": -1420
+        },
+        {
+          "position_label": "Antenna front (PVC): top left",
+          "x": 4284,
+          "y": 721,
           "z": 1006,
           "rx": 1792,
           "ry": 511,

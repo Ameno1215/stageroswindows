@@ -1,6 +1,6 @@
 {
   "plate_number": 2,
-  "mesh_path": "platesStaubli/plate2/plaque2.obj",
+  "mesh_path": "plates/plate2/plaque2.obj",
   "mesh_offset_x": 0,
   "mesh_offset_y": 0, 
   "mesh_offset_z": 0,

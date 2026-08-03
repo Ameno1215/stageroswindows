@@ -31,8 +31,10 @@ STAUBLI_SPEED = 0.1
 SAFETY=0.00
 SPEED = 1
 ACCEL = 1
+PLATES = "plates"
+PLATES_STAUBLI = "platesStaubli"
 
-NUMBER_OF_TEST = 5
+NUMBER_OF_TEST = 1
 
 box_source = 1
 box1 = {
@@ -234,9 +236,9 @@ def run():
     number_of_cards = 1
 
     if MODEL == "tx40":
-        plates_dir = base_path / "platesStaubliTest"
+        plates_dir = base_path / PLATES_STAUBLI
     else:
-        plates_dir = base_path / "plates"
+        plates_dir = base_path / PLATES
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_dir in plates_dir.glob("plate*"):

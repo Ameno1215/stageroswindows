@@ -55,6 +55,7 @@ from pathlib import Path
 
 import numpy as np
 import trimesh
+import math
 
 # The script is meant to be launched from the ROS folder, so its own directory
 # and the parent one are put on the import path to reach the local modules.
@@ -72,7 +73,8 @@ from sharp_flatten import (
 
 # Pose of the plate frame F in the mesh frame: p_mesh = T_mesh_F @ p_F.
 T_mesh_F = np.eye(4)
-T_mesh_F[:3, :3] = rpy_to_matrix(0.0, 0.0, 0)
+# T_mesh_F[:3, :3] = rpy_to_matrix(0.0, 0.0, 0)
+T_mesh_F[:3, :3] = rpy_to_matrix(0.0, 0.0, 0 + math.pi/2)
 T_mesh_F[:3, 3] = [0.6245, -0.25, 0.0]
 print(T_mesh_F)
 inverse_matrix = np.linalg.inv(T_mesh_F)
