@@ -48,7 +48,7 @@ TERMINAL_4 = None
 TERMINAL_5 = None
 
 SETUP = (
-    "cd ~/workspace/denso_ros2_ws && "
+    "cd ~/workspace/ros2_ws && "
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
     "export OMPL_CONSOLE_LOG_LEVEL=DEV2 && "
@@ -120,7 +120,7 @@ TERMINAL_4 = (
     "cd ~/workspace && "
     "source venv/bin/activate && "
     "source /opt/ros/humble/setup.bash && "
-    "source ~/workspace/denso_ros2_ws/install/setup.bash && "
+    "source ~/workspace/ros2_ws/install/setup.bash && "
     "python wsl_ros_bridge.py --log-path /mnt/a/ROBOT_RF/lib/logs --log-name robot_rf --add-date"
     # "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
 )
