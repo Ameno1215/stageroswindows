@@ -1,5 +1,5 @@
 import requests
-from lib.robotcontroller.manage_env import load_env_from_file
+from lib.robotcontroller.utils.manage_env import load_env_from_file
 
 
 class RobotErrorException(Exception):

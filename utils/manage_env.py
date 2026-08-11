@@ -90,22 +90,21 @@ class Environnement:
     meshes: List[Mesh]
     fence: Fence
 
-def to_path_real(input, base_path=None):
-    if base_path == None:
-        base_path = Path.cwd()
+def to_path_real(input):
+    base_path = Path.cwd()
     abs_path_to_stl = base_path / input
 
     posix_path = abs_path_to_stl.as_posix()
 
-    if len(posix_path) >= 3 and posix_path[0].isalpha() and posix_path[1:3] == ":/":
-        wsl_path = "/mnt/" + posix_path[0].lower() + posix_path[2:]
+    if posix_path.lower().startswith("c:/"):
+        wsl_path = "/mnt/c/" + posix_path[3:]
     else:
         wsl_path = posix_path
 
     return f"file://{wsl_path}"
 
 
-def env_from_json(json_data: dict, base_dir: str) -> Environnement:
+def env_from_json(json_data: dict) -> Environnement:
     boxes = []
     meshes = []
     fence = None
@@ -117,10 +116,10 @@ def env_from_json(json_data: dict, base_dir: str) -> Environnement:
             position.ry *= pi/180
             position.rz *= pi/180
         scale = Scale.from_dict(mesh_data["scale"])
-        
+
         mesh = Mesh(
             id=mesh_data["id"],
-            path=to_path_real(mesh_data["path"], base_dir),
+            path=to_path_real(mesh_data["path"]),
             scale=scale,
             position=position,
             a=mesh_data["a"],
@@ -168,7 +167,7 @@ def env_from_json(json_data: dict, base_dir: str) -> Environnement:
         fence=fence
     )
 
-def load_env_from_file(file_path: str, base_dir: str = None) -> Environnement:
+def load_env_from_file(file_path: str) -> Environnement:
     with open(file_path, 'r') as f:
         json_data = json.load(f)
-    return env_from_json(json_data, base_dir)
+    return env_from_json(json_data)
