@@ -55,8 +55,8 @@ The scanned mesh is never perfect, so the actual reading surfaces are rebuilt (f
 Add these fields to the plate JSON:
 
 ```json
-"mesh_offset_x": 0,
-"mesh_offset_y": 0,
+"mesh_offset_x": 0.6245,
+"mesh_offset_y": -0.25, 
 "mesh_offset_z": 0,
 "mesh_rotation_x": 0,
 "mesh_rotation_y": 0,
@@ -106,3 +106,20 @@ Open the output in MeshLab and look at the reader areas:
 - Where two positions overlap, the lower surface should win.
 
 The console output lists every area as it is processed, with the vertex and face count after each step, which is useful for spotting a position whose rectangle falls outside the scanned geometry (the counts stop changing).
+
+## Step 7 — Register the mesh on the plate
+
+Once the mesh is ready, it still has to be attached to the plate so the rest of the system picks it up.
+
+1. **Place the mesh file in the bank**, in the folder of the plate it belongs to.
+2. **Add the path to the 3D mesh file in the plate's JSON**, and check that it points to the file you just placed.
+
+```json
+  "mesh_path": "/app/resources/plates_reader_bank/plate_1.obj"
+```
+## Step 8 — Test the mesh
+
+Validate the mesh in two stages, never directly on hardware:
+
+1. **In simulation first.** Load the plate and check that the mesh appears where it should in the robot frame and that the reader positions are reachable, with no unexpected collision against the plate surface.
+2. **Then on the real robot**, once the simulation run is clean.

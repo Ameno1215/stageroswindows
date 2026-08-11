@@ -179,7 +179,7 @@ def kill_wsl_processes():
         f"staubli_{MODEL}_planning_execution",
         "ros2 launch staubli_val3_driver",
         "robot_interface_streaming.launch.py",
-        "uvicorn wsl_ros_bridge:app",
+        "python wsl_ros_bridge.py",
     ]
 
     node_targets = [
@@ -189,7 +189,7 @@ def kill_wsl_processes():
         "staubli_val3_driver", "robot_interface_streaming", "robot_interface",
         "gzserver", "gzclient", "gazebo", "gzweb",
         "spawn_entity", "controller_manager", "ros2_control_node",
-        "uvicorn",
+        "wsl_ros_bridge",
     ]
 
     all_targets = launch_targets + node_targets
@@ -266,7 +266,7 @@ def kill_wsl_processes():
     print("   Verifying cleanup...")
     verify_regex = (
         "gazebo|gzserver|gzclient|move_group|controller_manager|ros2_control|"
-        "spawn_entity|motion_server|pump_controller|uvicorn|denso_robot|"
+        "spawn_entity|motion_server|pump_controller|wsl_ros_bridge|denso_robot|"
         "staubli_|robot_interface_streaming|robot_interface|ros2 launch"
     )
     result = subprocess.run(
