@@ -2,10 +2,10 @@ import math
 import time
 from motion_http_client import MotionRobotClient
 from math import pi
-from plate import load_plate_from_file
+from utils.plate import load_plate_from_file
 from pathlib import Path
 import urllib.parse
-from logger_worker import tail_linux_logs, win_logger
+from utils.logger_worker import tail_linux_logs, win_logger
 import threading
 import argparse
 

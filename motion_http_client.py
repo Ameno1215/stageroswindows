@@ -1,5 +1,5 @@
 import requests
-from manage_env import load_env_from_file
+from utils.manage_env import load_env_from_file
 
 class MotionRobotClient:
     def __init__(self, base_url="http://localhost:8000", sim=True, timeout=60.0):
