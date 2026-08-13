@@ -2,7 +2,7 @@ import math
 import time
 from motion_http_client import MotionRobotClient
 from math import pi
-from utils.plate import load_plate_from_file
+from utils.plate import load_reader_plate_from_file
 from pathlib import Path
 import urllib.parse
 from utils.logger_worker import tail_linux_logs, win_logger
@@ -193,7 +193,7 @@ def run():
                 print(f'Loading plate from: {json_path.name}')
                 
                 # Load the plate
-                plate = load_plate_from_file(json_path)
+                plate = load_reader_plate_from_file(json_path)
                 win_logger.info(f"Testing plate : {plate.plate_number}")
 
                 for reader in plate.readers:

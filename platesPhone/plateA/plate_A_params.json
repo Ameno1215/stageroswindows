@@ -1,0 +1,92 @@
+{
+  "plate_number": "A",
+  "mesh_path": "platesPhone/plateA/plaqueA.obj",
+  "mesh_offset_x": 0,
+  "mesh_offset_y": 0, 
+  "mesh_offset_z": 0,
+  "mesh_rotation_x": 0,
+  "mesh_rotation_y": 0, 
+  "mesh_rotation_z": 0,
+  "list_phones": [
+    {
+      "commercial_name": "Google Pixel 3",
+      "model_number": "Pixel 3",
+      "os_version": "Android 12",
+      "kernel_version": "MP1.0",
+      "adb_device_name": "8C3X1HBKN",
+      "phone_number": "A.1",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": false,
+      "position": {
+        "position_label": "Center",
+        "x": 5566,
+        "y": 839,
+        "z": 401,
+        "rx": -1800,
+        "ry": 0,
+        "rz": -1800
+      }
+    },
+    {
+      "commercial_name": "Google Pixel 7",
+      "model_number": "Pixel 7 Pro",
+      "os_version": "Android 14",
+      "kernel_version": "5.10.177",
+      "adb_device_name": "35221FDH30021T",
+      "phone_number": "A.2",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": true,
+      "position": {
+        "position_label": "Center",
+        "x": 4286,
+        "y": 1327,
+        "z": 411,
+        "rx": -1800,
+        "ry": 0,
+        "rz": 1800
+      }
+    },
+    {
+      "commercial_name": "OPPO Reno8 Lite 5G",
+      "model_number": "Reno8 Lite 5G",
+      "os_version": "Android 13",
+      "kernel_version": "5.4.254",
+      "adb_device_name": "45746c0",
+      "phone_number": "A.3",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": false,
+      "position": {
+        "position_label": "Center",
+        "x": 5549,
+        "y": -972,
+        "z": 401,
+        "rx": 1800,
+        "ry": 0,
+        "rz": 1800
+      }
+    },
+    {
+      "commercial_name": "Samsung Galaxy A40",
+      "model_number": "A40",
+      "os_version": "Android 11",
+      "kernel_version": "4.4.177-24085844",
+      "adb_device_name": "R58N71E90XT",
+      "phone_number": "A.4",
+      "minimum_height": 0,
+      "maximum_height": 50,
+      "include_in_test": false,
+      "position": {
+        "position_label": "Center",
+        "x": 4272,
+        "y": -1197,
+        "z": 396,
+        "rx": 1800,
+        "ry": 0,
+        "rz": -1800
+      }
+    }
+  ]
+}

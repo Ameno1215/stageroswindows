@@ -64,7 +64,7 @@ for _p in (str(_HERE), str(_HERE.parent)):
     if _p not in sys.path:
         sys.path.insert(0, _p)
 
-from plate import load_plate_from_file
+from utils.plate import load_reader_plate_from_file
 from sharp_flatten import (
     flatten_rectangle_sharp_in_frame,
     shave_rectangle_sharp_in_frame,
@@ -100,7 +100,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    plate = load_plate_from_file(args.json)
+    plate = load_reader_plate_from_file(args.json)
 
     # The temporary file carries the output extension so trimesh keeps
     # exporting in the same format from one call to the next.

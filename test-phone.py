@@ -2,7 +2,7 @@ import math
 import time
 from motion_http_client import MotionRobotClient
 from math import pi
-from utils.plate import load_reader_plate_from_file
+from utils.plate import load_phone_plate_from_file
 from pathlib import Path
 import urllib.parse
 from utils.logger_worker import tail_linux_logs, win_logger
@@ -32,7 +32,7 @@ STAUBLI_SPEED = 0.1
 SAFETY = 0.00
 SPEED = 0.35
 ACCEL = 0.1
-PLATES = "plates"
+PLATES = "platesPhone"
 PLATES_STAUBLI = "platesStaubli"
 
 NUMBER_OF_TEST = 1
@@ -181,41 +181,40 @@ def run():
 
     # Iterate over all items in the 'plates' directory that start with 'plate'
     for plate_index, plate_dir in enumerate(plates_dir.glob("plate*")):
-
         # Ensure it's actually a directory (and not a file named plate_something)
         if plate_dir.is_dir():
-            
             # Look for the JSON file inside this sub-directory
             json_files = list(plate_dir.glob("*.json"))
+            print(f"PLate liste {json_files}")
             
             if json_files:
                 json_path = json_files[0] # Take the first (and supposedly only) JSON file
                 print(f'Loading plate from: {json_path.name}')
                 
                 # Load the plate
-                plate = load_reader_plate_from_file(json_path)
+                plate = load_phone_plate_from_file(json_path)
                 win_logger.info(f"Testing plate : {plate.plate_number}")
 
-                for reader in plate.readers:
-                    for pos in reader.positions:
-                        if MODEL == "tx40":
-                            robot.manage_box(
-                                box_id=f"{reader.reader_name}_{pos.position_label}",
-                                x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
-                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                size_x=0.06, size_y=0.09, size_z=0.02,
-                                action="ADD",
-                                enable_collision=False
-                            )
-                        else:
-                            robot.manage_box(
-                                box_id=f"{reader.reader_name}_{pos.position_label}",
-                                x=pos.x, y=pos.y, z=pos.z,
-                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                size_x=0.06, size_y=0.09, size_z=0.02, a=0.7,
-                                action="ADD",
-                                enable_collision=False
-                            )
+                for phone in plate.phones:
+                    pos = phone.position
+                    if MODEL == "tx40":
+                        robot.manage_box(
+                            box_id=f"{phone.commercial_name}",
+                            x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
+                            r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                            size_x=0.06, size_y=0.09, size_z=0.02,
+                            action="ADD",
+                            enable_collision=False
+                        )
+                    else:
+                        robot.manage_box(
+                            box_id=f"{phone.commercial_name}",
+                            x=pos.x, y=pos.y, z=pos.z,
+                            r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                            size_x=0.06, size_y=0.09, size_z=0.02, a=0.7,
+                            action="ADD",
+                            enable_collision=False
+                        )
                 
                 if MODEL == "tx40":
                     robot.manage_mesh(
@@ -238,10 +237,10 @@ def run():
                         action="ADD"
                     )       
 
-                for reader_index, reader in enumerate(plate.readers):
+                for phone_index, phone in enumerate(plate.phones):
                     # Initial stack: created ONCE, on the first reader of the first plate.
                     # Afterwards the boxes follow the cards through the ADD/REMOVE below.
-                    if plate_index == 0 and reader_index == 0:
+                    if plate_index == 0 and phone_index == 0:
                         for u in range(number_of_cards):
                             hue = (u / max(number_of_cards, 1)) % 1.0
                             r_, g_, b_ = colorsys.hsv_to_rgb(hue, 0.85, 0.95)
@@ -265,9 +264,9 @@ def run():
                                              action="ADD",
                                              )
 
-                    win_logger.info(f'Testing reader: {reader.reader_name}')
+                    win_logger.info(f'Testing reader: {phone.commercial_name}')
                     for card in range(number_of_cards):
-                        if card == 0 and reader_index !=0:
+                        if card == 0 and phone_index !=0:
                             # the card is still on the suction cup from the previous reader
                             pass
                         else:                      
@@ -339,50 +338,50 @@ def run():
                                 execute=True
                             )
                     
-                        for pos_index, pos in enumerate(reader.positions):
-                            win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
+                        pos = phone.position
+                        win_logger.info(f'Testing card {card} o, phone: {phone.commercial_name}')
 
-                            if MODEL == "tx40":
-                                robot.move_approach(
-                                    x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
-                                    r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                    z_offset=0.12,
-                                    rotation_format="RPY",
-                                    cartesian_path=CARTESIAN_PATH,
-                                    execute=True
-                                )
-                            else:
-                                robot.move_approach(
-                                    x=pos.x, y=pos.y, z=pos.z,
-                                    r1=pos.rx, r2=pos.ry, r3=pos.rz,
-                                    z_offset=0.12,
-                                    rotation_format="RPY",
-                                    cartesian_path=CARTESIAN_PATH,
-                                    execute=True
-                                )
+                        if MODEL == "tx40":
+                            robot.move_approach(
+                                x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
+                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                                z_offset=0.12,
+                                rotation_format="RPY",
+                                cartesian_path=CARTESIAN_PATH,
+                                execute=True
+                            )
+                        else:
+                            robot.move_approach(
+                                x=pos.x, y=pos.y, z=pos.z,
+                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                                z_offset=0.12,
+                                rotation_format="RPY",
+                                cartesian_path=CARTESIAN_PATH,
+                                execute=True
+                            )
 
-                            for k in range(NUMBER_OF_TEST):
-                                robot.move_to_pose(
-                                    x=0, y=0, z=0.12 - SAFETY,
-                                    r1=0, r2=0, r3=0,
-                                    rotation_format="RPY",
-                                    reference_frame="TOOL",
-                                    cartesian_path=CARTESIAN_ALL,
-                                    is_relative=True,
-                                    execute=True
-                                )
+                        for k in range(NUMBER_OF_TEST):
+                            robot.move_to_pose(
+                                x=0, y=0, z=0.12 - SAFETY,
+                                r1=0, r2=0, r3=0,
+                                rotation_format="RPY",
+                                reference_frame="TOOL",
+                                cartesian_path=CARTESIAN_ALL,
+                                is_relative=True,
+                                execute=True
+                            )
 
-                                robot.move_to_pose(
-                                    x=0, y=0, z=-0.12 + SAFETY,
-                                    r1=0, r2=0, r3=0,
-                                    rotation_format="RPY",
-                                    reference_frame="TOOL",
-                                    cartesian_path=CARTESIAN_ALL,
-                                    is_relative=True,
-                                    execute=True
-                                )
+                            robot.move_to_pose(
+                                x=0, y=0, z=-0.12 + SAFETY,
+                                r1=0, r2=0, r3=0,
+                                rotation_format="RPY",
+                                reference_frame="TOOL",
+                                cartesian_path=CARTESIAN_ALL,
+                                is_relative=True,
+                                execute=True
+                            )
 
-                        if card == number_of_cards-1 and reader_index != len(plate.readers)-1:
+                        if card == number_of_cards-1 and phone_index != len(plate.phones)-1:
                             win_logger.info("Robot don't release the card to gain time")
                             pass
                         else:
@@ -477,17 +476,19 @@ def run():
                 win_logger.info("Going home")
                 robot.move_to_home()     
 
-                for reader in plate.readers:
-                    for pos in reader.positions:
-                        robot.manage_box(
-                            box_id=f"{reader.reader_name}_{pos.position_label}",
-                            action="REMOVE"
-                        )      
+                for phone in plate.phones:
+                    robot.manage_box(
+                        box_id=f"{phone.commercial_name}",
+                        action="REMOVE"
+                    )      
 
                 robot.manage_mesh(
                     mesh_id=f"plaque{plate.plate_number}",
                     action="REMOVE"
                 )
+
+        else:
+            print(f"{plate_dir} si not a dir")
 
     time.sleep(2)
 

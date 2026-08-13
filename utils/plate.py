@@ -40,9 +40,21 @@ class Reader:
     include_in_test: bool
     positions: List[Position]
 
+@dataclass
+class Phone:
+    commercial_name: str
+    model_number: str
+    os_version: str
+    kernel_version: int
+    adb_device_name: str
+    phone_number: str
+    minimum_height: float
+    maximum_height: float
+    include_in_test: bool
+    position: Position
 
 @dataclass
-class Plate:
+class PlateReader:
     plate_number: int
     mesh_path: str
     mesh_rotation_x: float # must be in m
@@ -53,8 +65,19 @@ class Plate:
     mesh_offset_z: float # must be in deg
     readers: List[Reader]
 
+@dataclass
+class PlatePhone:
+    plate_number: str
+    mesh_path: str
+    mesh_rotation_x: float # must be in m
+    mesh_rotation_y: float # must be in m
+    mesh_rotation_z: float # must be in m
+    mesh_offset_x: float # must be in deg
+    mesh_offset_y: float # must be in deg
+    mesh_offset_z: float # must be in deg
+    phones: List[Phone]
 
-def plate_from_json(json_data: dict) -> Plate:
+def reader_plate_from_json(json_data: dict) -> PlateReader:
     readers = []
 
     for reader_data in json_data.get("list_readers", []):
@@ -78,7 +101,7 @@ def plate_from_json(json_data: dict) -> Plate:
 
         readers.append(reader)
 
-    return Plate(
+    return PlateReader(
         plate_number=json_data["plate_number"],
         mesh_path=json_data["mesh_path"],
         mesh_rotation_x=json_data["mesh_rotation_x"],
@@ -90,7 +113,47 @@ def plate_from_json(json_data: dict) -> Plate:
         readers=readers
     )
 
-def load_plate_from_file(file_path: str) -> Plate:
+def phone_plate_from_json(json_data: dict) -> PlatePhone:
+    phones = []
+
+    for phone_data in json_data.get("list_phones", []):
+        position = Position.from_dict(phone_data["position"])
+
+        phone = Phone(
+            commercial_name=phone_data["commercial_name"],
+            model_number=phone_data["model_number"],
+            os_version=phone_data["os_version"],
+            kernel_version=phone_data["kernel_version"],
+            adb_device_name=phone_data["adb_device_name"],
+            phone_number=phone_data["phone_number"],
+            minimum_height=phone_data["minimum_height"],
+            maximum_height=phone_data["maximum_height"],
+            include_in_test=phone_data["include_in_test"],
+            position=position,
+        )
+
+        phones.append(phone)
+
+    return PlatePhone(
+        plate_number=json_data["plate_number"],
+        mesh_path=json_data["mesh_path"],
+        mesh_rotation_x=json_data["mesh_rotation_x"],
+        mesh_rotation_y=json_data["mesh_rotation_y"],
+        mesh_rotation_z=json_data["mesh_rotation_z"],
+        mesh_offset_x=json_data["mesh_offset_x"],
+        mesh_offset_y=json_data["mesh_offset_y"],
+        mesh_offset_z=json_data["mesh_offset_z"],
+        phones=phones
+    )
+
+
+def load_reader_plate_from_file(file_path: str) -> PlateReader:
     with open(file_path, 'r') as f:
         json_data = json.load(f)
-    return plate_from_json(json_data)
+    return reader_plate_from_json(json_data)
+
+
+def load_phone_plate_from_file(file_path: str) -> PlatePhone:
+    with open(file_path, 'r') as f:
+        json_data = json.load(f)
+    return phone_plate_from_json(json_data)
