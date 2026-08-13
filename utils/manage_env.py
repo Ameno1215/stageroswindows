@@ -119,7 +119,7 @@ def env_from_json(json_data: dict) -> Environnement:
 
         mesh = Mesh(
             id=mesh_data["id"],
-            path=to_path_real(mesh_data["path"]),
+            path=mesh_data["path"],
             scale=scale,
             position=position,
             a=mesh_data["a"],

@@ -1,7 +1,7 @@
 import requests
 from lib.robotcontroller.utils.manage_env import load_env_from_file
-
-
+import os
+import re
 class RobotErrorException(Exception):
     """Raised when the motion server reports a failed operation."""
 
@@ -891,13 +891,22 @@ class RobotController:
         """
         Loads a full environment (virtual fence + meshes + boxes) from a JSON file.
 
+        Raises:
+            RobotErrorException: if the file cannot be parsed, or if one or more
+                objects failed to be added. All object failures are collected and
+                reported in a single exception; objects added before the failure
+                stay in the scene.
+
         Returns:
-            dict: {"success": bool, "message": str}
+            dict: {"success": True, "message": str} — only ever returned on success.
         """
-        try:
-            env = load_env_from_file(json_path, base_dir)
+        try:   
+            path = json_path if base_dir is None else os.path.join(base_dir, json_path)
+            env = load_env_from_file(path)
         except Exception as e:
-            return {"success": False, "message": f"Failed to load env file '{json_path}': {e}"}
+            raise RobotErrorException(
+                f"Failed to load env file '{json_path}': {e}"
+            ) from e
 
         errors = []
         n_meshes = 0
@@ -913,9 +922,10 @@ class RobotController:
             errors.append(f"fence: {e}")
 
         for mesh in env.meshes:
+            path = mesh.path if base_dir is None else os.path.join(base_dir, mesh.path)
             try:
                 self.manage_mesh(
-                    mesh_id=mesh.id, mesh_path=mesh.path,
+                    mesh_id=mesh.id, mesh_path=windowsPathToWslFileUri(path),
                     x=mesh.position.x, y=mesh.position.y, z=mesh.position.z,
                     r1=mesh.position.rx, r2=mesh.position.ry, r3=mesh.position.rz,
                     scale_x=mesh.scale.x, scale_y=mesh.scale.y, scale_z=mesh.scale.z,
@@ -941,12 +951,31 @@ class RobotController:
                 errors.append(f"box '{box.id}': {e}")
 
         if errors:
-            return {
-                "success": False,
-                "message": f"{len(errors)} object(s) failed: " + " | ".join(errors),
-            }
+            raise RobotErrorException(
+                f"Environment '{json_path}' partially loaded "
+                f"({n_meshes} mesh(es), {n_boxes} box(es) OK) — "
+                f"{len(errors)} failure(s): " + " | ".join(errors)
+            )
 
         return {
             "success": True,
             "message": f"Environment loaded: fence + {n_meshes} mesh(es) + {n_boxes} box(es)",
         }
+
+def windowsPathToWslFileUri(windowsPath: str) -> str:
+    """
+    Converts a Windows path (or a file:// URI wrapping one) to a WSL file URI.
+    Ex: 'A:\\ROBOT_RF\\prj\\boitier.STL'      -> 'file:///mnt/a/ROBOT_RF/prj/boitier.STL'
+        'file://A:/ROBOT_RF/prj/boitier.STL'  -> 'file:///mnt/a/ROBOT_RF/prj/boitier.STL'
+    """
+    path = windowsPath
+    if path.startswith("file://"):
+        path = path[len("file://"):].lstrip("/")   # tolerate 2 or 3 slashes
+
+    match = re.match(r'^([A-Za-z]):[\\/](.*)$', path)
+    if not match:
+        raise ValueError(f"Chemin Windows invalide: {windowsPath}")
+
+    drive = match.group(1).lower()
+    rest = match.group(2).replace('\\', '/')
+    return f"file:///mnt/{drive}/{rest}"
