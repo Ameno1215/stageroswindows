@@ -14,7 +14,7 @@ parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
 parser.add_argument("--accuracy", action="store_true",
                     help="log movement accuracy in debug mode.")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40", "lite6"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
                       help="Tool name (ex: effecteur_v3, none)")
@@ -36,8 +36,10 @@ MODEL = args.model
 IP_ROBOT = args.ip
 ACCURACY = args.accuracy
 IS_STAUBLI = MODEL in {"tx40"}
+IS_UFACTORY = MODEL in {"lite6"}
 DEFAULT_TOOL = "effecteur_v3"
-TOOL = args.tool or DEFAULT_TOOL
+# The Lite 6 is integrated bare for now: no tool, no pump.
+TOOL = args.tool or ("none" if IS_UFACTORY else DEFAULT_TOOL)
 
 
 
@@ -64,7 +66,29 @@ SETUP = (
     "export GZ_IP=127.0.0.1"
 )
 
-if IS_STAUBLI:
+if IS_UFACTORY:
+    # TERMINAL_1: robot_state_publisher + ros2_control + move_group + RViz.
+    # sim:=true uses the vendor fake hardware, sim:=false talks to the real arm.
+    # The Pilz capabilities are what motion_control needs for LIN / sequence moves.
+    TERMINAL_1 = (
+        f"{SETUP} && "
+        "ros2 launch ufactory_lite6_moveit_config ufactory_lite6_planning_execution.launch.py "
+        f"sim:={SIM} tool:={TOOL} ip_address:={IP_ROBOT} "
+        f"capabilities:='pilz_industrial_motion_planner/MoveGroupSequenceAction "
+        f"pilz_industrial_motion_planner/MoveGroupSequenceService'"
+    )
+
+    TERMINAL_2 = (
+        f"{SETUP} && "
+        "ros2 launch motion_control motion_server.launch.py "
+        f"model:=ufactory_{MODEL} sim:={SIM} tool:={TOOL} ik_solver:={SOLVER} accuracy:={ACCURACY}"
+    )
+
+    # No pump package for the Lite 6 yet: TERMINAL_3 stays None and the tab is
+    # skipped in main().
+    TERMINAL_3 = None
+
+elif IS_STAUBLI:
     if SIM == "true":
         TERMINAL_1 = (
             f"{SETUP} && "
@@ -177,6 +201,8 @@ def kill_wsl_processes():
         "motion_server.launch.py",
         "ros2 launch command_pump_denso",
         "pump_controller.launch.py",
+        "ros2 launch ufactory_lite6_moveit_config",
+        "ufactory_lite6_planning_execution.launch.py",
         f"ros2 launch staubli_{MODEL}_moveit_config",
         f"staubli_{MODEL}_planning_execution",
         "ros2 launch staubli_val3_driver",
@@ -189,6 +215,7 @@ def kill_wsl_processes():
         "motion_server", "motion_control",
         "pump_controller", "command_pump_denso",
         "staubli_val3_driver", "robot_interface_streaming", "robot_interface",
+        "ufactory_lite6", "xarm",
         "gzserver", "gzclient", "gazebo", "gzweb",
         "spawn_entity", "controller_manager", "ros2_control_node",
         "wsl_ros_bridge",
@@ -231,7 +258,7 @@ def kill_wsl_processes():
     # Also kill orphaned ros2 launch processes that contain this workspace stack.
     launch_regex = (
         "ros2 launch (denso_robot_bringup|motion_control|command_pump_denso|"
-        f"staubli_{MODEL}_moveit_config|staubli_val3_driver)"
+        f"staubli_{MODEL}_moveit_config|staubli_val3_driver|ufactory_lite6_moveit_config)"
     )
     subprocess.run(
         ["wsl.exe", "bash", "-c",
@@ -269,7 +296,7 @@ def kill_wsl_processes():
     verify_regex = (
         "gazebo|gzserver|gzclient|move_group|controller_manager|ros2_control|"
         "spawn_entity|motion_server|pump_controller|wsl_ros_bridge|denso_robot|"
-        "staubli_|robot_interface_streaming|robot_interface|ros2 launch"
+        "staubli_|robot_interface_streaming|robot_interface|ufactory_|xarm|ros2 launch"
     )
     result = subprocess.run(
         ["wsl.exe", "bash", "-c",
@@ -330,7 +357,7 @@ def main():
     # time.sleep(2)
 
 
-    total = 3 if (IS_STAUBLI and SIM == "true") else 4
+    total = 3 if ((IS_STAUBLI and SIM == "true") or TERMINAL_3 is None) else 4
     step = 1
 
     print(f"[{step}/{total}] Starting Gazebo & RViz...")
@@ -354,9 +381,10 @@ def main():
         step += 1
 
 
-    print(f"[{step}/{total}] Starting Pump Control...")
-    launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
-    step += 1
+    if TERMINAL_3 is not None:
+        print(f"[{step}/{total}] Starting Pump Control...")
+        launch_wsl_tab(TAB_TITLES[2], TERMINAL_3)
+        step += 1
 
     print(f"[{step}/{total}] Starting HTTP Bridge...")
     launch_wsl_tab(TAB_TITLES[3], TERMINAL_4)

@@ -1,0 +1,21 @@
+{
+  "_comment": [
+    "Collision environment for the UFACTORY Lite 6.",
+    "The fence is expressed in metres from the world origin, which sits at the",
+    "robot base. The Lite 6 has a 440 mm reach, so these bounds leave a small",
+    "margin around the fully extended arm without clipping it.",
+    "mesh_list and box_list are intentionally empty: the cell furniture defined",
+    "for the DENSO and Staubli cells does not apply to this robot. Add the real",
+    "obstacles here once the Lite 6 is mounted in its cell."
+  ],
+  "mesh_list": [],
+  "box_list": [],
+  "fence": {
+    "front": 0.55,
+    "back": 0.55,
+    "left": 0.55,
+    "right": 0.55,
+    "top": 0.75,
+    "bottom": 0.0
+  }
+}

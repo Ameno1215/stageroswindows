@@ -14,7 +14,7 @@ import colorsys
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40", "lite6"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
@@ -142,6 +142,8 @@ def run():
 
     if MODEL == "tx40":
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
+    elif MODEL == "lite6":
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/lite6.json")
     else:
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
     robot.clear_trace()
