@@ -57,7 +57,9 @@ SETUP = (
     "export OMPL_CONSOLE_LOG_LEVEL=DEV2 && "
     "export LIBGL_ALWAYS_SOFTWARE=0 && "
     "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA && "
-    "export GAZEBO_MODEL_DATABASE_URI= && "
+    "export GAZEBO_IP=127.0.0.1 &&"
+    "export GAZEBO_HOSTNAME=127.0.0.1 &&"
+    "export GAZEBO_MASTER_URI=http://127.0.0.1:11345 &&"
     "unset IGN_FUEL_CACHE_PATH && "
     "export GZ_IP=127.0.0.1"
 )

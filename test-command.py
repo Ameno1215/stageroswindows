@@ -28,8 +28,8 @@ OFFSET = 0.015
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
 STAUBLI_SPEED = 0.1
-SPEED = 0.5
-ACCEL = 0.5
+SPEED = 0.4
+ACCEL = 0.2
 
 NUMBER_OF_TEST = 5
 
@@ -128,55 +128,15 @@ def run():
 
     robot.clear_environment()
 
-    if MODEL == "tx40":
-        robot.manage_mesh(
-            mesh_id="box1",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box1_staubli["position"]["x"], y=box1_staubli["position"]["y"], z=box1_staubli["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-        robot.manage_mesh(
-            mesh_id="box2",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box2_staubli["position"]["x"], y=box2_staubli["position"]["y"], z=box2_staubli["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-    else:
-        robot.manage_mesh(
-            mesh_id="box1",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box1["position"]["x"], y=box1["position"]["y"], z=box1["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
-        robot.manage_mesh(
-            mesh_id="box2",
-            mesh_path=to_path_real(rel_path_to_stl),
-            x=box2["position"]["x"], y=box2["position"]["y"], z=box2["position"]["z"],
-            r1=0.0, r2=0.0, r3=0.0,
-            scale_x=0.001, scale_y=0.001, scale_z=0.001,
-            rotation_format="RPY",
-            a=1, r=0.5, g=0.5, b=0.5,
-            action="ADD"
-        )
+   
+    robot.clear_environment()
 
-    robot.set_virtual_fence(
-        enable=True, 
-        front=0.66, back=0.35, 
-        left=0.325, right=0.325, 
-        top=0.9, bottom=0.0
-    )
+    if MODEL == "tx40":
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
+    else:
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
+    robot.clear_trace()
+
     time.sleep(2)
 
     print(robot.set_servo_on(True))
@@ -186,22 +146,22 @@ def run():
     robot.start_trace()
 
 
-    side = 0.15
-    a = 1
-    square = [
-        {"x":  side, "y":  0.0,  "z": 0, "r1": 0, "r2": 0, "r3": 0,
-        "is_relative": True, "reference_frame": "WORLD"},
-        {"x":  0.0,  "y":  -a*side, "z": 0, "r1": 0, "r2": 0, "r3": 0,
-        "is_relative": True, "reference_frame": "WORLD"},
-        {"x": -side, "y":  0.0,  "z": 0, "r1": 0, "r2": 0, "r3": 0,
-        "is_relative": True, "reference_frame": "WORLD"},
-        {"x":  0.0,  "y": a*side, "z": 0, "r1": 0, "r2": 0, "r3": 0,
-        "is_relative": True, "reference_frame": "WORLD"},
-    ]
+    # side = 0.15
+    # a = 1
+    # square = [
+    #     {"x":  side, "y":  0.0,  "z": 0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x":  0.0,  "y":  -a*side, "z": 0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x": -side, "y":  0.0,  "z": 0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    #     {"x":  0.0,  "y": a*side, "z": 0, "r1": 0, "r2": 0, "r3": 0,
+    #     "is_relative": True, "reference_frame": "WORLD"},
+    # ]
 
-    robot.move_waypoints(square, cartesian_path=False, blend_radius=0.05, path_tolerance=0.05)
+    # robot.move_waypoints(square, cartesian_path=False, blend_radius=0.05, path_tolerance=0.05)
 
-    return
+    # return
 
 
 
@@ -307,15 +267,15 @@ def run():
         robot.start_trace()
         for int, i in enumerate(square):
             robot.move_to_pose(x=i["x"], y=i["y"], z=i["z"], r1=0, r2=0, r3=0, cartesian_path=False, is_relative=True)
-            theorical_pos = {
-                "x": theorical_pos["x"] + i["x"],
-                "y": theorical_pos["y"] + i["y"],
-                "z": theorical_pos["z"] + i["z"],
-            }
-            # if ((j*4+int)-2)%4==0:
-            pos = robot.get_current_pose()["position"]
-            print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-            print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((theorical_pos["z"]-pos["z"])*1000, 5)}")
+            # theorical_pos = {
+            #     "x": theorical_pos["x"] + i["x"],
+            #     "y": theorical_pos["y"] + i["y"],
+            #     "z": theorical_pos["z"] + i["z"],
+            # }
+            # # if ((j*4+int)-2)%4==0:
+            # pos = robot.get_current_pose()["position"]
+            # print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+            # print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((theorical_pos["z"]-pos["z"])*1000, 5)}")
         robot.stop_trace()
 
     a=-1
@@ -340,54 +300,54 @@ def run():
         robot.start_trace()
         for int, i in enumerate(square):
             robot.move_to_pose(x=i["x"], y=i["y"], z=i["z"], r1=0, r2=0, r3=0, cartesian_path=True, is_relative=True)
-            theorical_pos = {
-                "x": theorical_pos["x"] + i["x"],
-                "y": theorical_pos["y"] + i["y"],
-                "z": theorical_pos["z"] + i["z"],
-            }
-            # if ((j*4+int)-2)%4==0:
-            pos = robot.get_current_pose()["position"]
-            print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-            print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((theorical_pos["z"]-pos["z"])*1000, 5)}")
+            # theorical_pos = {
+            #     "x": theorical_pos["x"] + i["x"],
+            #     "y": theorical_pos["y"] + i["y"],
+            #     "z": theorical_pos["z"] + i["z"],
+            # }
+            # # if ((j*4+int)-2)%4==0:
+            # pos = robot.get_current_pose()["position"]
+            # print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+            # print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((theorical_pos["z"]-pos["z"])*1000, 5)}")
         robot.stop_trace()
 
 
     robot.move_to_home()    
-    robot.move_to_pose(x=0.04, y=0.05, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
+    # robot.move_to_pose(x=0.04, y=0.05, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
     
-    theorical_pos = robot.get_current_pose()["position"]
-    for i in range(TIMES):
-        print(f"Down cartesian {i}")
-        robot.start_trace()
-        robot.move_to_pose(x=0, y=0, z=-0.2, r1=0, r2=0, r3=0, cartesian_path=True, is_relative=True)
-        pos = robot.get_current_pose()["position"]
-        print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-        print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.19-pos["z"])*1000, 5)}")
-        robot.move_to_pose(x=0, y=0, z=0.2, r1=0, r2=0, r3=0, cartesian_path=True, is_relative=True)
-        pos = robot.get_current_pose()["position"]
-        print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-        print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.39-pos["z"])*1000, 5)}")
-        robot.stop_trace()
+    # theorical_pos = robot.get_current_pose()["position"]
+    # for i in range(TIMES):
+    #     print(f"Down cartesian {i}")
+    #     robot.start_trace()
+    #     robot.move_to_pose(x=0, y=0, z=-0.2, r1=0, r2=0, r3=0, cartesian_path=True, is_relative=True)
+    #     pos = robot.get_current_pose()["position"]
+    #     print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+    #     print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.19-pos["z"])*1000, 5)}")
+    #     robot.move_to_pose(x=0, y=0, z=0.2, r1=0, r2=0, r3=0, cartesian_path=True, is_relative=True)
+    #     pos = robot.get_current_pose()["position"]
+    #     print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+    #     print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.39-pos["z"])*1000, 5)}")
+    #     robot.stop_trace()
 
     
-    robot.move_to_home()    
-    robot.move_to_pose(x=0.06, y=0.05, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
+    # robot.move_to_home()    
+    # robot.move_to_pose(x=0.06, y=0.05, z=0, r1=0, r2=0, r3=0, is_relative=True, cartesian_path=False, execute=True)
     
-    theorical_pos = robot.get_current_pose()["position"]
-    for i in range(TIMES):
-        print(f"Down non-cartesian {i}")
-        robot.start_trace()
-        robot.move_to_pose(x=0, y=0, z=-0.2, r1=0, r2=0, r3=0, cartesian_path=False, is_relative=True)
-        pos = robot.get_current_pose()["position"]
-        print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-        print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.19-pos["z"])*1000, 5)}")
-        robot.move_to_pose(x=0, y=0, z=0.2, r1=0, r2=0, r3=0, cartesian_path=False, is_relative=True)
-        pos = robot.get_current_pose()["position"]
-        print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
-        print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.39-pos["z"])*1000, 5)}")
-        robot.stop_trace()
+    # theorical_pos = robot.get_current_pose()["position"]
+    # for i in range(TIMES):
+    #     print(f"Down non-cartesian {i}")
+    #     robot.start_trace()
+    #     robot.move_to_pose(x=0, y=0, z=-0.2, r1=0, r2=0, r3=0, cartesian_path=False, is_relative=True)
+    #     pos = robot.get_current_pose()["position"]
+    #     print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+    #     print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.19-pos["z"])*1000, 5)}")
+    #     robot.move_to_pose(x=0, y=0, z=0.2, r1=0, r2=0, r3=0, cartesian_path=False, is_relative=True)
+    #     pos = robot.get_current_pose()["position"]
+    #     print(f"x={round(pos["x"], 5)}, y={round(pos["y"], 5)}, z={round(pos["z"], 5)}")
+    #     print(f"\t\t\t\t\tDELTA x={round((theorical_pos["x"]-pos["x"])*1000, 5)}, y={round((theorical_pos["y"]-pos["y"])*1000, 5)}, z={round((0.39-pos["z"])*1000, 5)}")
+    #     robot.stop_trace()
 
-    robot.get_current_pose()
+    # robot.get_current_pose()
     return
 
 
