@@ -4,8 +4,11 @@ stack with:
 
     python .\launch_controller.py --model lite6 --show-terminals
 
-It deliberately does NOT use the pump or a tool: the Lite 6 is integrated bare
-for now, so the full test.py scenario (card handling) does not apply to it yet.
+It deliberately does NOT use the pump: there is no pump package for this arm
+yet, so the full test.py scenario (card handling) does not apply to it. The
+tool is whatever the stack was launched with — poses and Cartesian moves are
+then expressed at the tool TCP rather than at the flange.
+
 What this checks is the whole chain end to end — HTTP bridge, motion_server,
 MoveIt, the lite6 planning group, ros2_control — with small isolated moves:
 

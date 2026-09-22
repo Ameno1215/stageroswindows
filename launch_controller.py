@@ -17,7 +17,7 @@ parser.add_argument("--accuracy", action="store_true",
 parser.add_argument("--model", choices=["vs060", "vp5243", "tx40", "lite6"], default="vs060",
                     help="Robot model to use (default: vs060)")
 parser.add_argument("--tool", default=None,
-                      help="Tool name (ex: effecteur_v3, none)")
+                      help="Tool name (ex: effecteur_v3, effecteur_short, none)")
 parser.add_argument("--ip", default="169.254.75.249",
                       help="Robot IP (ex: 169.254.139.249)")
 
@@ -38,8 +38,7 @@ ACCURACY = args.accuracy
 IS_STAUBLI = MODEL in {"tx40"}
 IS_UFACTORY = MODEL in {"lite6"}
 DEFAULT_TOOL = "effecteur_v3"
-# The Lite 6 is integrated bare for now: no tool, no pump.
-TOOL = args.tool or ("none" if IS_UFACTORY else DEFAULT_TOOL)
+TOOL = args.tool or DEFAULT_TOOL
 
 
 
@@ -85,7 +84,8 @@ if IS_UFACTORY:
     )
 
     # No pump package for the Lite 6 yet: TERMINAL_3 stays None and the tab is
-    # skipped in main().
+    # skipped in main(). The tool, on the other hand, is attached like on the
+    # other robots — pass --tool none to run the arm bare.
     TERMINAL_3 = None
 
 elif IS_STAUBLI:
