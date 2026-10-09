@@ -2,6 +2,14 @@ import os
 import time
 import logging
 import re
+from pathlib import Path
+
+# Log file written by wsl_ros_bridge.py, seen from the client
+if os.name == "nt":
+    LINUX_LOG_PATH = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
+else:
+    # Docker: stageroslinux is mounted in the container, the bridge writes its log in stageroslinux/log
+    LINUX_LOG_PATH = str(Path(__file__).resolve().parents[2] / "stageroslinux" / "log" / "robot_system.log")
 
 LOG_WSL_TO_WINDOWS_FILE = False
 

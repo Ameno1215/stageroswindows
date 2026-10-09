@@ -3,6 +3,7 @@ from typing import List
 import json
 from math import pi
 from pathlib import Path
+import urllib.parse
 
 @dataclass
 class Position:
@@ -101,7 +102,7 @@ def to_path_real(input):
     else:
         wsl_path = posix_path
 
-    return f"file://{wsl_path}"
+    return f"file://{urllib.parse.quote(wsl_path)}"
 
 
 def env_from_json(json_data: dict) -> Environnement:

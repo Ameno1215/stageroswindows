@@ -5,11 +5,14 @@ import sys
 import argparse
 import shlex
 
+from utils.ros_backend import IS_WINDOWS, ROS_WS, BRIDGE_DIR, BRIDGE_CMD, \
+    run_ros, ensure_backend, stop_backend, open_ros_tab
+
 # --- CLI args ----------------------------------------------------------------
 
 parser = argparse.ArgumentParser(description="Launch DENSO VS060 ROS 2 stack")
 parser.add_argument("--show-terminals", action="store_true",
-                    help="Hide WSL terminals (run in background)")
+                    help="Show one terminal tab per process (default: run in background)")
 parser.add_argument("--real-robot", action="store_true",
                     help="Connect to the real robot (default: simulation)")
 parser.add_argument("--accuracy", action="store_true",
@@ -50,13 +53,18 @@ TERMINAL_3 = None
 TERMINAL_4 = None
 TERMINAL_5 = None
 
+# GPU selection through D3D12 only makes sense under WSL
+GPU_ENV = (
+    "export LIBGL_ALWAYS_SOFTWARE=0 && "
+    "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA && "
+) if IS_WINDOWS else ""
+
 SETUP = (
-    "cd ~/workspace/ros2_ws && "
+    f"cd {ROS_WS} && "
     "source /opt/ros/humble/setup.bash && "
     "source install/setup.bash && "
     "export OMPL_CONSOLE_LOG_LEVEL=DEV2 && "
-    "export LIBGL_ALWAYS_SOFTWARE=0 && "
-    "export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA && "
+    f"{GPU_ENV}"
     "export GAZEBO_IP=127.0.0.1 &&"
     "export GAZEBO_HOSTNAME=127.0.0.1 &&"
     "export GAZEBO_MASTER_URI=http://127.0.0.1:11345 &&"
@@ -122,11 +130,10 @@ else:
 
 
 TERMINAL_4 = (
-    "cd ~/workspace && "
-    "source venv/bin/activate && "
+    f"cd {BRIDGE_DIR} && "
     "source /opt/ros/humble/setup.bash && "
-    "source ~/workspace/ros2_ws/install/setup.bash && "
-    "python wsl_ros_bridge.py"
+    f"source {ROS_WS}/install/setup.bash && "
+    f"{BRIDGE_CMD}"
     # "uvicorn wsl_ros_bridge:app --host 0.0.0.0 --port 8000"
 )
 
@@ -135,32 +142,13 @@ TAB_TITLES = ["Bringup", "MotionServer", "Pump Control", "WSL_Bridge", "Staubli_
 # --- Launched processes ------------------------------------------------------
 
 launched_processes = []
+started_container = False
 
 # --- Launch ------------------------------------------------------------------
 
 def launch_wsl_tab(title, bash_cmd):
     """Opens a visible terminal or a hidden background process depending on SHOW_TERMINALS."""
-
-    if SHOW_TERMINALS:
-        wrapped_cmd = (
-            f"({bash_cmd}); "
-            f"echo; "
-            f"echo '--- Process ended (press Enter or Ctrl+D to close) ---'; "
-            f"exec bash"
-        )
-        wrapped_cmd_escaped = wrapped_cmd.replace("; ", " \\; ")
-        proc = subprocess.Popen(
-            ["wt.exe", "-w", "denso_stack", "new-tab",
-             "--title", title, "--", "wsl.exe", "bash", "-c", wrapped_cmd_escaped]
-        )
-    else:
-        proc = subprocess.Popen(
-            ["wsl.exe", "bash", "-c", bash_cmd],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW,
-        )
-
+    proc = open_ros_tab(title, bash_cmd, SHOW_TERMINALS)
     launched_processes.append(proc)
     return proc
 
@@ -199,10 +187,7 @@ def kill_wsl_processes():
     def pkill(signal_name, targets):
         for target in targets:
             target = shlex.quote(target)
-            subprocess.run(
-                ["wsl.exe", "bash", "-c", f"pkill -{signal_name} -f -- {target} 2>/dev/null || true"],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-            )
+            run_ros(f"pkill -{signal_name} -f -- {target} 2>/dev/null || true")
 
     # --- Step 1: SIGINT on ros2 launch supervisors first
     # If a launch process survives, it can restart children that were just killed.
@@ -233,11 +218,7 @@ def kill_wsl_processes():
         "ros2 launch (denso_robot_bringup|motion_control|command_pump_denso|"
         f"staubli_{MODEL}_moveit_config|staubli_val3_driver)"
     )
-    subprocess.run(
-        ["wsl.exe", "bash", "-c",
-         f"pgrep -f {shlex.quote(launch_regex)} | xargs -r kill -9 2>/dev/null || true"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
+    run_ros(f"pgrep -f {shlex.quote(launch_regex)} | xargs -r kill -9 2>/dev/null || true")
 
     # Terminate Windows-side wrappers after the WSL processes are gone.
     for proc in launched_processes:
@@ -250,20 +231,15 @@ def kill_wsl_processes():
 
     # Step 5.5: clean Gazebo and DDS state
     print("   Cleaning Gazebo lock files and DDS shared memory...")
-    subprocess.run(
-        ["wsl.exe", "bash", "-c",
-         "rm -rf /tmp/gazebo-* /tmp/.gazebo* 2>/dev/null; "
-         "rm -f /dev/shm/fastrtps_* /dev/shm/sem.fastrtps_* 2>/dev/null; "
-         "rm -f /tmp/gz_* 2>/dev/null; "
-         "true"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+    run_ros(
+        "rm -rf /tmp/gazebo-* /tmp/.gazebo* 2>/dev/null; "
+        "rm -f /dev/shm/fastrtps_* /dev/shm/sem.fastrtps_* 2>/dev/null; "
+        "rm -f /tmp/gz_* 2>/dev/null; "
+        "true"
     )
 
     # Step 6: stop ROS daemon
-    subprocess.run(
-        ["wsl.exe", "bash", "-c", "ros2 daemon stop 2>/dev/null || true"],
-        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-    )
+    run_ros("source /opt/ros/humble/setup.bash && ros2 daemon stop 2>/dev/null || true")
 
     print("   Verifying cleanup...")
     verify_regex = (
@@ -271,30 +247,23 @@ def kill_wsl_processes():
         "spawn_entity|motion_server|pump_controller|wsl_ros_bridge|denso_robot|"
         "staubli_|robot_interface_streaming|robot_interface|ros2 launch"
     )
-    result = subprocess.run(
-        ["wsl.exe", "bash", "-c",
+    result = run_ros(
         f"pgrep -af {shlex.quote(verify_regex)} "
-        "| grep -v pgrep | grep -v 'bash -c' || echo CLEAN"],
-        capture_output=True, text=True,
+        "| grep -v pgrep | grep -v 'bash -c' || echo CLEAN",
+        capture=True,
     )
     leftovers = result.stdout.strip()
     if leftovers and leftovers != "CLEAN":
         print(f"     Leftover processes detected:\n{leftovers}")
         print("   Force-killing leftovers...")
-        subprocess.run(
-            ["wsl.exe", "bash", "-c",
+        run_ros(
             f"pgrep -f {shlex.quote(verify_regex)} "
-            "| xargs -r kill -9 2>/dev/null || true"],
-            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            "| xargs -r kill -9 2>/dev/null || true"
         )
     else:
         print("     All processes terminated")
         
-    port_check = subprocess.run(
-        ["wsl.exe", "bash", "-c",
-         "ss -tln | grep ':11345' || echo PORT_FREE"],
-        capture_output=True, text=True,
-    )
+    port_check = run_ros("ss -tln | grep ':11345' || echo PORT_FREE", capture=True)
     if "PORT_FREE" not in port_check.stdout:
         print(f"     Port 11345 still in use:\n{port_check.stdout.strip()}")
         print("   Waiting 5s for socket to release...")
@@ -308,6 +277,9 @@ def kill_wsl_processes():
 
 def cleanup():
     kill_wsl_processes()
+    if started_container:
+        print("   Stopping the ros-humble container...")
+        stop_backend()
     print("\nClean shutdown complete.")
     sys.exit(0)
 
@@ -322,6 +294,9 @@ signal.signal(signal.SIGINT, handle_sigint)
 # --- Main --------------------------------------------------------------------
 
 def main():
+    global started_container
+    started_container = ensure_backend()
+
     mode = "visible" if SHOW_TERMINALS else "hidden (background)"
     print(f"Starting {MODEL} stack (mode: {mode})...\n")
 
@@ -361,7 +336,7 @@ def main():
     print(f"[{step}/{total}] Starting HTTP Bridge...")
     launch_wsl_tab(TAB_TITLES[3], TERMINAL_4)
 
-    print(f"\nAll {total} WSL processes launched (mode: {mode}).")
+    print(f"\nAll {total} ROS processes launched (mode: {mode}).")
     print("Press Ctrl+C to stop everything.\n")
 
     while True:

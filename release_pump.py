@@ -5,7 +5,7 @@ from math import pi
 from utils.plate import load_reader_plate_from_file
 from pathlib import Path
 import urllib.parse
-from utils.logger_worker import tail_linux_logs, win_logger
+from utils.logger_worker import tail_linux_logs, win_logger, LINUX_LOG_PATH
 import threading
 import argparse
 
@@ -22,7 +22,7 @@ SIM = args.real_robot
 
 
 def run():
-    linux_log_path = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
+    linux_log_path = LINUX_LOG_PATH
     
     # Start the log reader in a background daemon thread
     log_thread = threading.Thread(

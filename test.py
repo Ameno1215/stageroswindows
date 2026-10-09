@@ -5,7 +5,7 @@ from math import pi
 from utils.plate import load_reader_plate_from_file
 from pathlib import Path
 import urllib.parse
-from utils.logger_worker import tail_linux_logs, win_logger
+from utils.logger_worker import tail_linux_logs, win_logger, LINUX_LOG_PATH
 import threading
 import argparse
 import colorsys
@@ -31,12 +31,12 @@ CARTESIAN_ALL = True
 STAUBLI_SPEED = 0.1
 SAFETY = 0.00
 SPEED = 0.35
-ACCEL = 0.1
+ACCEL = 0.2
 PLATES = "plates"
 PLATES_STAUBLI = "platesStaubli"
 
-NUMBER_OF_TEST = 1
-CARD = 2
+NUMBER_OF_TEST = 10
+CARD = 1
 
 CARD_THICKNESS = 0.0008        # m, thickness of one card (align with getCardHeightRos)
 DELTA_SUCTION_CUPS = 2 / 1000  # size of the suction cup between card stack and tool
@@ -103,13 +103,13 @@ def to_path_real(input):
     else:
         wsl_path = posix_path
 
-    return f"file://{wsl_path}"
+    return f"file://{urllib.parse.quote(wsl_path)}"
 
 
 
 
 def run():
-    linux_log_path = r"\\wsl.localhost\Ubuntu-22.04\home\antonin\workspace\robot_system.log"
+    linux_log_path = LINUX_LOG_PATH
 
     time.sleep(3)
     
@@ -141,9 +141,9 @@ def run():
     robot.clear_environment()
 
     if MODEL == "tx40":
-        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
+        robot.load_environnement("/home/antonin/Documents/ROBOT IN GROUPE/stageroswindows/env/tx40.json")
     else:
-        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
+        robot.load_environnement("/home/antonin/Documents/ROBOT IN GROUPE/stageroswindows/env/vs060.json")
     robot.clear_trace()
     
     
@@ -179,8 +179,11 @@ def run():
     else:
         plates_dir = base_path / PLATES
 
+    # for plate_index, plate_dir in enumerate(sorted(plates_dir.glob("plate*"))):
+    #     print(plate_dir)
+
     # Iterate over all items in the 'plates' directory that start with 'plate'
-    for plate_index, plate_dir in enumerate(plates_dir.glob("plate*")):
+    for plate_index, plate_dir in enumerate(sorted(plates_dir.glob("plate*"))):
 
         # Ensure it's actually a directory (and not a file named plate_something)
         if plate_dir.is_dir():
@@ -304,21 +307,21 @@ def run():
                                 execute=True
                             )
 
-                            if not SIM:
-                                robot.pump_grab()
+                            # if not SIM:
+                            #     robot.pump_grab()
 
-                                t = time.time()
+                            #     t = time.time()
 
-                                bool_grabbed = False
-                                while time.time() - t < 5:
-                                    print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
-                                    if robot.pump_is_grabbed()["grabbed"]:
-                                        bool_grabbed = True
-                                        win_logger.info("Card is grabbed")
-                                        break
+                            #     bool_grabbed = False
+                            #     while time.time() - t < 5:
+                            #         print(f'at t={time.time() - t}: {robot.pump_is_grabbed()}')
+                            #         if robot.pump_is_grabbed()["grabbed"]:
+                            #             bool_grabbed = True
+                            #             win_logger.info("Card is grabbed")
+                            #             break
                                 
-                                if not bool_grabbed:
-                                    robot.pump_release()
+                            #     if not bool_grabbed:
+                            #         robot.pump_release()
 
                             # the card left the stack: remove its box and update the count
                             robot.manage_box(box_id=f"storage_{inputStorage['box_number']}_{input_level}",
@@ -419,8 +422,8 @@ def run():
                                 execute=True
                             )
 
-                            if not SIM:
-                                robot.pump_release()
+                            # if not SIM:
+                            #     robot.pump_release()
 
                             # the card joined the destination stack: add its box and update the count
                             hue = (output_level / max(number_of_cards, 1)) % 1.0
