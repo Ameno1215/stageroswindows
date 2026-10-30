@@ -443,6 +443,7 @@ class MotionRobotClient:
 
         The home configuration depends on the model:
             - "vp5243": [0.0, 0.0, 1.57, 1.57, 0.0]
+            - "lite6":  [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
             - any other model: [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
 
         Examples:
@@ -458,6 +459,11 @@ class MotionRobotClient:
 
         if self.model == "vp5243":
             home_position = [0.0, 0.0, 1.57, 1.57, 0.0]
+        elif self.model == "lite6":
+            # Same pose as the "home" group_state of ufactory_lite6.srdf.xacro.
+            # Joint 3 of the Lite 6 has an asymmetric range (lower limit
+            # -0.061 rad), so an all-zeros home would sit right on that limit.
+            home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         else:
             home_position = [0.0, 0.0, 1.57, 0.0, 1.57, 0.0]
         return self.move_joints(home_position, is_relative=False)

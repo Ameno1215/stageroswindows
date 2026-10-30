@@ -14,7 +14,7 @@ import colorsys
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40", "lite6"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
@@ -23,15 +23,18 @@ SIM = args.real_robot
 MODEL = args.model
 
 
-STAUBLI_PLATE_OFFSET = 0.11
+STAUBLI_PLATE_OFFSET = 0.15
+# STAUBLI_PLATE_OFFSET = 0.11
 OFFSET = 0.0
 # OFFSET = 0.07
+# CARTESIAN_PATH = False
+
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
-STAUBLI_SPEED = 0.1
+STAUBLI_SPEED = 0.5
 SAFETY = 0.00
-SPEED = 0.35
-ACCEL = 0.2
+SPEED = 0.5
+ACCEL = 0.5
 PLATES = "plates"
 PLATES_STAUBLI = "platesStaubli"
 
@@ -40,7 +43,7 @@ CARD = 1
 
 CARD_THICKNESS = 0.0008        # m, thickness of one card (align with getCardHeightRos)
 DELTA_SUCTION_CUPS = 2 / 1000  # size of the suction cup between card stack and tool
-APPROACH_HEIGHT = 0.3          # m, height above the stack before descending
+APPROACH_HEIGHT = 0.2          # m, height above the stack before descending
 DROP_MARGIN = 0.0              # m, extra height when releasing (0.01 in the app)
 
 box_source = 1
@@ -69,9 +72,9 @@ box2 = {
 box1_staubli = {
     "box_number": 1,
     "position": {
-        "x": 0.15,
-        "y": 0.15,
-        "z": 0.0,
+        "x": 0.12,
+        "y": 0.2,
+        "z": 0.008,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -80,9 +83,9 @@ box1_staubli = {
 box2_staubli = {
     "box_number": 2,
     "position": {
-        "x": 0.15,
-        "y": -0.15,
-        "z": 0.0,
+        "x": 0.12,
+        "y": -0.2,
+        "z": 0.008,
         "rx": 180*pi/180,
         "ry": 0,
         "rz": -90*pi/180
@@ -133,7 +136,7 @@ def run():
                            allow_replanning=True, 
                            planner_id="RRTConnect")
 
-    if MODEL == "tx40":
+    if MODEL == "lite6" or MODEL == "tx40":
         robot.set_scaling(velocity_scale=STAUBLI_SPEED, accel_scale=ACCEL, cartesian_speed=SPEED)
     else:
         robot.set_scaling(velocity_scale=SPEED, accel_scale=ACCEL)
@@ -142,9 +145,13 @@ def run():
 
     if MODEL == "tx40":
         robot.load_environnement("/home/antonin/Documents/ROBOT IN GROUPE/stageroswindows/env/tx40.json")
+    elif MODEL == "lite6":
+        robot.load_environnement("/home/antonin/Documents/ROBOT IN GROUPE/stageroswindows/env/lite6.json")
     else:
         robot.load_environnement("/home/antonin/Documents/ROBOT IN GROUPE/stageroswindows/env/vs060.json")
     robot.clear_trace()
+
+    robot.set_virtual_fence(False)
     
     
     time.sleep(2)
@@ -157,7 +164,7 @@ def run():
 
     inputStorage = None
     outputStorage = None
-    if MODEL == "tx40":
+    if MODEL == "lite6" or MODEL == "tx40":
         inputStorage = box1_staubli
         outputStorage = box2_staubli
     else:
@@ -201,7 +208,7 @@ def run():
 
                 for reader in plate.readers:
                     for pos in reader.positions:
-                        if MODEL == "tx40":
+                        if MODEL == "lite6" or MODEL == "tx40":
                             robot.manage_box(
                                 box_id=f"{reader.reader_name}_{pos.position_label}",
                                 x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
@@ -220,7 +227,7 @@ def run():
                                 enable_collision=False
                             )
                 
-                if MODEL == "tx40":
+                if MODEL == "lite6" or MODEL == "tx40":
                     robot.manage_mesh(
                         mesh_id=f"plaque{plate.plate_number}",
                         mesh_path=to_path_real(plate.mesh_path),
@@ -345,7 +352,7 @@ def run():
                         for pos_index, pos in enumerate(reader.positions):
                             win_logger.info(f'Testing card {card} on position: {pos.position_label} of reader: {reader.reader_name}')
 
-                            if MODEL == "tx40":
+                            if MODEL == "lite6" or MODEL == "tx40":
                                 robot.move_approach(
                                     x=pos.x-STAUBLI_PLATE_OFFSET, y=pos.y, z=pos.z,
                                     r1=pos.rx, r2=pos.ry, r3=pos.rz,
@@ -463,7 +470,7 @@ def run():
                                 execute=True
                             )
 
-                    if MODEL == "tx40":
+                    if MODEL == "lite6" or MODEL == "tx40":
                         if inputStorage is box1_staubli:
                             inputStorage = box2_staubli
                             outputStorage = box1_staubli

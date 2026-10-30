@@ -14,7 +14,7 @@ import colorsys
 parser = argparse.ArgumentParser(description="Test file to command real robot")
 parser.add_argument("--real-robot", action="store_false",
                     help="Connect to the real robot (default: simulation)")
-parser.add_argument("--model", choices=["vs060", "vp5243", "tx40"], default="vs060",
+parser.add_argument("--model", choices=["vs060", "vp5243", "tx40", "lite6"], default="vs060",
                     help="Robot model to use (default: vs060)")
 
 args = parser.parse_args()
@@ -24,14 +24,15 @@ MODEL = args.model
 
 
 STAUBLI_PLATE_OFFSET = 0.11
+UFACTORY_PLATE_OFFSET = 0.15
 OFFSET = 0.0
 # OFFSET = 0.07
 CARTESIAN_PATH = False
 CARTESIAN_ALL = True
-STAUBLI_SPEED = 0.1
+STAUBLI_SPEED = 0.2
 SAFETY = 0.00
-SPEED = 0.35
-ACCEL = 0.1
+SPEED = 0.5
+ACCEL = 0.5
 PLATES = "platesPhone"
 PLATES_STAUBLI = "platesStaubli"
 
@@ -88,6 +89,29 @@ box2_staubli = {
         "rz": -90*pi/180
     }
 }
+box1_lite = {
+    "box_number": 1,
+    "position": {
+        "x": 0.12,
+        "y": 0.2,
+        "z": 0.008,
+        "rx": 180*pi/180,
+        "ry": 0,
+        "rz": -90*pi/180
+    }
+}
+box2_lite = {
+    "box_number": 2,
+    "position": {
+        "x": 0.12,
+        "y": -0.2,
+        "z": 0.008,
+        "rx": 180*pi/180,
+        "ry": 0,
+        "rz": -90*pi/180
+    }
+}
+
 
 
 base_path = Path.cwd()
@@ -142,6 +166,8 @@ def run():
 
     if MODEL == "tx40":
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/tx40.json")
+    if MODEL == "lite6":
+        robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/lite6.json")
     else:
         robot.load_environnement("C:/Users/Azur_Local_User/Documents/DEV/ROS/env/vs060.json")
     robot.clear_trace()
@@ -160,6 +186,9 @@ def run():
     if MODEL == "tx40":
         inputStorage = box1_staubli
         outputStorage = box2_staubli
+    if MODEL == "lite6":
+        inputStorage = box1_lite
+        outputStorage = box2_lite
     else:
         inputStorage = box1
         outputStorage = box2
@@ -206,6 +235,15 @@ def run():
                             action="ADD",
                             enable_collision=False
                         )
+                    if MODEL == "lite6":
+                        robot.manage_box(
+                            box_id=f"{phone.commercial_name}",
+                            x=pos.x-UFACTORY_PLATE_OFFSET, y=pos.y, z=pos.z,
+                            r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                            size_x=0.06, size_y=0.09, size_z=0.02,
+                            action="ADD",
+                            enable_collision=False
+                        )
                     else:
                         robot.manage_box(
                             box_id=f"{phone.commercial_name}",
@@ -221,6 +259,16 @@ def run():
                         mesh_id=f"plaque{plate.plate_number}",
                         mesh_path=to_path_real(plate.mesh_path),
                         x=0.557+0.135/2-STAUBLI_PLATE_OFFSET+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
+                        r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
+                        rotation_format="RPY",
+                        a=1, r=0, g=1, b=0,
+                        action="ADD"
+                    )
+                if MODEL == "lite6":
+                    robot.manage_mesh(
+                        mesh_id=f"plaque{plate.plate_number}",
+                        mesh_path=to_path_real(plate.mesh_path),
+                        x=0.557+0.135/2-UFACTORY_PLATE_OFFSET+plate.mesh_offset_x, y=-0.25+plate.mesh_offset_y, z=0+plate.mesh_offset_z,
                         r1=pi/180*plate.mesh_rotation_x, r2=pi/180*plate.mesh_rotation_y, r3=pi/180*plate.mesh_rotation_z,
                         rotation_format="RPY",
                         a=1, r=0, g=1, b=0,
@@ -350,6 +398,15 @@ def run():
                                 cartesian_path=CARTESIAN_PATH,
                                 execute=True
                             )
+                        if MODEL == "lite6":
+                            robot.move_approach(
+                                x=pos.x-UFACTORY_PLATE_OFFSET, y=pos.y, z=pos.z,
+                                r1=pos.rx, r2=pos.ry, r3=pos.rz,
+                                z_offset=0.12,
+                                rotation_format="RPY",
+                                cartesian_path=CARTESIAN_PATH,
+                                execute=True
+                            )
                         else:
                             robot.move_approach(
                                 x=pos.x, y=pos.y, z=pos.z,
@@ -466,6 +523,13 @@ def run():
                         else:
                             inputStorage = box1_staubli
                             outputStorage = box2_staubli
+                    if MODEL == "lite6":
+                        if inputStorage is box1_lite:
+                            inputStorage = box2_lite
+                            outputStorage = box1_lite
+                        else:
+                            inputStorage = box1_lite
+                            outputStorage = box2_lite
                     else:
                         if inputStorage is box1:
                             inputStorage = box2
